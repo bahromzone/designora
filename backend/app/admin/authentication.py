@@ -85,10 +85,9 @@ class AdminAuth(AuthenticationBackend):
         Har bir admin sahifaga kirishda tekshiriladi.
         """
         try:
-            # DEBUG: session tarkibini ko'rish
-            logger.info(f"[AUTHENTICATE] session keys: {list(request.session.keys())}")
-            logger.info(f"[AUTHENTICATE] session user: {request.session.get('user')}")
-            logger.info(f"[AUTHENTICATE] cookies: {list(request.cookies.keys())}")
+            # Sensitive session/cookie details only at DEBUG level (never INFO in prod logs)
+            logger.debug(f"[AUTHENTICATE] session keys: {list(request.session.keys())}")
+            logger.debug(f"[AUTHENTICATE] cookies: {list(request.cookies.keys())}")
 
             user = request.session.get("user")
             if not user:
@@ -96,7 +95,7 @@ class AdminAuth(AuthenticationBackend):
                 return False
             if isinstance(user, dict):
                 role = user.get("role")
-                logger.info(f"[AUTHENTICATE] role={role}")
+                logger.debug(f"[AUTHENTICATE] role={role}")
                 return role == "admin"
             return False
         except Exception as e:

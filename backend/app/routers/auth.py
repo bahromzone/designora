@@ -133,7 +133,8 @@ class ResetPasswordRequest(BaseModel):
 # Register
 # ==================================================
 @router.post("/register")
-async def register(data: RegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+async def register(request: Request, data: RegisterRequest, db: Session = Depends(get_db)):
     if not await verify_recaptcha(data.recaptcha_token):
         raise HTTPException(status_code=400, detail="reCAPTCHA noto'g'ri")
 

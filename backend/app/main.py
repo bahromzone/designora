@@ -22,7 +22,7 @@ from app.core.middleware import (
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.Course import Course
-
+from app.admin.admin_panel import setup_admin
 from app.routers import auth, google, users, pages, profile
 from app.routers import admin_courses
 from app.routers.auth import public_router
@@ -79,11 +79,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# ── SQLADMIN ─────────────────────────────────────────────────────────────────
-# ✅ BUG #9 FIX: setup_admin() taniqlanmagan (never called) edi.
-# Admin panel butunlay mount qilinmagan — /sqladmin yo'qligi uchun.
-# Endi app yaratilgandan keyin darhol chaqiriladi.
-from app.admin.admin_panel import setup_admin
+
 setup_admin(app)
 
 # ── ROUTERS ───────────────────────────────────────────────────────────────────
@@ -95,10 +91,7 @@ app.include_router(auth.router)
 app.include_router(google.router)
 app.include_router(users.router)
 
-# ── ADMIN USERS API ───────────────────────────────────────────────────────────
-# ✅ BUG #2 FIX (qo'shimcha): /api/admin/users avval admin_courses.py da
-# noto'g'ri prefix ostida edi → hech qachon ishlamasdi.
-# Endi to'g'ri /api/admin/users da ro'yxatdan o'tkaziladi.
+
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 

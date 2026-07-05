@@ -1,8 +1,9 @@
 from sqladmin import Admin
-from app.core.database import engine
+
 from app.admin.authentication import AdminAuth
-from app.admin.views import UserAdmin, StudentAdmin, AdminUserAdmin, CourseAdmin
+from app.admin.views import AdminUserAdmin, CourseAdmin, StudentAdmin, UserAdmin
 from app.core.config import settings
+from app.core.database import engine
 
 
 def setup_admin(app) -> Admin:

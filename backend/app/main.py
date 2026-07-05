@@ -1,32 +1,29 @@
 import logging
-from logging.handlers import RotatingFileHandler
 import os
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
+
 import uvicorn
-from fastapi import APIRouter, FastAPI, Request, status, Depends
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import APIRouter, Depends, FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy.orm import Session
+from starlette.middleware.sessions import SessionMiddleware
 
-from app.core.config import settings, limiter
+from app.admin.admin_panel import setup_admin
+from app.core.config import limiter, settings
 from app.core.database import Base, engine, get_db
 from app.core.middleware import (
-    SecurityHeadersMiddleware,
-    RequestLoggingMiddleware,
     IPBlockingMiddleware,
+    RequestLoggingMiddleware,
+    SecurityHeadersMiddleware,
 )
 from app.core.security import get_current_user
 from app.models.user import User
-from app.models.Course import Course
-from app.admin.admin_panel import setup_admin
-from app.routers import auth, google, users, profile
-from app.routers import admin_courses
-from app.routers import courses_api
+from app.routers import admin_courses, auth, courses_api, google, profile, users
 from app.routers.auth import public_router
 
 # ── LOGGING ──────────────────────────────────────────────────────────────────
@@ -105,6 +102,7 @@ def _require_admin(
     user = db.query(User).filter(User.email == email).first()
     if not user or user.role != "admin":
         from fastapi import HTTPException
+
         raise HTTPException(status_code=403, detail="Faqat adminlar uchun")
     return user
 
@@ -127,6 +125,7 @@ def admin_list_users(
 
 
 app.include_router(_admin_router)
+
 
 # ── ASOSIY SAHIFA ────────────────────────────────────────────────────────────
 # UI endi to'liq React frontend'da (frontend/ papkasi, Vite dev: 5173-port).

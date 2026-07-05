@@ -6,24 +6,39 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function CourseCard({ course, index = 0 }) {
   const cardRef = useRef(null);
-  const imgRef  = useRef(null);
+  const imgRef = useRef(null);
 
   useEffect(() => {
     const card = cardRef.current;
     if (!card) return;
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(card,
+      gsap.fromTo(
+        card,
         { opacity: 0, y: 48, scale: 0.96 },
         {
-          opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "power3.out",
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.7,
+          ease: "power3.out",
           delay: index * 0.12,
           scrollTrigger: { trigger: card, start: "top 88%", once: true },
         }
       );
 
-      const enter = () => gsap.to(imgRef.current, { scale: 1.06, duration: 0.6, ease: "power2.out" });
-      const leave = () => gsap.to(imgRef.current, { scale: 1,    duration: 0.6, ease: "power2.out" });
+      const enter = () =>
+        gsap.to(imgRef.current, {
+          scale: 1.06,
+          duration: 0.6,
+          ease: "power2.out",
+        });
+      const leave = () =>
+        gsap.to(imgRef.current, {
+          scale: 1,
+          duration: 0.6,
+          ease: "power2.out",
+        });
 
       card.addEventListener("mouseenter", enter);
       card.addEventListener("mouseleave", leave);
@@ -55,7 +70,11 @@ export default function CourseCard({ course, index = 0 }) {
         <div className="absolute left-3 right-3 top-3 flex items-center justify-between gap-2">
           <span
             className="rounded-full px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-widest"
-            style={{ background: "rgba(250,248,244,0.88)", color: "var(--ink)", backdropFilter: "blur(8px)" }}
+            style={{
+              background: "rgba(250,248,244,0.88)",
+              color: "var(--ink)",
+              backdropFilter: "blur(8px)",
+            }}
           >
             {course.level}
           </span>
@@ -75,7 +94,10 @@ export default function CourseCard({ course, index = 0 }) {
           <h3 className="font-serif text-2xl font-semibold text-ink leading-snug">
             {course.title}
           </h3>
-          <p className="mt-1 text-sm font-medium" style={{ color: "var(--amber)" }}>
+          <p
+            className="mt-1 text-sm font-medium"
+            style={{ color: "var(--amber)" }}
+          >
             {course.subtitle}
           </p>
         </div>
@@ -95,7 +117,13 @@ export default function CourseCard({ course, index = 0 }) {
           >
             Batafsil
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <path d="M2 6.5h9M8 3.5l3 3-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M2 6.5h9M8 3.5l3 3-3 3"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </span>
         </div>

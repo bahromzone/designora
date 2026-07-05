@@ -8,7 +8,9 @@ const STORAGE_KEY = "designora-auth-token";
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(STORAGE_KEY));
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(Boolean(localStorage.getItem(STORAGE_KEY)));
+  const [loading, setLoading] = useState(
+    Boolean(localStorage.getItem(STORAGE_KEY))
+  );
 
   useEffect(() => {
     if (!token) {

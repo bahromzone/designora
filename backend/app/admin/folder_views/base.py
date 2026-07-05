@@ -1,5 +1,6 @@
-from sqladmin import ModelView
 from fastapi import Request
+from sqladmin import ModelView
+
 
 class SecureModelView(ModelView):
     async def is_accessible(self, request: Request) -> bool:

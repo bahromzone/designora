@@ -1,17 +1,8 @@
 from logging.config import fileConfig
-from core.database import Base
-from models.user import User
-from models.Course import Course
-from models.progress import Progress
-from models.certificate import Certificate
-from models.assignment import Assignment
-from models.lesson import Lesson
-from models.password_reset import PasswordReset
-from models.notification import Notification
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
 
 from alembic import context
+from core.database import Base
+from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -26,8 +17,6 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from core.database import Base
-from models.user import User   # yoki qayerda Base bo‘lsa
 
 target_metadata = Base.metadata
 
@@ -76,9 +65,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

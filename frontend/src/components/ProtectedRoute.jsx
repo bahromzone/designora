@@ -8,7 +8,10 @@ export default function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div className="shell py-16 flex min-h-[60vh] items-center justify-center">
-        <div className="card rounded-2xl px-8 py-6 text-sm" style={{ color: "var(--muted)" }}>
+        <div
+          className="card rounded-2xl px-8 py-6 text-sm"
+          style={{ color: "var(--muted)" }}
+        >
           Profil ma'lumotlari yuklanmoqda...
         </div>
       </div>
@@ -16,7 +19,9 @@ export default function ProtectedRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/kirish" replace state={{ from: location.pathname }} />;
+    return (
+      <Navigate to="/kirish" replace state={{ from: location.pathname }} />
+    );
   }
 
   return children;

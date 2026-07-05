@@ -1,0 +1,15 @@
+# Ishlab chiqish (development) va CI uchun qo'shimcha paketlar.
+# Asosiy paketlar: requirements.txt
+-r requirements.txt
+
+# ===== Test =====
+pytest==8.4.2
+pytest-cov==6.2.1
+pytest-asyncio==1.2.0
+
+# ===== Lint / format =====
+ruff==0.9.6
+# black requirements.txt da mavjud (25.12.0)
+
+# ===== Pre-commit =====
+pre-commit==4.1.0

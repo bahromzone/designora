@@ -1,5 +1,7 @@
 from sqladmin import ModelView
+
 from app.models.payment import Payment
+
 
 class PaymentAdmin(ModelView, model=Payment):
     name = "Payments"

@@ -1,0 +1,37 @@
+# Designora pre-commit hooks
+# O'rnatish:  pip install pre-commit && pre-commit install
+# Qo'lda ishga tushirish:  pre-commit run --all-files
+repos:
+  # ── Umumiy tekshiruvlar ──────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict   # hal qilinmagan merge konfliktlarini bloklaydi
+
+  # ── Backend: Ruff (lint + import saralash) ───────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  # ── Backend: Black (formatlash) ──────────────────────────────────────
+  - repo: https://github.com/psf/black
+    rev: 25.12.0
+    hooks:
+      - id: black
+        files: ^backend/
+
+  # ── Frontend: Prettier (formatlash) ──────────────────────────────────
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: ^frontend/src/.*\.(js|jsx|css)$

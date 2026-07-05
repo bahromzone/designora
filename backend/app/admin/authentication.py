@@ -2,15 +2,16 @@
 SQLAdmin Authentication Backend
 Admin panelga kirish uchun authentication
 """
+
+import logging
+
 from sqladmin.authentication import AuthenticationBackend
-from starlette.requests import Request
-from starlette.responses import RedirectResponse
 from sqlalchemy.orm import Session
+from starlette.requests import Request
 
 from app.core.database import SessionLocal
 from app.core.password import verify_password
 from app.models.user import User
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.core.admin_guard import admin_required
 from app.core.database import get_db
-from app.models.user import User
 from app.models.Course import Course
+from app.models.user import User
 
 router = APIRouter(prefix="/admin")
 templates = Jinja2Templates(directory="templates")
@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory="templates")
 def dashboard(
     request: Request,
     admin: User = Depends(admin_required),
-    db: Session = Depends(get_db),         # ✅ BUG #11 FIX: DB session qo'shildi
+    db: Session = Depends(get_db),  # ✅ BUG #11 FIX: DB session qo'shildi
 ):
     # ✅ BUG #11 FIX: Template context bo'sh edi — statistik kartalar ko'rinmasdi.
     # Endi DB dan haqiqiy sonlar o'qilib template ga uzatiladi.
@@ -30,5 +30,5 @@ def dashboard(
             "users_count": users_count,
             "courses_count": courses_count,
             "admins_count": admins_count,
-        }
+        },
     )

@@ -1,3 +1,4 @@
+// frontend/src/pages/RegisterPage.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -6,7 +7,8 @@ import { fashionImages } from "../data/fashionImages";
 export default function RegisterPage() {
   const navigate       = useNavigate();
   const { register }   = useAuth();
-  const [form,         setForm]      = useState({ full_name: "", email: "", password: "" });
+  // ✅ TUZATILDI: full_name → username (backend RegisterRequest shunday kutadi)
+  const [form,         setForm]      = useState({ username: "", email: "", password: "" });
   const [error,        setError]     = useState("");
   const [submitting,   setSubmitting]= useState(false);
 
@@ -14,7 +16,10 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(""); setSubmitting(true);
     try {
-      await register(form);
+      // ✅ TUZATILDI: recaptcha_token — backendda majburiy maydon.
+      // Dev rejimida tekshirilmaydi (verify_recaptcha True qaytaradi),
+      // production'da real reCAPTCHA token olish kerak bo'ladi.
+      await register({ ...form, recaptcha_token: "" });
       navigate("/", { replace: true });
     } catch (err) {
       setError(err.message);
@@ -39,13 +44,15 @@ export default function RegisterPage() {
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-ink">To'liq ism</span>
+              <span className="mb-2 block text-sm font-semibold text-ink">Ism</span>
               <input
                 type="text"
-                value={form.full_name}
-                onChange={e => setForm(p => ({ ...p, full_name: e.target.value }))}
+                value={form.username}
+                onChange={e => setForm(p => ({ ...p, username: e.target.value }))}
                 className="input-field"
                 placeholder="Dilnoza Rasulova"
+                minLength={3}
+                maxLength={50}
                 required
               />
             </label>
@@ -67,7 +74,9 @@ export default function RegisterPage() {
                 value={form.password}
                 onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
                 className="input-field"
-                placeholder="Katta harf va raqam kiriting"
+                placeholder="Kamida 8 belgi, katta harf va raqam"
+                minLength={8}
+                maxLength={128}
                 required
               />
             </label>

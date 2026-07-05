@@ -1,11 +1,13 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from datetime import UTC, datetime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import relationship
+
 from app.core.database import Base
-from datetime import datetime, timezone
 
 
 def _now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Progress(Base):

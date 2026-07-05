@@ -4,7 +4,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function FeatureCard({ icon, title, description, eyebrow, index = 0 }) {
+export default function FeatureCard({
+  icon,
+  title,
+  description,
+  eyebrow,
+  index = 0,
+}) {
   const cardRef = useRef(null);
 
   useEffect(() => {
@@ -12,10 +18,14 @@ export default function FeatureCard({ icon, title, description, eyebrow, index =
     if (!card) return;
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(card,
+      gsap.fromTo(
+        card,
         { opacity: 0, y: 40 },
         {
-          opacity: 1, y: 0, duration: 0.65, ease: "power3.out",
+          opacity: 1,
+          y: 0,
+          duration: 0.65,
+          ease: "power3.out",
           delay: index * 0.1,
           scrollTrigger: { trigger: card, start: "top 88%", once: true },
         }

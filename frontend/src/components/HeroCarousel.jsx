@@ -76,7 +76,8 @@ function HeroCarousel() {
                 Tanlangan tajriba
               </p>
               <p className="mt-3 text-lg leading-8">
-                Har bir modul real kolleksiya, styling va vizual sotuvga yo'naltirilgan.
+                Har bir modul real kolleksiya, styling va vizual sotuvga
+                yo'naltirilgan.
               </p>
             </div>
 
@@ -88,7 +89,9 @@ function HeroCarousel() {
                   aria-label={`${index + 1}-slayd`}
                   onClick={() => setActiveIndex(index)}
                   className={`h-2.5 rounded-full transition-all ${
-                    index === activeIndex ? "w-10 bg-white" : "w-2.5 bg-white/45"
+                    index === activeIndex
+                      ? "w-10 bg-white"
+                      : "w-2.5 bg-white/45"
                   }`}
                 />
               ))}

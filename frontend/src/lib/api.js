@@ -1,4 +1,3 @@
-
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
 // FastAPI xato javobini o'qish uchun yordamchi:
@@ -8,9 +7,7 @@ function extractErrorMessage(payload) {
   if (!detail) return "So'rovni bajarib bo'lmadi.";
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
-    return detail
-      .map((item) => item?.msg ?? "Noma'lum xato")
-      .join(" ");
+    return detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ");
   }
   return "So'rovni bajarib bo'lmadi.";
 }

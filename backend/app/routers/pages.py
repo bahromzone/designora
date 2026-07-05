@@ -1,7 +1,8 @@
 """
 Pages Router — Barcha sidebar sahifalari
 """
-from fastapi import APIRouter, Request, Depends, HTTPException
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -11,13 +12,18 @@ from app.core.security import get_current_user_optional
 from app.models.Course import Course
 from app.models.progress import Progress
 from app.models.user import User
-from app.utils.routes import dashboard_path_for_role, profile_path_for_role, is_admin_role
+from app.utils.routes import (
+    dashboard_path_for_role,
+    is_admin_role,
+    profile_path_for_role,
+)
 
 router = APIRouter(tags=["Pages"])
 templates = Jinja2Templates(directory="templates")
 
 
 # ── YORDAMCHI FUNKSIYALAR ──────────────────────────────────────────────────────
+
 
 def get_user_safe(request: Request) -> str | None:
     """Session, cookie, yoki auth header orqali user emailini oladi."""
@@ -45,6 +51,7 @@ def _base_ctx(request: Request, active_page: str, **extra) -> dict:
 
 # ── ASOSIY SAHIFALAR ──────────────────────────────────────────────────────────
 
+
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page(request: Request, db: Session = Depends(get_db)):
     if redir := _login_required(request):
@@ -52,18 +59,14 @@ def dashboard_page(request: Request, db: Session = Depends(get_db)):
     user = _request_user(request, db)
     if user and is_admin_role(user.role):
         return RedirectResponse(dashboard_path_for_role(user.role), status_code=302)
-    return templates.TemplateResponse(
-        "dashboard.html", _base_ctx(request, "dashboard")
-    )
+    return templates.TemplateResponse("dashboard.html", _base_ctx(request, "dashboard"))
 
 
 @router.get("/courses", response_class=HTMLResponse)
 def courses_page(request: Request):
     if redir := _login_required(request):
         return redir
-    return templates.TemplateResponse(
-        "courses.html", _base_ctx(request, "courses")
-    )
+    return templates.TemplateResponse("courses.html", _base_ctx(request, "courses"))
 
 
 @router.get("/catalog", response_class=HTMLResponse)
@@ -90,10 +93,14 @@ def course_detail_page(
     if redir := _login_required(request):
         return redir
 
-    course = db.query(Course).filter(
-        Course.id == course_id,
-        Course.is_active == True,
-    ).first()
+    course = (
+        db.query(Course)
+        .filter(
+            Course.id == course_id,
+            Course.is_active == True,
+        )
+        .first()
+    )
     if not course:
         raise HTTPException(status_code=404, detail="Kurs topilmadi")
 
@@ -104,18 +111,23 @@ def course_detail_page(
     if email:
         current_user = db.query(User).filter(User.email == email).first()
         if current_user:
-            progress = db.query(Progress).filter(
-                Progress.user_id == current_user.id,
-                Progress.course_id == course_id,
-            ).first()
+            progress = (
+                db.query(Progress)
+                .filter(
+                    Progress.user_id == current_user.id,
+                    Progress.course_id == course_id,
+                )
+                .first()
+            )
 
     return templates.TemplateResponse(
         "course_detail.html",
         _base_ctx(
-            request, "catalog",      # catalog highlighted in sidebar
+            request,
+            "catalog",  # catalog highlighted in sidebar
             course=course,
             progress=progress,
-            user=current_user,       # ✅ BUG #3 FIX: user object passed — {% if user %} works
+            user=current_user,  # ✅ BUG #3 FIX: user object passed — {% if user %} works
         ),
     )
 
@@ -131,6 +143,7 @@ def certificates_page(request: Request):
 
 # ── O'RGANISH ─────────────────────────────────────────────────────────────────
 
+
 @router.get("/schedule", response_class=HTMLResponse)
 def schedule_page(request: Request):
     if redir := _login_required(request):
@@ -138,7 +151,8 @@ def schedule_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "schedule",
+            request,
+            "schedule",
             page_title="Jadval",
             page_icon="calendar",
             page_desc="Dars jadvali tez orada ochiladi",
@@ -153,7 +167,8 @@ def assignments_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "assignments",
+            request,
+            "assignments",
             page_title="Topshiriqlar",
             page_icon="clipboard-list",
             page_desc="Topshiriqlar bo'limi tez orada",
@@ -168,7 +183,8 @@ def community_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "community",
+            request,
+            "community",
             page_title="Jamiyat",
             page_icon="users",
             page_desc="Jamiyat platformasi tez orada ochiladi",
@@ -183,7 +199,8 @@ def mentors_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "mentors",
+            request,
+            "mentors",
             page_title="Mentorlar",
             page_icon="message-circle",
             page_desc="Mentor bron qilish tez orada",
@@ -193,6 +210,7 @@ def mentors_page(request: Request):
 
 # ── TAHLIL ────────────────────────────────────────────────────────────────────
 
+
 @router.get("/stats", response_class=HTMLResponse)
 def stats_page(request: Request):
     if redir := _login_required(request):
@@ -200,7 +218,8 @@ def stats_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "stats",
+            request,
+            "stats",
             page_title="Statistika",
             page_icon="bar-chart-2",
             page_desc="Batafsil statistika bo'limi tez orada",
@@ -215,7 +234,8 @@ def goals_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "goals",
+            request,
+            "goals",
             page_title="Maqsadlar",
             page_icon="target",
             page_desc="Maqsad qo'yish va kuzatish tizimi tez orada",
@@ -230,7 +250,8 @@ def messages_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "messages",
+            request,
+            "messages",
             page_title="Xabarlar",
             page_icon="message-square",
             page_desc="Xabarlar tizimi tez orada ochiladi",
@@ -245,7 +266,8 @@ def notifications_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "notifications",
+            request,
+            "notifications",
             page_title="Bildirishnomalar",
             page_icon="bell",
             page_desc="Bildirishnomalar markazi tez orada",
@@ -254,6 +276,7 @@ def notifications_page(request: Request):
 
 
 # ── SOZLAMALAR ────────────────────────────────────────────────────────────────
+
 
 @router.get("/profile", response_class=HTMLResponse)
 def profile_redirect_page(request: Request, db: Session = Depends(get_db)):
@@ -278,9 +301,7 @@ def user_profile_page(request: Request, db: Session = Depends(get_db)):
     if is_admin_role(user.role):
         return RedirectResponse(profile_path_for_role(user.role), status_code=302)
 
-    return templates.TemplateResponse(
-        "profile.html", _base_ctx(request, "profile")
-    )
+    return templates.TemplateResponse("profile.html", _base_ctx(request, "profile"))
 
 
 @router.get("/admin/profile", response_class=HTMLResponse)
@@ -294,9 +315,7 @@ def admin_profile_page(request: Request, db: Session = Depends(get_db)):
     if not is_admin_role(user.role):
         return RedirectResponse(profile_path_for_role(user.role), status_code=302)
 
-    return templates.TemplateResponse(
-        "profile.html", _base_ctx(request, "profile")
-    )
+    return templates.TemplateResponse("profile.html", _base_ctx(request, "profile"))
 
 
 @router.get("/settings", response_class=HTMLResponse)
@@ -306,7 +325,8 @@ def settings_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "settings",
+            request,
+            "settings",
             page_title="Sozlamalar",
             page_icon="settings",
             page_desc="Sozlamalar bo'limi tez orada",
@@ -321,7 +341,8 @@ def help_page(request: Request):
     return templates.TemplateResponse(
         "coming_soon.html",
         _base_ctx(
-            request, "help",
+            request,
+            "help",
             page_title="Yordam",
             page_icon="help-circle",
             page_desc="Yordam markazi va FAQ tez orada",
@@ -330,6 +351,7 @@ def help_page(request: Request):
 
 
 # ── ADMIN: KURSLAR BOSHQARUVI ─────────────────────────────────────────────────
+
 
 @router.get("/manage/courses", response_class=HTMLResponse)
 def admin_courses_page(request: Request, db: Session = Depends(get_db)):

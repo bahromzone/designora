@@ -1,16 +1,20 @@
-from datetime import datetime, timedelta, timezone
-from jose import jwt, JWTError
-from fastapi import HTTPException, Request
-from app.core.config import settings
 import secrets
+from datetime import UTC, datetime, timedelta
+
+from fastapi import HTTPException, Request
+from jose import JWTError, jwt
+
+from app.core.config import settings
 
 
 def create_access_token(sub: str) -> str:
     payload = {
         "sub": sub,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
+        "exp": datetime.now(UTC) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES),
     }
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return jwt.encode(
+        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
 
 
 def _normalize_token(token: str | None) -> str:
@@ -59,7 +63,9 @@ def get_current_user(request: Request) -> str:
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        payload = jwt.decode(
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
         email: str = payload.get("sub")
         if not email:
             raise HTTPException(status_code=401, detail="Unauthorized")
@@ -82,4 +88,4 @@ def create_reset_token() -> str:
 
 
 def reset_token_expiry(minutes: int = 30) -> datetime:
-    return datetime.now(timezone.utc) + timedelta(minutes=minutes)
+    return datetime.now(UTC) + timedelta(minutes=minutes)

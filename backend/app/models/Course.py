@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
+
 from app.core.database import Base
 
 
@@ -11,7 +12,7 @@ class Course(Base):
     price = Column(Integer, default=0)
     description = Column(Text)
     is_active = Column(Boolean, default=True)
-    category = Column(String)                  # fashion, pattern, textile
+    category = Column(String)  # fashion, pattern, textile
     thumbnail_url = Column(String, nullable=True)
     instructor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 

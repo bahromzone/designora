@@ -9,25 +9,27 @@ Endi to'liq model: message, type, link, created_at.
     ADD COLUMN link VARCHAR,
     ADD COLUMN created_at TIMESTAMPTZ DEFAULT NOW();
 """
-from sqlalchemy import Column, Integer, Boolean, ForeignKey, String, DateTime, Text
-from sqlalchemy.orm import relationship
+
+from datetime import UTC, datetime
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+
 from app.core.database import Base
-from datetime import datetime, timezone
 
 
 def _now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Notification(Base):
     __tablename__ = "notifications"
 
-    id         = Column(Integer, primary_key=True, index=True)
-    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
-    message    = Column(Text, nullable=False, default="")
-    type       = Column(String(30), default="info")   # info | success | warning | course
-    link       = Column(String, nullable=True)        # klikganda qayerga o'tish
-    is_read    = Column(Boolean, default=False)
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    message = Column(Text, nullable=False, default="")
+    type = Column(String(30), default="info")  # info | success | warning | course
+    link = Column(String, nullable=True)  # klikganda qayerga o'tish
+    is_read = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), default=_now)
 
     # Relationship (User modelga back_populates qo'shish kerak bo'lsa)

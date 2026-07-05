@@ -1,14 +1,11 @@
+from fastapi_csrf_protect import CsrfProtect
 from pydantic_settings import BaseSettings
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from fastapi_csrf_protect import CsrfProtect
-
 
 # ===== YAGONA LIMITER (barcha joylarda shu ishlatiladi) =====
 limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["200/minute"],
-    storage_uri="memory://"
+    key_func=get_remote_address, default_limits=["200/minute"], storage_uri="memory://"
 )
 
 

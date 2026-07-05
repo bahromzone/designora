@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+
 from app.core.database import Base
 
 
@@ -13,4 +15,4 @@ class PasswordReset(Base):
 
     @staticmethod
     def expiry() -> datetime:
-        return datetime.now(timezone.utc) + timedelta(minutes=15)
+        return datetime.now(UTC) + timedelta(minutes=15)

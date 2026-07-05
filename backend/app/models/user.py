@@ -1,11 +1,13 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from datetime import UTC, datetime
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
+
 from app.core.database import Base
-from datetime import datetime, timezone
 
 
 def _now():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class User(Base):
@@ -19,7 +21,7 @@ class User(Base):
     provider = Column(String, default="local")
     password = Column(String, nullable=True)
     is_admin = Column(Boolean, default=False)
-    role = Column(String, default="user")          # user / admin / superadmin
+    role = Column(String, default="user")  # user / admin / superadmin
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=_now)
 

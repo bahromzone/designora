@@ -1,12 +1,15 @@
 """
 Security Middleware — CORS, Rate Limiting, Security Headers
 """
+
+import logging
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.core.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -47,16 +50,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 # ===== IP BLOCKING MIDDLEWARE =====
 class IPBlockingMiddleware(BaseHTTPMiddleware):
     """Ma'lum IP addresslarni bloklash. Production da Redis/DB dan yuklanadi."""
+
     BLOCKED_IPS: set[str] = set()
 
     async def dispatch(self, request: Request, call_next):
         client_ip = request.client.host
         if client_ip in self.BLOCKED_IPS:
             logger.warning(f"Blocked IP attempted access: {client_ip}")
-            return JSONResponse(
-                status_code=403,
-                content={"detail": "Access forbidden"}
-            )
+            return JSONResponse(status_code=403, content={"detail": "Access forbidden"})
         return await call_next(request)
 
 
@@ -87,6 +88,6 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         status_code=429,
         content={
             "detail": "Too many requests. Please try again later.",
-            "retry_after": 60
-        }
+            "retry_after": 60,
+        },
     )

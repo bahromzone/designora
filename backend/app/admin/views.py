@@ -5,11 +5,13 @@ SQLAdmin Views
 - AdminUserAdmin : faqat role="admin" bo'lganlar
 - CourseAdmin    : kurslar
 """
-from sqladmin import ModelView
-from sqlalchemy import select
-from app.models.user import User
-from app.models.Course import Course
+
 import secrets
+
+from sqladmin import ModelView
+
+from app.models.Course import Course
+from app.models.user import User
 
 
 # ===== BASE: parol yaratish yordamchi =====
@@ -19,26 +21,37 @@ class _PasswordMixin:
     tasodifiy xavfsiz parol o'rnatiladi.
     (Foydalanuvchi keyinchalik parolni o'zgartirishi kerak.)
     """
+
     async def on_model_change(self, data, model, is_created, request):
         if is_created and not data.get("password"):
             from core.password import hash_password
+
             data["password"] = hash_password(secrets.token_urlsafe(16))
 
 
 # ===== USER ADMIN (hammasi) =====
 class UserAdmin(_PasswordMixin, ModelView, model=User):
     column_list = [
-        User.id, User.email, User.name, User.role,
-        User.is_active, User.created_at
+        User.id,
+        User.email,
+        User.name,
+        User.role,
+        User.is_active,
+        User.created_at,
     ]
     column_searchable_list = [User.email, User.name]
     column_sortable_list = [User.id, User.email, User.created_at]
     column_filters = ["role", "is_active"]
     column_details_list = [
-        User.id, User.email, User.name, User.role,
-        User.is_admin, User.is_active, User.created_at
+        User.id,
+        User.email,
+        User.name,
+        User.role,
+        User.is_admin,
+        User.is_active,
+        User.created_at,
     ]
-    form_excluded_columns = [User.password]   # parol admin formida ko'rsatilmaydi
+    form_excluded_columns = [User.password]  # parol admin formida ko'rsatilmaydi
 
     name = "User"
     name_plural = "Users"
@@ -49,7 +62,7 @@ class UserAdmin(_PasswordMixin, ModelView, model=User):
 
     can_create = True
     can_edit = True
-    can_delete = False    # soft delete tavsiya etiladi
+    can_delete = False  # soft delete tavsiya etiladi
     can_view_details = True
     can_export = True
 
@@ -114,15 +127,22 @@ class AdminUserAdmin(_PasswordMixin, ModelView, model=User):
 # ===== COURSE ADMIN =====
 class CourseAdmin(ModelView, model=Course):
     column_list = [
-        Course.id, Course.title, Course.price,
-        Course.category, Course.is_active
+        Course.id,
+        Course.title,
+        Course.price,
+        Course.category,
+        Course.is_active,
     ]
     column_searchable_list = [Course.title, Course.category]
     column_sortable_list = [Course.id, Course.title, Course.price]
     column_filters = ["category", "is_active"]
     column_details_list = [
-        Course.id, Course.title, Course.description,
-        Course.price, Course.category, Course.is_active
+        Course.id,
+        Course.title,
+        Course.description,
+        Course.price,
+        Course.category,
+        Course.is_active,
     ]
 
     name = "Course"

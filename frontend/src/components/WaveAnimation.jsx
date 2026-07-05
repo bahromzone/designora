@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const WaveAnimation = () => {
   return (
@@ -41,14 +41,25 @@ const WaveAnimation = () => {
             {/* Asosiy Gradient: To'q Siyohrang -> Yorqin Pushti -> Yorqin Moviy (Cyan) */}
             <linearGradient id="grad-main" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#4F46E5">
-                <animate attributeName="stop-color" values="#4F46E5;#7C3AED;#4F46E5" dur="10s" repeatCount="indefinite" />
+                <animate
+                  attributeName="stop-color"
+                  values="#4F46E5;#7C3AED;#4F46E5"
+                  dur="10s"
+                  repeatCount="indefinite"
+                />
               </stop>
               <stop offset="50%" stopColor="#EC4899" />
               <stop offset="100%" stopColor="#06B6D4" />
             </linearGradient>
 
             {/* Qo'shimcha Gradient: Olovrang -> To'q Pushti -> Siyohrang */}
-            <linearGradient id="grad-accent" x1="100%" y1="100%" x2="0%" y2="0%">
+            <linearGradient
+              id="grad-accent"
+              x1="100%"
+              y1="100%"
+              x2="0%"
+              y2="0%"
+            >
               <stop offset="0%" stopColor="#F97316" />
               <stop offset="50%" stopColor="#E11D48" />
               <stop offset="100%" stopColor="#4338CA" />

@@ -1,22 +1,24 @@
 """
 Profile Router — foydalanuvchi profil va statistika
 """
+
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from pydantic import BaseModel, StringConstraints, field_validator
 from sqlalchemy import func
-from pydantic import BaseModel, EmailStr, StringConstraints, field_validator
-from typing import Annotated, Optional
-from datetime import datetime, timedelta, date, timezone
+from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_user
 from app.core.password import hash_password, verify_password
-from app.models.user import User
-from app.models.progress import Progress
-from app.models.certificate import Certificate
+from app.core.security import get_current_user
 from app.models.assignment import Assignment
+from app.models.certificate import Certificate
 from app.models.Course import Course
+from app.models.progress import Progress
+from app.models.user import User
 
 router = APIRouter(prefix="/api/profile", tags=["Profile"])
 
@@ -37,14 +39,14 @@ class ProfileResponse(BaseModel):
     email: str
     role: str
     # ✅ BUG FIX: provider va created_at User modelida bo'lmasligi mumkin → Optional
-    provider: Optional[str] = "local"
+    provider: str | None = "local"
     is_active: bool = True
-    created_at: Optional[datetime] = None
-    bio: Optional[str] = None
-    phone: Optional[str] = None
-    location: Optional[str] = None
-    website: Optional[str] = None
-    avatar_url: Optional[str] = None
+    created_at: datetime | None = None
+    bio: str | None = None
+    phone: str | None = None
+    location: str | None = None
+    website: str | None = None
+    avatar_url: str | None = None
 
     class Config:
         from_attributes = True
@@ -52,10 +54,10 @@ class ProfileResponse(BaseModel):
 
 class ProfileUpdateRequest(BaseModel):
     name: Annotated[str, StringConstraints(min_length=2, max_length=100)]
-    bio: Optional[Annotated[str, StringConstraints(max_length=500)]] = None
-    phone: Optional[Annotated[str, StringConstraints(max_length=20)]] = None
-    location: Optional[Annotated[str, StringConstraints(max_length=100)]] = None
-    website: Optional[Annotated[str, StringConstraints(max_length=200)]] = None
+    bio: Annotated[str, StringConstraints(max_length=500)] | None = None
+    phone: Annotated[str, StringConstraints(max_length=20)] | None = None
+    location: Annotated[str, StringConstraints(max_length=100)] | None = None
+    website: Annotated[str, StringConstraints(max_length=200)] | None = None
 
 
 class ChangePasswordRequest(BaseModel):
@@ -74,17 +76,14 @@ class ChangePasswordRequest(BaseModel):
 
 class ProgressUpdateRequest(BaseModel):
     percent: int
-    minutes_spent: Optional[int] = 0
+    minutes_spent: int | None = 0
 
 
 # ==================================================
 # GET /api/profile/me
 # ==================================================
 @router.get("/me", response_model=ProfileResponse)
-def get_profile(
-    email: str = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
+def get_profile(email: str = Depends(get_current_user), db: Session = Depends(get_db)):
     user = _get_user_or_unauthorized(db, email)
 
     return ProfileResponse(
@@ -111,7 +110,7 @@ def get_profile(
 def update_profile(
     data: ProfileUpdateRequest,
     email: str = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     user = _get_user_or_unauthorized(db, email)
 
@@ -127,7 +126,9 @@ def update_profile(
         db.rollback()
         raise HTTPException(status_code=500, detail="Ma'lumotlarni saqlashda xatolik")
 
-    return JSONResponse({"message": "Profil muvaffaqiyatli yangilandi", "name": user.name})
+    return JSONResponse(
+        {"message": "Profil muvaffaqiyatli yangilandi", "name": user.name}
+    )
 
 
 # ==================================================
@@ -137,14 +138,14 @@ def update_profile(
 def change_password(
     data: ChangePasswordRequest,
     email: str = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     user = _get_user_or_unauthorized(db, email)
 
     if user.provider != "local":
         raise HTTPException(
             status_code=400,
-            detail=f"Siz {user.provider} orqali kirganingiz uchun parolni bu yerda o'zgartira olmaysiz"
+            detail=f"Siz {user.provider} orqali kirganingiz uchun parolni bu yerda o'zgartira olmaysiz",
         )
 
     if not user.password:
@@ -154,7 +155,9 @@ def change_password(
         raise HTTPException(status_code=400, detail="Joriy parol noto'g'ri")
 
     if verify_password(data.new_password, user.password):
-        raise HTTPException(status_code=400, detail="Yangi parol joriy paroldan farq qilishi kerak")
+        raise HTTPException(
+            status_code=400, detail="Yangi parol joriy paroldan farq qilishi kerak"
+        )
 
     user.password = hash_password(data.new_password)
 
@@ -171,10 +174,7 @@ def change_password(
 # GET /api/profile/stats
 # ==================================================
 @router.get("/stats")
-def get_stats(
-    email: str = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
+def get_stats(email: str = Depends(get_current_user), db: Session = Depends(get_db)):
     user = _get_user_or_unauthorized(db, email)
 
     try:
@@ -195,14 +195,13 @@ def get_stats(
     total_minutes = (
         db.query(func.sum(Progress.minutes_spent))
         .filter(Progress.user_id == user.id)
-        .scalar() or 0
+        .scalar()
+        or 0
     )
     hours_learned = round(total_minutes / 60, 1)
 
     certificates_count = (
-        db.query(Certificate)
-        .filter(Certificate.user_id == user.id)
-        .count()
+        db.query(Certificate).filter(Certificate.user_id == user.id).count()
     )
 
     pending_assignments = (
@@ -213,26 +212,30 @@ def get_stats(
 
     courses_list = []
     for prog, course in progress_rows:
-        courses_list.append({
-            "id": course.id,
-            "title": course.title,
-            "category": course.category or "general",
-            "progress": prog.percent,
-            "is_completed": prog.percent >= 100,
-            # ✅ BUG #12 FIX: hours_spent → minutes_spent
-            "hours_spent": round((getattr(prog, "minutes_spent", None) or 0) / 60, 1),
-            "thumbnail_url": getattr(course, "thumbnail_url", None),
-            "last_activity": (
-                prog.last_activity.isoformat() if prog.last_activity else None
-            ),
-        })
+        courses_list.append(
+            {
+                "id": course.id,
+                "title": course.title,
+                "category": course.category or "general",
+                "progress": prog.percent,
+                "is_completed": prog.percent >= 100,
+                # ✅ BUG #12 FIX: hours_spent → minutes_spent
+                "hours_spent": round(
+                    (getattr(prog, "minutes_spent", None) or 0) / 60, 1
+                ),
+                "thumbnail_url": getattr(course, "thumbnail_url", None),
+                "last_activity": (
+                    prog.last_activity.isoformat() if prog.last_activity else None
+                ),
+            }
+        )
     courses_list.sort(key=lambda x: x["last_activity"] or "", reverse=True)
 
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     activity = []
     for i in range(6, -1, -1):
         day = today - timedelta(days=i)
-        day_start = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
+        day_start = datetime(day.year, day.month, day.day, tzinfo=UTC)
         day_end = day_start + timedelta(days=1)
 
         # ✅ BUG #12 FIX: hours_spent → minutes_spent
@@ -241,9 +244,10 @@ def get_stats(
             .filter(
                 Progress.user_id == user.id,
                 Progress.last_activity >= day_start,
-                Progress.last_activity < day_end
+                Progress.last_activity < day_end,
             )
-            .scalar() or 0
+            .scalar()
+            or 0
         )
         activity.append({"date": day.isoformat(), "minutes": day_minutes})
 
@@ -269,29 +273,36 @@ def update_progress(
     course_id: int,
     data: ProgressUpdateRequest,
     email: str = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     user = _get_user_or_unauthorized(db, email)
 
-    course = db.query(Course).filter(
-        Course.id == course_id, Course.is_active == True
-    ).first()
+    course = (
+        db.query(Course)
+        .filter(Course.id == course_id, Course.is_active == True)
+        .first()
+    )
     if not course:
         raise HTTPException(status_code=404, detail="Kurs topilmadi")
 
-    progress = db.query(Progress).filter(
-        Progress.user_id == user.id,
-        Progress.course_id == course_id
-    ).first()
+    progress = (
+        db.query(Progress)
+        .filter(Progress.user_id == user.id, Progress.course_id == course_id)
+        .first()
+    )
 
     if not progress:
-        progress = Progress(user_id=user.id, course_id=course_id, percent=0, minutes_spent=0)
+        progress = Progress(
+            user_id=user.id, course_id=course_id, percent=0, minutes_spent=0
+        )
         db.add(progress)
 
     progress.percent = min(max(data.percent, 0), 100)
     # ✅ BUG #12 FIX: hours_spent → minutes_spent
-    progress.minutes_spent = (getattr(progress, "minutes_spent", None) or 0) + (data.minutes_spent or 0)
-    progress.last_activity = datetime.now(timezone.utc)
+    progress.minutes_spent = (getattr(progress, "minutes_spent", None) or 0) + (
+        data.minutes_spent or 0
+    )
+    progress.last_activity = datetime.now(UTC)
 
     # ✅ BUG #6 FIX: Pointlar ikki marta qo'shilish muammosi hal qilindi.
     # Avvalgi mantiq:
@@ -302,16 +313,17 @@ def update_progress(
     # Kurs yangi tugagan bo'lsa: +100 (sertifikat) + minutes_spent (bu sessiya)
     # Kurs avval tugagan bo'lsa yoki hali tugamasa: faqat +minutes_spent
     if progress.percent >= 100:
-        existing_cert = db.query(Certificate).filter(
-            Certificate.user_id == user.id,
-            Certificate.course_id == course_id
-        ).first()
+        existing_cert = (
+            db.query(Certificate)
+            .filter(Certificate.user_id == user.id, Certificate.course_id == course_id)
+            .first()
+        )
         if not existing_cert:
             cert = Certificate(
                 user_id=user.id,
                 course_id=course_id,
                 title=f"{course.title} sertifikati",
-                issued_at=datetime.now(timezone.utc)
+                issued_at=datetime.now(UTC),
             )
             db.add(cert)
             # Sertifikat bonusi + bu sessiyaning minutlari — faqat bir marta
@@ -329,8 +341,10 @@ def update_progress(
         db.rollback()
         raise HTTPException(status_code=500, detail="Saqlashda xatolik")
 
-    return JSONResponse({
-        "message": "Progress yangilandi",
-        "percent": progress.percent,
-        "points": user.points
-    })
+    return JSONResponse(
+        {
+            "message": "Progress yangilandi",
+            "percent": progress.percent,
+            "points": user.points,
+        }
+    )

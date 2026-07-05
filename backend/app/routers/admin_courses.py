@@ -3,16 +3,18 @@ Admin Courses Router — Kurslarni boshqarish (CRUD)
 Faqat admin roli uchun.
 Prefix: /api/admin/courses
 """
+
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
 from pydantic import BaseModel, StringConstraints
-from typing import Annotated, Optional
+from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.user import User
 from app.models.Course import Course
+from app.models.user import User
 
 router = APIRouter(prefix="/api/admin/courses", tags=["Admin - Courses"])
 
@@ -33,20 +35,20 @@ def require_admin(
 # ── SCHEMAS ───────────────────────────────────────────────────────────────────
 class CourseCreate(BaseModel):
     title: Annotated[str, StringConstraints(min_length=3, max_length=200)]
-    description: Optional[str] = None
-    category: Optional[str] = None
-    price: Optional[int] = 0
-    thumbnail_url: Optional[str] = None
-    is_active: Optional[bool] = True
+    description: str | None = None
+    category: str | None = None
+    price: int | None = 0
+    thumbnail_url: str | None = None
+    is_active: bool | None = True
 
 
 class CourseUpdate(BaseModel):
-    title: Optional[Annotated[str, StringConstraints(min_length=3, max_length=200)]] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
-    price: Optional[int] = None
-    thumbnail_url: Optional[str] = None
-    is_active: Optional[bool] = None
+    title: Annotated[str, StringConstraints(min_length=3, max_length=200)] | None = None
+    description: str | None = None
+    category: str | None = None
+    price: int | None = None
+    thumbnail_url: str | None = None
+    is_active: bool | None = None
 
 
 # ── GET /api/admin/users ──────────────────────────────────────────────────────
@@ -57,12 +59,12 @@ class CourseUpdate(BaseModel):
 # Yechim: bu endpointni alohida router orqali chiqaramiz.
 # (admin_courses.py da faqat /api/admin/courses/* bo'lishi mantiqan to'g'ri)
 
+
 @router.get("/api/admin/users", include_in_schema=False)
 def _wrong_users_route():
     """Bu route avval noto'g'ri joyda edi — endi 410 Gone qaytaradi."""
     raise HTTPException(
-        status_code=410,
-        detail="Bu endpoint ko'chirildi. /api/admin/users ishlatilsin."
+        status_code=410, detail="Bu endpoint ko'chirildi. /api/admin/users ishlatilsin."
     )
 
 

@@ -1,7 +1,9 @@
 import smtplib
 from email.mime.text import MIMEText
-from app.core.config import settings
+
 from fastapi import HTTPException
+
+from app.core.config import settings
 
 
 def send_email(to: str, subject: str, body: str):

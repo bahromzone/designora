@@ -8,6 +8,14 @@ from sqlalchemy import engine_from_config, pool
 # access to the values within the .ini file in use.
 config = context.config
 
+# Allow overriding the DB URL from the environment (e.g. .env / DATABASE_URL),
+# falling back to the value in alembic.ini when not set.
+import os
+
+_env_db_url = os.getenv("DATABASE_URL")
+if _env_db_url:
+    config.set_main_option("sqlalchemy.url", _env_db_url.replace("%", "%%"))
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:

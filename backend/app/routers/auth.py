@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Request
 from fastapi.responses import RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, StringConstraints, field_validator
 from typing import Optional, Annotated
@@ -26,7 +25,7 @@ logger = logging.getLogger(__name__)
 # ==================================================
 public_router = APIRouter(tags=["Public"])
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
-templates = Jinja2Templates(directory="templates")
+# templates olib tashlandi — UI to'liq React frontend'da
 
 
 # ==================================================
@@ -277,9 +276,10 @@ def logout(request: Request):
 # ==================================================
 @public_router.get("/reset-password")
 def reset_password_page(request: Request, token: str):
-    return templates.TemplateResponse(
-        "reset_password.html",
-        {"request": request, "token": token}
+    # Parol tiklash sahifasi React frontend'da — u yerga yo'naltiramiz
+    return RedirectResponse(
+        url=f"{settings.FRONTEND_URL}/reset-password?token={token}",
+        status_code=302,
     )
 
 

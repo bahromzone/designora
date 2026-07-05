@@ -41,7 +41,14 @@ class Settings(BaseSettings):
     RECAPTCHA_SECRET_KEY: str
 
     # ===== CORS =====
-    ALLOWED_ORIGINS: str = "http://localhost:8000,http://127.0.0.1:8000"
+    # 5173 — Vite dev server (React frontend)
+    ALLOWED_ORIGINS: str = (
+        "http://localhost:8000,http://127.0.0.1:8000,"
+        "http://localhost:5173,http://127.0.0.1:5173"
+    )
+
+    # ===== FRONTEND =====
+    FRONTEND_URL: str = "http://localhost:5173"
 
     class Config:
         env_file = ".env"

@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from pathlib import Path
 import uvicorn
 from fastapi import APIRouter, FastAPI, Request, status, Depends
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
@@ -23,8 +24,9 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.Course import Course
 from app.admin.admin_panel import setup_admin
-from app.routers import auth, google, users, pages, profile
+from app.routers import auth, google, users, profile
 from app.routers import admin_courses
+from app.routers import courses_api
 from app.routers.auth import public_router
 
 # ── LOGGING ──────────────────────────────────────────────────────────────────
@@ -75,9 +77,10 @@ app.add_middleware(IPBlockingMiddleware)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── STATIC & TEMPLATES ───────────────────────────────────────────────────────
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+# ── STATIC ───────────────────────────────────────────────────────────────────
+# Absolyut yo'l — server qaysi papkadan ishga tushirilishidan qat'i nazar ishlaydi
+BASE_DIR = Path(__file__).resolve().parent
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 
 setup_admin(app)
@@ -85,7 +88,7 @@ setup_admin(app)
 # ── ROUTERS ───────────────────────────────────────────────────────────────────
 app.include_router(profile.router)
 app.include_router(admin_courses.router)
-app.include_router(pages.router)
+app.include_router(courses_api.router)
 app.include_router(public_router)
 app.include_router(auth.router)
 app.include_router(google.router)
@@ -126,12 +129,16 @@ def admin_list_users(
 app.include_router(_admin_router)
 
 # ── ASOSIY SAHIFA ────────────────────────────────────────────────────────────
-@app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "static_version": os.getenv("APP_VERSION", "1.0"),
-    })
+# UI endi to'liq React frontend'da (frontend/ papkasi, Vite dev: 5173-port).
+# Backend faqat JSON API xizmatini bajaradi.
+@app.get("/")
+def home():
+    return {
+        "app": "Designora API",
+        "status": "ok",
+        "version": os.getenv("APP_VERSION", "1.0"),
+        "docs": "/docs",
+    }
 
 
 # ── /api/me → /api/profile/me ────────────────────────────────────────────────
@@ -157,7 +164,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # ── RUN ───────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",
+        "app.main:app",
         host="127.0.0.1",
         port=8000,
         reload=settings.ENVIRONMENT != "production",

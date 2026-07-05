@@ -1,12 +1,4 @@
-# backend/app/routers/courses_api.py
-# YANGI FAYL — public JSON kurslar endpointi.
-# React'dagi CoursesPage hozir JSON kutadi, lekin backendda GET /courses
-# HTML sahifa qaytaradi. Bu router shu bo'shliqni yopadi.
-#
-# Ulash uchun app/main.py ga qo'shing:
-#   from app.routers import courses_api
-#   app.include_router(courses_api.router)
-
+# Public kurslar JSON API — React frontend uchun
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -14,6 +6,17 @@ from app.core.database import get_db
 from app.models.Course import Course
 
 router = APIRouter(prefix="/api/courses", tags=["Courses"])
+
+
+def _course_to_dict(c: Course) -> dict:
+    return {
+        "id": c.id,
+        "title": c.title,
+        "price": c.price,
+        "description": c.description,
+        "category": c.category,
+        "thumbnail_url": c.thumbnail_url,
+    }
 
 
 @router.get("")
@@ -24,14 +27,18 @@ def list_courses(db: Session = Depends(get_db)):
         .order_by(Course.id.desc())
         .all()
     )
-    return [
-        {
-            "id": c.id,
-            "title": c.title,
-            "price": c.price,
-            "description": c.description,
-            "category": c.category,
-            "thumbnail_url": c.thumbnail_url,
-        }
-        for c in courses
-    ]
+    return [_course_to_dict(c) for c in courses]
+
+
+@router.get("/{course_id}")
+def get_course(course_id: int, db: Session = Depends(get_db)):
+    from fastapi import HTTPException
+
+    course = (
+        db.query(Course)
+        .filter(Course.id == course_id, Course.is_active == True)  # noqa: E712
+        .first()
+    )
+    if not course:
+        raise HTTPException(status_code=404, detail="Kurs topilmadi")
+    return _course_to_dict(course)

@@ -473,6 +473,16 @@ export default function Navbar() {
                 {l.label}
               </NavLink>
             ))}
+            {isAuthenticated && (
+              <NavLink
+                to="/kurslarim"
+                className={({ isActive }) =>
+                  `text-sm font-medium transition-colors ${isActive ? "text-slate-900 font-bold" : "text-slate-500 hover:text-slate-900"}`
+                }
+              >
+                Mening kurslarim
+              </NavLink>
+            )}
           </nav>
 
           {/* Auth CTA */}

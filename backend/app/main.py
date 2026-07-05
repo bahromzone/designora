@@ -23,7 +23,16 @@ from app.core.middleware import (
 )
 from app.core.security import get_current_user
 from app.models.user import User
-from app.routers import admin_courses, auth, courses_api, google, profile, users
+from app.routers import (
+    admin_courses,
+    auth,
+    courses_api,
+    google,
+    instructor,
+    learning,
+    profile,
+    users,
+)
 from app.routers.auth import public_router
 
 # ── LOGGING ──────────────────────────────────────────────────────────────────
@@ -86,6 +95,8 @@ setup_admin(app)
 app.include_router(profile.router)
 app.include_router(admin_courses.router)
 app.include_router(courses_api.router)
+app.include_router(learning.router)
+app.include_router(instructor.router)
 app.include_router(public_router)
 app.include_router(auth.router)
 app.include_router(google.router)

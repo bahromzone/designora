@@ -4,7 +4,10 @@
 from .assignment import Assignment
 from .certificate import Certificate
 from .Course import Course
+from .enrollment import Enrollment
 from .lesson import Lesson  # Course.lessons uchun shart
+from .lesson_progress import LessonProgress
+from .module import Module
 from .notification import Notification
 from .password_reset import PasswordReset
 from .payment import Payment

@@ -64,11 +64,63 @@ export const authApi = {
       token,
     }),
 
-  // ⚠️ DIQQAT: backendda GET /courses HTML sahifa qaytaradi (Jinja).
-  // JSON qaytaradigan public endpoint kerak — pastdagi "courses_api.py"
-  // snippetini backendga qo'shing, keyin bu /api/courses ga ishlaydi.
+  // Public kurslar katalogi (JSON) — /api/courses
   courses: () =>
     request("/api/courses", {
       method: "GET",
     }),
 };
+
+// ── BOSQICH 1: kurs detali (syllabus bilan) ─────────────────────────────────
+export const coursesApi = {
+  list: () => request("/api/courses"),
+  detail: (courseId) => request(`/api/courses/${courseId}/detail`),
+};
+
+// ── BOSQICH 1: o'quv (learning) API ─────────────────────────────────────────
+export const learningApi = {
+  enroll: (courseId, token) =>
+    request(`/api/learning/enroll/${courseId}`, { method: "POST", token }),
+
+  unenroll: (courseId, token) =>
+    request(`/api/learning/enroll/${courseId}`, { method: "DELETE", token }),
+
+  myCourses: (token) => request("/api/learning/my-courses", { token }),
+
+  learn: (courseId, token) =>
+    request(`/api/learning/courses/${courseId}`, { token }),
+
+  completeLesson: (lessonId, token) =>
+    request(`/api/learning/lessons/${lessonId}/complete`, {
+      method: "POST",
+      token,
+    }),
+
+  uncompleteLesson: (lessonId, token) =>
+    request(`/api/learning/lessons/${lessonId}/uncomplete`, {
+      method: "POST",
+      token,
+    }),
+};
+
+// ── Umumiy formatlash yordamchilari ─────────────────────────────────────────
+export function formatDuration(totalMinutes) {
+  const mins = Number(totalMinutes) || 0;
+  if (mins < 60) return `${mins} daqiqa`;
+  const hours = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return rem ? `${hours} soat ${rem} daq` : `${hours} soat`;
+}
+
+export function formatSeconds(totalSeconds) {
+  const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+export function formatPrice(price) {
+  const p = Number(price) || 0;
+  if (p <= 0) return "Bepul";
+  return `${p.toLocaleString("uz-UZ")} so'm`;
+}

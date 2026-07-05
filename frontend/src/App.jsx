@@ -2,9 +2,12 @@ import { Route, Routes } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CourseDetailPage from "./pages/CourseDetailPage";
 import CoursesPage from "./pages/CoursesPage";
 import HomePage from "./pages/HomePage";
+import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
+import MyCoursesPage from "./pages/MyCoursesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProfilePage from "./pages/ProfilePage";
 import RegisterPage from "./pages/RegisterPage";
@@ -15,8 +18,25 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/kurslar" element={<CoursesPage />} />
+        <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
         <Route path="/kirish" element={<LoginPage />} />
         <Route path="/royxatdan-otish" element={<RegisterPage />} />
+        <Route
+          path="/kurslarim"
+          element={
+            <ProtectedRoute>
+              <MyCoursesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/organish/:courseId"
+          element={
+            <ProtectedRoute>
+              <LearnPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/profil"
           element={

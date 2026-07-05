@@ -40,3 +40,7 @@ class User(Base):
     progress_records = relationship("Progress", back_populates="user", lazy="dynamic")
     certificates = relationship("Certificate", back_populates="user", lazy="dynamic")
     assignments = relationship("Assignment", back_populates="user", lazy="dynamic")
+    enrollments = relationship("Enrollment", back_populates="user", lazy="dynamic")
+    lesson_progress = relationship(
+        "LessonProgress", back_populates="user", lazy="dynamic"
+    )

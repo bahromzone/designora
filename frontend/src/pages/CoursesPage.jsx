@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import CourseCard from "../components/CourseCard";
 import { authApi } from "../lib/api";
 
@@ -52,7 +53,13 @@ export default function CoursesPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {courses.map((course, i) => (
-            <CourseCard key={course.id} course={course} index={i} />
+            <Link
+              key={course.id}
+              to={`/kurslar/${course.id}`}
+              className="block focus:outline-none"
+            >
+              <CourseCard course={course} index={i} />
+            </Link>
           ))}
         </div>
       )}

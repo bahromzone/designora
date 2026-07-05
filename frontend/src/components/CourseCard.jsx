@@ -1,10 +1,18 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { formatDuration } from "../lib/api";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function CourseCard({ course, index = 0 }) {
+  // Katalog API (thumbnail_url/duration_minutes/lessons_count) va eski
+  // test ma'lumotlari (image_url/duration/lessons) — ikkalasini ham qo'llaymiz.
+  const imageUrl = course.image_url ?? course.thumbnail_url;
+  const durationLabel =
+    course.duration ??
+    (course.duration_minutes ? formatDuration(course.duration_minutes) : null);
+  const lessonsCount = course.lessons ?? course.lessons_count ?? 0;
   const cardRef = useRef(null);
   const imgRef = useRef(null);
 
@@ -61,7 +69,7 @@ export default function CourseCard({ course, index = 0 }) {
       <div className="relative aspect-[16/10] overflow-hidden bg-surface">
         <img
           ref={imgRef}
-          src={course.image_url}
+          src={imageUrl}
           alt={course.title}
           className="h-full w-full object-cover"
           style={{ willChange: "transform" }}
@@ -78,12 +86,14 @@ export default function CourseCard({ course, index = 0 }) {
           >
             {course.level}
           </span>
-          <span
-            className="rounded-full px-3 py-1 text-[0.62rem] font-semibold"
-            style={{ background: "var(--amber)", color: "#fff" }}
-          >
-            {course.duration}
-          </span>
+          {durationLabel && (
+            <span
+              className="rounded-full px-3 py-1 text-[0.62rem] font-semibold"
+              style={{ background: "var(--amber)", color: "#fff" }}
+            >
+              {durationLabel}
+            </span>
+          )}
         </div>
       </div>
 
@@ -110,7 +120,7 @@ export default function CourseCard({ course, index = 0 }) {
           className="flex items-center justify-between border-t pt-4 text-xs font-medium uppercase tracking-widest"
           style={{ borderColor: "var(--border)" }}
         >
-          <span style={{ color: "var(--muted)" }}>{course.lessons} dars</span>
+          <span style={{ color: "var(--muted)" }}>{lessonsCount} dars</span>
           <span
             className="flex items-center gap-1 transition-colors"
             style={{ color: "var(--amber)" }}

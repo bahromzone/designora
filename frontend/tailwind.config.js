@@ -4,24 +4,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        parchment: "#e9e3da",
-        surface:   "#f4efe8",
-        card:      "#faf8f4",
-        ink:       "#1a1208",
-        amber:     "#c4703a",
-        forest:    "#2c4a3e",
-        muted:     "#7a6a58",
-        border:    "rgba(26,18,8,0.09)",
+        // Binafsha gradient palitra — brend uslubi
+        parchment: "#ECEAFB",
+        surface:   "#F3F1FB",
+        card:      "#FBFAFF",
+        ink:       "#17132B",
+        amber:     "#7C3AED", // brend binafsha (eski nom saqlangan)
+        forest:    "#4F46E5", // indigo
+        muted:     "#6F6A8A",
+        border:    "rgba(23,19,43,0.09)",
       },
       fontFamily: {
         sans:  ["Outfit", "sans-serif"],
         serif: ["Cormorant Garamond", "serif"],
       },
       boxShadow: {
-        card:   "0 2px 16px rgba(26,18,8,0.07), 0 1px 4px rgba(26,18,8,0.04)",
-        lift:   "0 8px 40px rgba(26,18,8,0.12), 0 2px 8px rgba(26,18,8,0.06)",
-        amber:  "0 4px 24px rgba(196,112,58,0.35)",
-        mockup: "0 24px 80px rgba(26,18,8,0.18), 0 8px 24px rgba(26,18,8,0.10)",
+        card:   "0 2px 16px rgba(79,70,229,0.07), 0 1px 4px rgba(23,19,43,0.04)",
+        lift:   "0 8px 40px rgba(124,58,237,0.14), 0 2px 8px rgba(23,19,43,0.06)",
+        amber:  "0 4px 24px rgba(124,58,237,0.35)",
+        mockup: "0 24px 80px rgba(79,70,229,0.18), 0 8px 24px rgba(23,19,43,0.10)",
       },
     },
   },

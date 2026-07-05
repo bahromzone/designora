@@ -9,10 +9,10 @@ const pageVariants = {
 };
 
 const FOOTER_LINKS = [
-  { title: "Platform", links: ["Courses", "Categories", "Pricing", "Certificates"] },
-  { title: "Company", links: ["About us", "Careers", "Blog", "Contact"] },
-  { title: "Support", links: ["Help center", "FAQ", "Terms", "Privacy policy"] },
-  { title: "Resources", links: ["Community", "Tutorials", "Guides"] }
+  { title: "Platforma", links: ["Kurslar", "Yo'nalishlar", "Narxlar", "Sertifikatlar"] },
+  { title: "Kompaniya", links: ["Biz haqimizda", "Karyera", "Blog", "Aloqa"] },
+  { title: "Yordam", links: ["Yordam markazi", "Savol-javob", "Foydalanish shartlari", "Maxfiylik siyosati"] },
+  { title: "Resurslar", links: ["Hamjamiyat", "Darsliklar", "Qo'llanmalar"] }
 ];
 
 export default function AppShell({ children }) {
@@ -67,7 +67,7 @@ export default function AppShell({ children }) {
                 </span>
               </div>
               <p className="mt-5 text-sm text-slate-500 max-w-xs leading-relaxed">
-                Modern fashion learning platform. Elevating digital education through premium, cinematic learning experiences.
+                Zamonaviy dizayn va moda ta'limi platformasi. Premium, kinematik ta'lim tajribasi orqali bilimingizni yangi darajaga olib chiqamiz.
               </p>
 
               {/* Social Icons */}
@@ -101,7 +101,7 @@ export default function AppShell({ children }) {
 
           {/* Bottom Bar */}
           <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <p>© 2026 Designora. All rights reserved.</p>
+            <p>© 2026 Designora. Barcha huquqlar himoyalangan.</p>
           </div>
         </div>
       </footer>

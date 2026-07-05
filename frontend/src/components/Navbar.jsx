@@ -4,11 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 
 const links = [
-  { label: "Kurslar",       to: "/kurslar" },
-  { label: "Yo‘nalishlar", to: "/yonalishlar" },
-  { label: "Mentorlar",     to: "/mentors" },
-  { label: "Hamjamiyat",    to: "/hamjamiyat" },
-  { label: "Narxlar",       to: "/pricing" },
+  { label: "Bosh sahifa", to: "/" },
+  { label: "Kurslar",     to: "/kurslar" },
 ];
 
 function AuthModal({ isOpen, onClose, initialMode = "login" }) {
@@ -136,10 +133,10 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
               <div className="w-full max-w-[320px] flex flex-col items-center">
 
                 <h1 className="text-[2rem] font-extrabold text-[#1E2335] tracking-tight mb-1">
-                  {mode === 'login' ? 'Hello!' : 'Create account'}
+                  {mode === 'login' ? 'Salom!' : 'Hisob yarating'}
                 </h1>
                 <p className="text-[14px] text-[#868D9C] mb-6">
-                  {mode === 'login' ? 'Sign in to your account' : 'Join Designora today'}
+                  {mode === 'login' ? 'Hisobingizga kiring' : "Bugun Designora'ga qo'shiling"}
                 </p>
 
                 <form className="w-full space-y-4" onSubmit={handleSubmit}>
@@ -161,7 +158,11 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                         </div>
                         <input
                           type="text"
+<<<<<<< HEAD
                           placeholder="Full Name"
+=======
+                          placeholder="Ism va familiya"
+>>>>>>> b8356c10f54b59b076137c6fcd4575261d88b988
                           value={form.name}
                           onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                           minLength={3}
@@ -182,7 +183,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     </div>
                     <input
                       type="email"
-                      placeholder="E-mail"
+                      placeholder="E-pochta"
                       autoFocus
                       value={form.email}
                       onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
@@ -200,7 +201,11 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     </div>
                     <input
                       type={showPassword ? "text" : "password"}
+<<<<<<< HEAD
                       placeholder="Password"
+=======
+                      placeholder="Parol"
+>>>>>>> b8356c10f54b59b076137c6fcd4575261d88b988
                       value={form.password}
                       onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
                       minLength={8}
@@ -239,11 +244,11 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                             </svg>
                           </div>
                         </div>
-                        <span className="text-[12px] font-medium text-[#A0A6B5] select-none">Remember me</span>
+                        <span className="text-[12px] font-medium text-[#A0A6B5] select-none">Meni eslab qol</span>
                       </label>
 
                       <a href="#" className="text-[12px] font-medium text-[#A0A6B5] hover:text-[#813BFF] transition-colors">
-                        Forgot password?
+                        Parolni unutdingizmi?
                       </a>
                     </div>
                   )}
@@ -262,19 +267,23 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                       disabled={submitting}
                       className="w-[180px] bg-gradient-to-r from-[#953DFF] via-[#6533FF] to-[#3055FF] text-white text-[14px] font-bold tracking-wide py-3 rounded-full shadow-[0_12px_24px_-8px_rgba(100,50,255,0.6)] hover:shadow-[0_15px_30px_-8px_rgba(100,50,255,0.7)] hover:-translate-y-[2px] transition-all duration-300 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
                     >
+<<<<<<< HEAD
                       {submitting ? "..." : mode === 'login' ? 'SIGN IN' : 'SIGN UP'}
+=======
+                      {submitting ? "..." : mode === 'login' ? 'KIRISH' : "RO'YXATDAN O'TISH"}
+>>>>>>> b8356c10f54b59b076137c6fcd4575261d88b988
                     </button>
                   </div>
 
                 </form>
 
                 <p className="mt-6 text-[13px] text-[#A0A6B5] font-medium">
-                  {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
+                  {mode === 'login' ? "Hisobingiz yo'qmi? " : "Hisobingiz bormi? "}
                   <button
                     onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
                     className="text-[#6533FF] font-semibold hover:underline decoration-2 underline-offset-2 focus:outline-none"
                   >
-                    {mode === 'login' ? 'Create' : 'Sign in'}
+                    {mode === 'login' ? 'Yaratish' : 'Kirish'}
                   </button>
                 </p>
               </div>
@@ -284,12 +293,12 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
             <div className={`relative z-10 w-full md:w-1/2 flex flex-col items-center justify-center p-8 lg:p-12 text-center transition-all duration-500 ${mode === 'signup' ? 'md:order-first' : ''}`}>
               <div className="max-w-[260px]">
                 <h2 className="text-[1.75rem] font-extrabold text-white md:text-[#1E2335] mb-4 tracking-tight drop-shadow-sm md:drop-shadow-none">
-                  {mode === 'login' ? 'Welcome Back!' : 'Join Designora'}
+                  {mode === 'login' ? 'Qaytganingizdan xursandmiz!' : "Designora oilasiga xush kelibsiz"}
                 </h2>
                 <p className="text-[13.5px] leading-[1.6] text-white/90 md:text-[#6C7281] font-medium">
                   {mode === 'login'
-                    ? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed pharetra magna nisl, at posuere sem dapibus sed.'
-                    : 'Unlock premium courses, mentorship, and join a community of top-tier designers building the future.'}
+                    ? "Premium kurslar, mentorlik va shaxsiy tavsiyalar sizni kutmoqda. O'qishni qoldirgan joyingizdan davom ettiring."
+                    : "Premium kurslar va mentorlikka ega bo'ling hamda kelajakni quruvchi kuchli dizaynerlar hamjamiyatiga qo'shiling."}
                 </p>
               </div>
             </div>
@@ -376,7 +385,7 @@ export default function Navbar() {
             {isAuthenticated ? (
                <div className="flex items-center gap-4">
                  <Link to="/profil" className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors">{user?.full_name}</Link>
-                 <button onClick={logout} className="text-sm font-medium px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-50 transition-colors">Sign Out</button>
+                 <button onClick={logout} className="text-sm font-medium px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-50 transition-colors">Chiqish</button>
                </div>
             ) : (
                <>

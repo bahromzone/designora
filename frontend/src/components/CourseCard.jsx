@@ -71,7 +71,7 @@ export default function CourseCard({ course, index = 0 }) {
       {/* Content */}
       <div className="p-5 space-y-3">
         <div>
-          <p className="label mb-1.5">Curated pathway</p>
+          <p className="label mb-1.5">Maxsus yo'nalish</p>
           <h3 className="font-serif text-2xl font-semibold text-ink leading-snug">
             {course.title}
           </h3>

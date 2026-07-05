@@ -4,6 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Brauzerning o'zining parol-ko'rsatish (ko'z) tugmasini yashirish —
+   bizda o'zimizning toggle bor, ikkita ko'z chiqib qolmasin */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+}
+
 :root {
   --bg-light: #F8F9FB;
   --glass-bg: rgba(255, 255, 255, 0.7);

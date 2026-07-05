@@ -15,9 +15,44 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
   const [mode, setMode] = useState(initialMode);
   const [showPassword, setShowPassword] = useState(false);
 
+  // ✅ TUZATILDI: modal endi backend bilan ishlaydi
+  const { login, register } = useAuth();
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode, isOpen]);
+
+  // Modal ochilganda/rejim almashganda forma va xatoni tozalash
+  useEffect(() => {
+    setError("");
+  }, [mode, isOpen]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setSubmitting(true);
+    try {
+      if (mode === "login") {
+        await login({ email: form.email, password: form.password });
+      } else {
+        await register({
+          username: form.name,
+          email: form.email,
+          password: form.password,
+          recaptcha_token: "",
+        });
+      }
+      setForm({ name: "", email: "", password: "" });
+      onClose();
+    } catch (err) {
+      setError(err.message || "Xatolik yuz berdi. Qayta urinib ko'ring.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -107,7 +142,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                   {mode === 'login' ? 'Sign in to your account' : 'Join Designora today'}
                 </p>
 
-                <form className="w-full space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <form className="w-full space-y-4" onSubmit={handleSubmit}>
 
                   {/* Name Input (Signup Only) */}
                   <AnimatePresence mode="popLayout">
@@ -127,6 +162,11 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                         <input
                           type="text"
                           placeholder="Full Name"
+                          value={form.name}
+                          onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                          minLength={3}
+                          maxLength={50}
+                          required={mode === "signup"}
                           className="w-full bg-[#F8F9FA] md:bg-white rounded-full py-3.5 pl-[3.2rem] pr-5 text-[14px] text-gray-700 placeholder-[#A0A6B5] outline-none shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] border border-transparent focus:border-violet-100 transition-all duration-300"
                         />
                       </motion.div>
@@ -144,6 +184,9 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                       type="email"
                       placeholder="E-mail"
                       autoFocus
+                      value={form.email}
+                      onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                      required
                       className="w-full bg-[#F8F9FA] md:bg-white rounded-full py-3.5 pl-[3.2rem] pr-5 text-[14px] text-gray-700 placeholder-[#A0A6B5] outline-none shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] border border-transparent focus:border-violet-100 transition-all duration-300"
                     />
                   </div>
@@ -158,6 +201,11 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
+                      value={form.password}
+                      onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                      minLength={8}
+                      maxLength={128}
+                      required
                       className="w-full bg-[#F8F9FA] md:bg-white rounded-full py-3.5 pl-[3.2rem] pr-[3.2rem] text-[14px] text-gray-700 placeholder-[#A0A6B5] outline-none shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] border border-transparent focus:border-violet-100 transition-all duration-300"
                     />
                     <button
@@ -200,13 +248,21 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     </div>
                   )}
 
+                  {/* Error Message */}
+                  {error && (
+                    <p className="text-center text-[13px] font-semibold text-red-500 px-2">
+                      {error}
+                    </p>
+                  )}
+
                   {/* Submit Button */}
                   <div className="flex justify-center pt-3">
                     <button
                       type="submit"
-                      className="w-[180px] bg-gradient-to-r from-[#953DFF] via-[#6533FF] to-[#3055FF] text-white text-[14px] font-bold tracking-wide py-3 rounded-full shadow-[0_12px_24px_-8px_rgba(100,50,255,0.6)] hover:shadow-[0_15px_30px_-8px_rgba(100,50,255,0.7)] hover:-translate-y-[2px] transition-all duration-300 active:translate-y-0"
+                      disabled={submitting}
+                      className="w-[180px] bg-gradient-to-r from-[#953DFF] via-[#6533FF] to-[#3055FF] text-white text-[14px] font-bold tracking-wide py-3 rounded-full shadow-[0_12px_24px_-8px_rgba(100,50,255,0.6)] hover:shadow-[0_15px_30px_-8px_rgba(100,50,255,0.7)] hover:-translate-y-[2px] transition-all duration-300 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
                     >
-                      {mode === 'login' ? 'SIGN IN' : 'SIGN UP'}
+                      {submitting ? "..." : mode === 'login' ? 'SIGN IN' : 'SIGN UP'}
                     </button>
                   </div>
 

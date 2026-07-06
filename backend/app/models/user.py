@@ -44,3 +44,9 @@ class User(Base):
     lesson_progress = relationship(
         "LessonProgress", back_populates="user", lazy="dynamic"
     )
+
+    # ── BOSQICH 3: gamifikatsiya + quiz bog'lanishlari ──────────────────────
+    quiz_attempts = relationship(
+        "QuizAttempt", back_populates="user", lazy="dynamic"
+    )
+    badges = relationship("UserBadge", back_populates="user", lazy="dynamic")

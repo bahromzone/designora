@@ -78,7 +78,9 @@ def generate_certificate_pdf(
 
     c.setFont("Helvetica", 16)
     c.drawCentredString(
-        width / 2, height - 112 * mm, "quyidagi kursni muvaffaqiyatli tamomlagani uchun:"
+        width / 2,
+        height - 112 * mm,
+        "quyidagi kursni muvaffaqiyatli tamomlagani uchun:",
     )
 
     c.setFont("Helvetica-Bold", 22)

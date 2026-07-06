@@ -195,7 +195,9 @@ def my_certificates(
         .order_by(Certificate.issued_at.desc())
         .all()
     )
-    return [_certificate_dict(c, course.title if course else None) for c, course in rows]
+    return [
+        _certificate_dict(c, course.title if course else None) for c, course in rows
+    ]
 
 
 @router.get("/{certificate_id}/download")

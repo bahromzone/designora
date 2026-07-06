@@ -17,14 +17,62 @@ from app.models.user import User
 POINTS_PER_LEVEL = 100
 
 DEFAULT_BADGES = [
-    {"code": "first_enroll", "title": "Birinchi qadam", "description": "Birinchi kursga yozildingiz", "icon": "🎯", "points": 10},
-    {"code": "first_lesson", "title": "O'rganish boshlandi", "description": "Birinchi darsni tugatdingiz", "icon": "📘", "points": 10},
-    {"code": "quiz_passed", "title": "Bilimdon", "description": "Birinchi testdan o'tdingiz", "icon": "🧠", "points": 20},
-    {"code": "quiz_perfect", "title": "Mukammal", "description": "Testni 100% bilan topshirdingiz", "icon": "💯", "points": 30},
-    {"code": "course_completed", "title": "Bitiruvchi", "description": "Kursni 100% tugatdingiz", "icon": "🏆", "points": 50},
-    {"code": "certified", "title": "Sertifikatli", "description": "Sertifikat qo'lga kiritdingiz", "icon": "📜", "points": 50},
-    {"code": "streak_7", "title": "Izchil hafta", "description": "7 kunlik streak", "icon": "🔥", "points": 40},
-    {"code": "streak_30", "title": "Izchil oy", "description": "30 kunlik streak", "icon": "⚡", "points": 100},
+    {
+        "code": "first_enroll",
+        "title": "Birinchi qadam",
+        "description": "Birinchi kursga yozildingiz",
+        "icon": "🎯",
+        "points": 10,
+    },
+    {
+        "code": "first_lesson",
+        "title": "O'rganish boshlandi",
+        "description": "Birinchi darsni tugatdingiz",
+        "icon": "📘",
+        "points": 10,
+    },
+    {
+        "code": "quiz_passed",
+        "title": "Bilimdon",
+        "description": "Birinchi testdan o'tdingiz",
+        "icon": "🧠",
+        "points": 20,
+    },
+    {
+        "code": "quiz_perfect",
+        "title": "Mukammal",
+        "description": "Testni 100% bilan topshirdingiz",
+        "icon": "💯",
+        "points": 30,
+    },
+    {
+        "code": "course_completed",
+        "title": "Bitiruvchi",
+        "description": "Kursni 100% tugatdingiz",
+        "icon": "🏆",
+        "points": 50,
+    },
+    {
+        "code": "certified",
+        "title": "Sertifikatli",
+        "description": "Sertifikat qo'lga kiritdingiz",
+        "icon": "📜",
+        "points": 50,
+    },
+    {
+        "code": "streak_7",
+        "title": "Izchil hafta",
+        "description": "7 kunlik streak",
+        "icon": "🔥",
+        "points": 40,
+    },
+    {
+        "code": "streak_30",
+        "title": "Izchil oy",
+        "description": "30 kunlik streak",
+        "icon": "⚡",
+        "points": 100,
+    },
 ]
 
 

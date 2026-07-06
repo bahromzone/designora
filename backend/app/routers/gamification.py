@@ -3,8 +3,7 @@
 Prefix: /api/gamification
 """
 
-from fastapi import APIRouter, Depends, Query
-from fastapi import HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db

@@ -15,8 +15,8 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.Course import Course
 from app.models.certificate import Certificate
+from app.models.Course import Course
 from app.models.enrollment import Enrollment
 from app.models.quiz import Quiz, QuizAttempt
 from app.models.user import User
@@ -38,12 +38,12 @@ def _get_user(db: Session, email: str) -> User:
 
 
 def _active_quiz_ids(db: Session, course_id: int) -> list[int]:
-    return [
-        qid
-        for (qid,) in db.query(Quiz.id)
+    rows = (
+        db.query(Quiz.id)
         .filter(Quiz.course_id == course_id, Quiz.is_active == True)  # noqa: E712
         .all()
-    ]
+    )
+    return [qid for (qid,) in rows]
 
 
 def _all_quizzes_passed(db: Session, user: User, course_id: int) -> bool:
@@ -196,7 +196,8 @@ def my_certificates(
         .all()
     )
     return [
-        _certificate_dict(c, course.title if course else None) for c, course in rows
+        _certificate_dict(c, course.title if course else None)
+        for c, course in rows
     ]
 
 

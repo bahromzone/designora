@@ -12,7 +12,7 @@ def normalize(value: Any) -> set[str]:
     """Javobni taqqoslash uchun string'lar to'plamiga keltiradi."""
     if value is None:
         return set()
-    if isinstance(value, (list, tuple, set)):
+    if isinstance(value, list | tuple | set):
         return {str(v).strip() for v in value if str(v).strip() != ""}
     text = str(value).strip()
     return {text} if text else set()

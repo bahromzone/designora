@@ -48,6 +48,7 @@ def _complete_sign(click_tx, merchant_tx, prepare_id, amount, action, sign_time)
 
 def _set_secret(monkeypatch):
     from app.core import config
+
     monkeypatch.setattr(config.settings, "CLICK_SECRET_KEY", SECRET, raising=False)
 
 
@@ -59,9 +60,12 @@ def test_click_prepare_bad_sign(client, db_session, monkeypatch):
     resp = client.post(
         "/api/payments/click/prepare",
         data={
-            "click_trans_id": "c1", "service_id": SERVICE_ID,
-            "merchant_trans_id": str(order.id), "amount": "100000",
-            "action": "0", "sign_time": "2026-07-06 10:00:00",
+            "click_trans_id": "c1",
+            "service_id": SERVICE_ID,
+            "merchant_trans_id": str(order.id),
+            "amount": "100000",
+            "action": "0",
+            "sign_time": "2026-07-06 10:00:00",
             "sign_string": "deadbeef",
         },
     )
@@ -79,9 +83,12 @@ def test_click_full_flow_grants_access(client, db_session, monkeypatch):
     resp = client.post(
         "/api/payments/click/prepare",
         data={
-            "click_trans_id": "c1", "service_id": SERVICE_ID,
-            "merchant_trans_id": str(order.id), "amount": "100000",
-            "action": "0", "sign_time": st,
+            "click_trans_id": "c1",
+            "service_id": SERVICE_ID,
+            "merchant_trans_id": str(order.id),
+            "amount": "100000",
+            "action": "0",
+            "sign_time": st,
             "sign_string": _prepare_sign("c1", str(order.id), "100000", "0", st),
         },
     )
@@ -92,10 +99,16 @@ def test_click_full_flow_grants_access(client, db_session, monkeypatch):
     resp = client.post(
         "/api/payments/click/complete",
         data={
-            "click_trans_id": "c1", "service_id": SERVICE_ID,
-            "merchant_trans_id": str(order.id), "merchant_prepare_id": str(prepare_id),
-            "amount": "100000", "action": "1", "sign_time": st,
-            "sign_string": _complete_sign("c1", str(order.id), str(prepare_id), "100000", "1", st),
+            "click_trans_id": "c1",
+            "service_id": SERVICE_ID,
+            "merchant_trans_id": str(order.id),
+            "merchant_prepare_id": str(prepare_id),
+            "amount": "100000",
+            "action": "1",
+            "sign_time": st,
+            "sign_string": _complete_sign(
+                "c1", str(order.id), str(prepare_id), "100000", "1", st
+            ),
             "error": "0",
         },
     )
@@ -117,19 +130,28 @@ def test_click_complete_wrong_amount(client, db_session, monkeypatch):
     client.post(
         "/api/payments/click/prepare",
         data={
-            "click_trans_id": "c1", "service_id": SERVICE_ID,
-            "merchant_trans_id": str(order.id), "amount": "100000",
-            "action": "0", "sign_time": st,
+            "click_trans_id": "c1",
+            "service_id": SERVICE_ID,
+            "merchant_trans_id": str(order.id),
+            "amount": "100000",
+            "action": "0",
+            "sign_time": st,
             "sign_string": _prepare_sign("c1", str(order.id), "100000", "0", st),
         },
     )
     resp = client.post(
         "/api/payments/click/complete",
         data={
-            "click_trans_id": "c1", "service_id": SERVICE_ID,
-            "merchant_trans_id": str(order.id), "merchant_prepare_id": str(order.id),
-            "amount": "500", "action": "1", "sign_time": st,
-            "sign_string": _complete_sign("c1", str(order.id), str(order.id), "500", "1", st),
+            "click_trans_id": "c1",
+            "service_id": SERVICE_ID,
+            "merchant_trans_id": str(order.id),
+            "merchant_prepare_id": str(order.id),
+            "amount": "500",
+            "action": "1",
+            "sign_time": st,
+            "sign_string": _complete_sign(
+                "c1", str(order.id), str(order.id), "500", "1", st
+            ),
             "error": "0",
         },
     )
@@ -146,19 +168,28 @@ def test_click_complete_user_cancelled(client, db_session, monkeypatch):
     client.post(
         "/api/payments/click/prepare",
         data={
-            "click_trans_id": "c1", "service_id": SERVICE_ID,
-            "merchant_trans_id": str(order.id), "amount": "100000",
-            "action": "0", "sign_time": st,
+            "click_trans_id": "c1",
+            "service_id": SERVICE_ID,
+            "merchant_trans_id": str(order.id),
+            "amount": "100000",
+            "action": "0",
+            "sign_time": st,
             "sign_string": _prepare_sign("c1", str(order.id), "100000", "0", st),
         },
     )
     resp = client.post(
         "/api/payments/click/complete",
         data={
-            "click_trans_id": "c1", "service_id": SERVICE_ID,
-            "merchant_trans_id": str(order.id), "merchant_prepare_id": str(order.id),
-            "amount": "100000", "action": "1", "sign_time": st,
-            "sign_string": _complete_sign("c1", str(order.id), str(order.id), "100000", "1", st),
+            "click_trans_id": "c1",
+            "service_id": SERVICE_ID,
+            "merchant_trans_id": str(order.id),
+            "merchant_prepare_id": str(order.id),
+            "amount": "100000",
+            "action": "1",
+            "sign_time": st,
+            "sign_string": _complete_sign(
+                "c1", str(order.id), str(order.id), "100000", "1", st
+            ),
             "error": "-1",
         },
     )

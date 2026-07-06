@@ -3,7 +3,6 @@
 Prefix: /api/notes
 """
 
-from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -18,10 +17,6 @@ from app.models.note import LessonNote
 from app.models.user import User
 
 router = APIRouter(prefix="/api/notes", tags=["Notes"])
-
-
-def _now():
-    return datetime.now(UTC)
 
 
 def _get_user(db: Session, email: str) -> User:

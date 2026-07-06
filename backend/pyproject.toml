@@ -13,7 +13,7 @@ target-version = ["py311", "py312"]
 extend-exclude = '''
 /(
   | \.venv
-  | app/alembic/versions
+  | app/alembic
 )/
 '''
 
@@ -23,14 +23,14 @@ extend-exclude = '''
 [tool.ruff]
 line-length = 88
 target-version = "py311"
-extend-exclude = ["app/alembic/versions", ".venv"]
+extend-exclude = ["app/alembic", ".venv"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C4"]
 # E501 — qator uzunligi (black boshqaradi)
 # B008 — FastAPI Depends() naqshi (funksiya default'ida chaqiruv)
 # E712 — SQLAlchemy filtrlarida `== True/False` ataylab ishlatiladi
-# B904  — mavjud except bloklari (kelajakda `raise ... from` bilan yaxshilanadi)
+# B904 — mavjud except bloklari (kelajakda `raise ... from` bilan yaxshilanadi)
 ignore = ["E501", "B008", "E712", "B904"]
 
 [tool.ruff.lint.per-file-ignores]

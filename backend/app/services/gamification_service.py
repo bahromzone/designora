@@ -139,10 +139,7 @@ def award_badge(db: Session, user: User, code: str) -> UserBadge | None:
 def leaderboard(db: Session, limit: int = 20) -> list[dict]:
     """Eng ko'p ballga ega foydalanuvchilar reytingi."""
     users = (
-        db.query(User)
-        .order_by(User.points.desc(), User.id.asc())
-        .limit(limit)
-        .all()
+        db.query(User).order_by(User.points.desc(), User.id.asc()).limit(limit).all()
     )
     out = []
     for rank, u in enumerate(users, start=1):

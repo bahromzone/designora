@@ -78,7 +78,9 @@ def generate_certificate_pdf(
 
     c.setFont("Helvetica", 16)
     c.drawCentredString(
-        width / 2, height - 112 * mm, "quyidagi kursni muvaffaqiyatli tamomlagani uchun:"
+        width / 2,
+        height - 112 * mm,
+        "quyidagi kursni muvaffaqiyatli tamomlagani uchun:",
     )
 
     c.setFont("Helvetica-Bold", 22)
@@ -93,17 +95,13 @@ def generate_certificate_pdf(
     c.setFillColor(colors.HexColor("#666666"))
     c.drawString(25 * mm, 25 * mm, f"Sana: {issued_at.strftime('%Y-%m-%d')}")
     c.drawString(25 * mm, 20 * mm, f"Seriya: {serial}")
-    c.drawRightString(
-        width - 25 * mm, 25 * mm, f"Tekshirish kodi: {verification_code}"
-    )
+    c.drawRightString(width - 25 * mm, 25 * mm, f"Tekshirish kodi: {verification_code}")
     if verify_url:
         c.drawRightString(width - 25 * mm, 20 * mm, verify_url)
 
     c.setFont("Helvetica-Bold", 12)
     c.setFillColor(colors.HexColor("#6C4CF1"))
-    c.drawCentredString(
-        width / 2, 32 * mm, "Designora — Dizayn ta'limi platformasi"
-    )
+    c.drawCentredString(width / 2, 32 * mm, "Designora — Dizayn ta'limi platformasi")
 
     c.showPage()
     c.save()

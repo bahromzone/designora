@@ -103,9 +103,7 @@ def generate_certificate_pdf(
 
     c.setFont("Helvetica-Bold", 12)
     c.setFillColor(colors.HexColor("#6C4CF1"))
-    c.drawCentredString(
-        width / 2, 32 * mm, "Designora — Dizayn ta'limi platformasi"
-    )
+    c.drawCentredString(width / 2, 32 * mm, "Designora — Dizayn ta'limi platformasi")
 
     c.showPage()
     c.save()

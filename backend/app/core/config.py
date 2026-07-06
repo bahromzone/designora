@@ -37,6 +37,19 @@ class Settings(BaseSettings):
     # ===== RECAPTCHA =====
     RECAPTCHA_SECRET_KEY: str
 
+    # ===== TO'LOV: PAYME (Paycom Merchant API) =====
+    PAYME_MERCHANT_ID: str | None = None
+    PAYME_MERCHANT_KEY: str | None = None       # X-Auth kaliti (webhook tekshiruvi)
+    PAYME_TEST_KEY: str | None = None
+    PAYME_KEY: str | None = None
+    PAYME_CHECKOUT_URL: str = "https://checkout.paycom.uz"
+
+    # ===== TO'LOV: CLICK =====
+    CLICK_SERVICE_ID: str | None = None
+    CLICK_MERCHANT_ID: str | None = None
+    CLICK_SECRET_KEY: str | None = None
+    CLICK_CHECKOUT_URL: str = "https://my.click.uz/services/pay"
+
     # ===== CORS =====
     # 5173 — Vite dev server (React frontend)
     ALLOWED_ORIGINS: str = (

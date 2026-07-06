@@ -32,8 +32,11 @@ from app.routers import (
     learning,
     profile,
     users,
+    payments,
+
 )
 from app.routers.auth import public_router
+
 
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -101,6 +104,7 @@ app.include_router(public_router)
 app.include_router(auth.router)
 app.include_router(google.router)
 app.include_router(users.router)
+app.include_router(payments.router)
 
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])

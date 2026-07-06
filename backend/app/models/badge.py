@@ -46,9 +46,7 @@ class UserBadge(Base):
     """Foydalanuvchiga berilgan nishon (bir marta)."""
 
     __tablename__ = "user_badges"
-    __table_args__ = (
-        UniqueConstraint("user_id", "badge_id", name="uq_user_badge"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "badge_id", name="uq_user_badge"),)
 
     id = Column(Integer, primary_key=True)
     user_id = Column(

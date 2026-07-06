@@ -95,9 +95,7 @@ def generate_certificate_pdf(
     c.setFillColor(colors.HexColor("#666666"))
     c.drawString(25 * mm, 25 * mm, f"Sana: {issued_at.strftime('%Y-%m-%d')}")
     c.drawString(25 * mm, 20 * mm, f"Seriya: {serial}")
-    c.drawRightString(
-        width - 25 * mm, 25 * mm, f"Tekshirish kodi: {verification_code}"
-    )
+    c.drawRightString(width - 25 * mm, 25 * mm, f"Tekshirish kodi: {verification_code}")
     if verify_url:
         c.drawRightString(width - 25 * mm, 20 * mm, verify_url)
 

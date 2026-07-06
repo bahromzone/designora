@@ -3,6 +3,7 @@
 Payme ham, Click ham to'lovni tasdiqlaganda shu funksiyani chaqiradi —
 shunda Enrollment yaratish mantiqi bitta joyda turadi.
 """
+
 from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
@@ -81,4 +82,4 @@ def grant_access(db: Session, order: Order) -> None:
             status="paid",
             provider=order.provider,
         )
-    )   
+    )

@@ -157,9 +157,7 @@ def checkout(
 
     # Bepul kurs — to'lovsiz to'g'ridan-to'g'ri enroll
     if base_amount <= 0:
-        order = Order(
-            user_id=user.id, course_id=course.id, amount=0, provider="free"
-        )
+        order = Order(user_id=user.id, course_id=course.id, amount=0, provider="free")
         db.add(order)
         db.flush()
         _grant_access(db, order)
@@ -418,7 +416,7 @@ def _click_signature(*parts) -> str:
 
 @router.post("/click/prepare")
 async def click_prepare(request: Request, db: Session = Depends(get_db)):
-    form = dict((await request.form()))
+    form = dict(await request.form())
     order_id = form.get("merchant_trans_id")
     order = (
         db.query(Order).filter(Order.id == int(order_id)).first() if order_id else None
@@ -459,7 +457,7 @@ async def click_prepare(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/click/complete")
 async def click_complete(request: Request, db: Session = Depends(get_db)):
-    form = dict((await request.form()))
+    form = dict(await request.form())
     order_id = form.get("merchant_trans_id")
     order = (
         db.query(Order).filter(Order.id == int(order_id)).first() if order_id else None

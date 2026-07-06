@@ -20,8 +20,6 @@ from app.models.user import User
 
 router = APIRouter(prefix="/api/qa", tags=["Q&A"])
 
-_INSTRUCTOR_ROLES = {"instructor", "admin", "superadmin"}
-
 
 def _get_user(db: Session, email: str) -> User:
     user = db.query(User).filter(User.email == email).first()
@@ -99,9 +97,7 @@ def list_questions(
         ans_out = []
         for a in answers:
             responder = db.query(User).filter(User.id == a.user_id).first()
-            ans_out.append(
-                _answer_dict(a, responder.name if responder else None)
-            )
+            ans_out.append(_answer_dict(a, responder.name if responder else None))
         out.append(
             {
                 "id": q.id,

@@ -20,5 +20,11 @@ class Certificate(Base):
     issued_at = Column(DateTime(timezone=True), default=_now)
     title = Column(String, nullable=True)
 
+    # ── BOSQICH 3: verifikatsiya + PDF ──
+    serial = Column(String, unique=True, index=True, nullable=True)
+    verification_code = Column(String, unique=True, index=True, nullable=True)
+    pdf_url = Column(String, nullable=True)
+    grade = Column(String, nullable=True)  # "A'lo" / "Yaxshi" / ...
+
     user = relationship("User", back_populates="certificates")
     course = relationship("Course", back_populates="certificates")

@@ -3,7 +3,6 @@
 Prefix: /api/qa
 """
 
-from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,10 +21,6 @@ from app.models.user import User
 router = APIRouter(prefix="/api/qa", tags=["Q&A"])
 
 _INSTRUCTOR_ROLES = {"instructor", "admin", "superadmin"}
-
-
-def _now():
-    return datetime.now(UTC)
 
 
 def _get_user(db: Session, email: str) -> User:

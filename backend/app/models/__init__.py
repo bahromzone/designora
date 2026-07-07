@@ -22,6 +22,7 @@ from .progress import Progress
 from .qa import LessonAnswer, LessonQuestion
 from .quiz import Quiz, QuizAttempt, QuizQuestion
 from .referral import Referral
+from .refresh_token import RefreshToken
 from .review import Review
 from .user import User
 
@@ -52,6 +53,7 @@ __all__ = [
     "QuizAttempt",
     "QuizQuestion",
     "Referral",
+    "RefreshToken",
     "Review",
     "User",
 ]

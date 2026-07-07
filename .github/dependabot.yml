@@ -1,0 +1,40 @@
+# Dependabot — bog'liqliklarni avtomatik yangilash (XAVFSIZLIK bloki)
+# https://docs.github.com/code-security/dependabot
+version: 2
+updates:
+  # ── Backend (pip) ──
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+    groups:
+      backend-deps:
+        patterns:
+          - "*"
+
+  # ── Frontend (npm) ──
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+    groups:
+      frontend-deps:
+        patterns:
+          - "*"
+
+  # ── GitHub Actions ──
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"

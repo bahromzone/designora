@@ -60,6 +60,18 @@ class Settings(BaseSettings):
     # ===== FRONTEND =====
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # ===== BOSQICH 5: MIQYOSLASH VA MUKAMMALLIK =====
+    # Kesh / navbat (ixtiyoriy — o'rnatilmasa xotiradagi kesh ishlatiladi)
+    REDIS_URL: str | None = None
+    # Monitoring (ixtiyoriy — DSN bo'lmasa Sentry o'chirilgan)
+    SENTRY_DSN: str | None = None
+    # Video kontent himoyasi uchun signed URL kaliti (bo'lmasa SECRET_KEY)
+    MEDIA_SIGNING_KEY: str | None = None
+    # Video CDN bazaviy manzili (Mux / Bunny / Cloudflare Stream)
+    MEDIA_CDN_BASE_URL: str = ""
+    # Ko'p tillilik (i18n)
+    DEFAULT_LANGUAGE: str = "uz"
+
     class Config:
         env_file = ".env"
         # ✅ BUG #17 FIX: "forbid" → "ignore"
@@ -69,6 +81,11 @@ class Settings(BaseSettings):
 
     def get_allowed_origins(self) -> list[str]:
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def media_signing_key(self) -> str:
+        """Video signed URL kaliti — alohida belgilanmagan bo'lsa SECRET_KEY."""
+        return self.MEDIA_SIGNING_KEY or self.SECRET_KEY
 
 
 settings = Settings()

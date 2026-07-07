@@ -1,7 +1,6 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import (
-    Boolean,
     Column,
     DateTime,
     ForeignKey,

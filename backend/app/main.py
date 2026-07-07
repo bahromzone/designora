@@ -28,6 +28,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.routers import (
     admin_courses,
+    analytics,
     assignments,
     auth,
     blog,
@@ -168,6 +169,9 @@ app.include_router(media.router)
 app.include_router(token.router)
 app.include_router(uploads.router)
 app.include_router(privacy.router)
+
+# ── ANALITIKA: dashboardlar + event tracking ──
+app.include_router(analytics.router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 

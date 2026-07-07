@@ -1,6 +1,7 @@
 # Barcha modellar shu yerda import qilinishi shart —
 # SQLAlchemy relationship larni to'g'ri resolve qilishi uchun.
 
+from .analytics_event import AnalyticsEvent
 from .assignment import Assignment
 from .assignment_submission import AssignmentSubmission
 from .badge import Badge, UserBadge
@@ -27,6 +28,7 @@ from .review import Review
 from .user import User
 
 __all__ = [
+    "AnalyticsEvent",
     "Assignment",
     "AssignmentSubmission",
     "Badge",

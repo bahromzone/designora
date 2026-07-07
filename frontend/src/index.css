@@ -23,7 +23,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   /* Brend ranglari */
   --brand: #7c3aed; /* violet-600 */
   --brand-deep: #4f46e5; /* indigo-600 */
-  --brand-pink: #ec4899; /* pink-500  */
+  --brand-pink: #ec4899; /* pink-500 */
   --gradient: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #4f46e5 100%);
 
   /* Eski "amber" nomli tokenlar endi binafshaga ishora qiladi —
@@ -38,6 +38,30 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   --muted: #6f6a8a;
   --surface: #f3f1fb;
   --border: rgba(23, 19, 43, 0.09);
+}
+
+/* ── Dark mode tokenlari (html.dark) ────────────────────────────── */
+html.dark {
+  --bg-light: #0f0d1a;
+  --glass-bg: rgba(30, 27, 46, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --ink: #ece9f6;
+  --ink-60: rgba(236, 233, 246, 0.62);
+  --muted: #9c98b3;
+  --surface: #1b1830;
+  --border: rgba(255, 255, 255, 0.1);
+}
+html.dark body {
+  color: var(--ink);
+}
+html.dark .card,
+html.dark .card-white {
+  background: #1b1830;
+  border-color: var(--border);
+}
+html.dark .input-field {
+  background: var(--surface);
+  color: var(--ink);
 }
 
 body {
@@ -150,6 +174,10 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.12);
 }
+html.dark .btn-outline {
+  background: rgba(30, 27, 46, 0.75);
+  color: var(--ink);
+}
 
 /* ── Forma maydonlari ── */
 .input-field {
@@ -174,6 +202,9 @@ body {
   background: #fff;
   box-shadow: 0 0 0 4px var(--amber-10);
 }
+html.dark .input-field:focus {
+  background: #211d38;
+}
 
 /* ── Sarlavha ostidagi "qalam chizig'i" ── */
 .sketch-underline {
@@ -189,6 +220,18 @@ body {
   border-radius: 999px;
   background-image: var(--gradient);
   opacity: 0.55;
+}
+
+/* ── Animatsiyalar ── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @layer utilities {

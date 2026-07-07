@@ -25,7 +25,7 @@ def similar(
 ) -> list[dict]:
     """Bir xil kategoriyadagi, reyting bo'yicha tartiblangan kurslar.
 
-    category None bo'lsa — kategoriya bo'yicha filt르lanmaydi.
+    category None bo'lsa — kategoriya bo'yicha filtrlanmaydi.
     """
     pool = [
         c

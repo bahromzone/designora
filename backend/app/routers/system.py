@@ -64,16 +64,12 @@ def sitemap(db: Session = Depends(get_db)):
     base = settings.FRONTEND_URL.rstrip("/")
     entries: list[dict] = [{"loc": base}]
 
-    courses = (
-        db.query(Course).filter(Course.is_active == True).all()  # noqa: E712
-    )
+    courses = db.query(Course).filter(Course.is_active == True).all()  # noqa: E712
     for c in courses:
         slug = c.slug or c.id
         entries.append({"loc": f"{base}/courses/{slug}"})
 
-    posts = (
-        db.query(BlogPost).filter(BlogPost.is_published == True).all()  # noqa: E712
-    )
+    posts = db.query(BlogPost).filter(BlogPost.is_published == True).all()  # noqa: E712
     for p in posts:
         lastmod = None
         if p.published_at:

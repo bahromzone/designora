@@ -44,12 +44,15 @@ from app.routers import (
     notes,
     notifications,
     payments,
+    privacy,
     profile,
     qa,
     quiz,
     referrals,
     reviews,
     system,
+    token,
+    uploads,
     users,
 )
 from app.routers.auth import public_router
@@ -160,6 +163,11 @@ app.include_router(forum.router)
 # ── BOSQICH 5: miqyoslash va mukammallik ──
 app.include_router(system.router)
 app.include_router(media.router)
+
+# ── XAVFSIZLIK: refresh-token, upload, GDPR ──
+app.include_router(token.router)
+app.include_router(uploads.router)
+app.include_router(privacy.router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 

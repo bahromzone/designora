@@ -28,7 +28,10 @@ describe("Input", () => {
     render(<Input name="email" label="Email" error="Xato" />);
     expect(screen.getByText("Email")).toBeInTheDocument();
     expect(screen.getByText("Xato")).toBeInTheDocument();
-    expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Email")).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
   });
 });
 
@@ -60,7 +63,9 @@ describe("EmptyState", () => {
 
 describe("Pagination", () => {
   it("hides when a single page", () => {
-    const { container } = render(<Pagination page={1} pages={1} onChange={() => {}} />);
+    const { container } = render(
+      <Pagination page={1} pages={1} onChange={() => {}} />
+    );
     expect(container.firstChild).toBeNull();
   });
 

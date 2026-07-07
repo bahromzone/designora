@@ -1,7 +1,15 @@
 /**
  * Umumiy tanlov (select). options: [{value, label}] yoki children.
  */
-function Select({ label, error, id, options, className = "", children, ...rest }) {
+function Select({
+  label,
+  error,
+  id,
+  options,
+  className = "",
+  children,
+  ...rest
+}) {
   const selectId = id ?? rest.name;
   return (
     <div className="flex flex-col gap-1.5">

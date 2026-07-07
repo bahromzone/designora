@@ -8,7 +8,10 @@ function Pagination({ page, pages, onChange }) {
   const canNext = page < pages;
 
   return (
-    <nav className="flex items-center justify-center gap-3 py-6" aria-label="Sahifalash">
+    <nav
+      className="flex items-center justify-center gap-3 py-6"
+      aria-label="Sahifalash"
+    >
       <button
         type="button"
         disabled={!canPrev}

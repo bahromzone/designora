@@ -20,7 +20,7 @@ export function ToastProvider({ children }) {
       }
       return id;
     },
-    [dismiss],
+    [dismiss]
   );
 
   const toast = {

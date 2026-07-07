@@ -81,7 +81,8 @@ export const authApi = {
   issueRefresh: (token) =>
     request("/api/auth/issue-refresh", { method: "POST", token }),
   refresh: () => request("/api/auth/refresh", { method: "POST" }),
-  logoutAll: (token) => request("/api/auth/logout-all", { method: "POST", token }),
+  logoutAll: (token) =>
+    request("/api/auth/logout-all", { method: "POST", token }),
 };
 
 // ── BOSQICH 1: kurs detali (syllabus bilan) ──
@@ -120,16 +121,20 @@ export const learningApi = {
 export const discoveryApi = {
   search: (params) => request(`/api/discovery/search${qs(params)}`),
   categories: () => request("/api/discovery/categories"),
-  bestselling: (limit) => request(`/api/discovery/recommendations/bestselling${qs({ limit })}`),
+  bestselling: (limit) =>
+    request(`/api/discovery/recommendations/bestselling${qs({ limit })}`),
   similar: (courseId, limit) =>
-    request(`/api/discovery/recommendations/similar/${courseId}${qs({ limit })}`),
+    request(
+      `/api/discovery/recommendations/similar/${courseId}${qs({ limit })}`
+    ),
 };
 
 // ── BOSQICH 4: sharh va reyting ──
 export const reviewsApi = {
   list: (courseId) => request(`/api/reviews/courses/${courseId}`),
   summary: (courseId) => request(`/api/reviews/courses/${courseId}/summary`),
-  mine: (courseId, token) => request(`/api/reviews/courses/${courseId}/my`, { token }),
+  mine: (courseId, token) =>
+    request(`/api/reviews/courses/${courseId}/my`, { token }),
   upsert: (courseId, body, token) =>
     request(`/api/reviews/courses/${courseId}`, {
       method: "POST",
@@ -185,12 +190,16 @@ export const qaApi = {
       token,
     }),
   resolve: (questionId, token) =>
-    request(`/api/qa/questions/${questionId}/resolve`, { method: "PATCH", token }),
+    request(`/api/qa/questions/${questionId}/resolve`, {
+      method: "PATCH",
+      token,
+    }),
 };
 
 // ── BOSQICH 3: eslatmalar ──
 export const notesApi = {
-  forLesson: (lessonId, token) => request(`/api/notes/lessons/${lessonId}`, { token }),
+  forLesson: (lessonId, token) =>
+    request(`/api/notes/lessons/${lessonId}`, { token }),
   mine: (token) => request("/api/notes/my", { token }),
   create: (lessonId, body, token) =>
     request(`/api/notes/lessons/${lessonId}`, {
@@ -269,7 +278,8 @@ export const forumApi = {
 // ── BOSQICH 3/4: gamifikatsiya ──
 export const gamificationApi = {
   me: (token) => request("/api/gamification/me", { token }),
-  leaderboard: (limit) => request(`/api/gamification/leaderboard${qs({ limit })}`),
+  leaderboard: (limit) =>
+    request(`/api/gamification/leaderboard${qs({ limit })}`),
   badges: (token) => request("/api/gamification/badges", { token }),
 };
 

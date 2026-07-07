@@ -44,12 +44,8 @@ def export_my_data(
     """Foydalanuvchi ma'lumotlarini mashina o'qiy oladigan JSON'da qaytaradi."""
     user = _get_user(db, email)
 
-    enrollments = (
-        db.query(Enrollment).filter(Enrollment.user_id == user.id).all()
-    )
-    certificates = (
-        db.query(Certificate).filter(Certificate.user_id == user.id).all()
-    )
+    enrollments = db.query(Enrollment).filter(Enrollment.user_id == user.id).all()
+    certificates = db.query(Certificate).filter(Certificate.user_id == user.id).all()
     reviews = db.query(Review).filter(Review.user_id == user.id).all()
 
     return {

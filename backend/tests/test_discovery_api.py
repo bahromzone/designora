@@ -4,7 +4,7 @@ from app.models.Course import Course
 
 
 def _mk(db, **kw):
-    defaults = dict(is_active=True, status="published")
+    defaults = {"is_active": True, "status": "published"}
     defaults.update(kw)
     course = Course(**defaults)
     db.add(course)

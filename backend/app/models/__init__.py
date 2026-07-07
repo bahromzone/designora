@@ -4,10 +4,12 @@
 from .assignment import Assignment
 from .assignment_submission import AssignmentSubmission
 from .badge import Badge, UserBadge
+from .blog import BlogPost
 from .certificate import Certificate
 from .coupon import Coupon
 from .Course import Course
 from .enrollment import Enrollment
+from .forum import ForumPost, ForumThread
 from .lesson import Lesson
 from .lesson_progress import LessonProgress
 from .module import Module
@@ -19,6 +21,8 @@ from .payment import Payment
 from .progress import Progress
 from .qa import LessonAnswer, LessonQuestion
 from .quiz import Quiz, QuizAttempt, QuizQuestion
+from .referral import Referral
+from .review import Review
 from .user import User
 
 __all__ = [
@@ -26,10 +30,13 @@ __all__ = [
     "AssignmentSubmission",
     "Badge",
     "UserBadge",
+    "BlogPost",
     "Certificate",
     "Coupon",
     "Course",
     "Enrollment",
+    "ForumPost",
+    "ForumThread",
     "Lesson",
     "LessonProgress",
     "Module",
@@ -44,5 +51,7 @@ __all__ = [
     "Quiz",
     "QuizAttempt",
     "QuizQuestion",
+    "Referral",
+    "Review",
     "User",
 ]

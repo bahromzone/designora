@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
+import CategoryChips from "../components/CategoryChips";
 import RecommendationSection from "../components/RecommendationSection";
 import SearchResultCard from "../components/SearchResultCard";
 import { CourseCardSkeleton, Input, Pagination, Select } from "../components/ui";
@@ -154,6 +155,13 @@ export default function CoursesPage() {
           toping.
         </p>
       </div>
+
+      {/* Kategoriya chiplari */}
+      <CategoryChips
+        categories={categories}
+        value={category}
+        onChange={(c) => setParam("category", c)}
+      />
 
       {/* Qidiruv + filtrlar */}
       <div className="card mb-8 rounded-2xl p-5">

@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.admin.admin_panel import setup_admin
+from app.core import metrics
 from app.core.config import limiter, settings
 from app.core.database import Base, engine, get_db
 from app.core.middleware import (
@@ -21,6 +23,7 @@ from app.core.middleware import (
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
 )
+from app.core.monitoring import init_sentry
 from app.core.security import get_current_user
 from app.models.user import User
 from app.routers import (
@@ -37,6 +40,7 @@ from app.routers import (
     instructor,
     instructors,
     learning,
+    media,
     notes,
     notifications,
     payments,
@@ -45,6 +49,7 @@ from app.routers import (
     quiz,
     referrals,
     reviews,
+    system,
     users,
 )
 from app.routers.auth import public_router
@@ -59,6 +64,9 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
+
+# ── SENTRY (ixtiyoriy) ──────────────────
+init_sentry()
 
 # ── APP ────────────────────────────────
 app = FastAPI(
@@ -97,6 +105,22 @@ app.add_middleware(IPBlockingMiddleware)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
+# ── METRIKA MIDDLEWARE ─────────────────
+@app.middleware("http")
+async def _metrics_middleware(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start
+    metrics.inc_counter(
+        "http_requests_total",
+        method=request.method,
+        status=str(response.status_code),
+    )
+    metrics.observe("http_request_duration_seconds", elapsed)
+    return response
+
+
 # ── STATIC ────────────────────────────
 # Absolyut yo'l — server qaysi papkadan ishga tushirilishidan qat'i nazar ishlaydi
 BASE_DIR = Path(__file__).resolve().parent
@@ -132,6 +156,10 @@ app.include_router(notifications.router)
 app.include_router(referrals.router)
 app.include_router(blog.router)
 app.include_router(forum.router)
+
+# ── BOSQICH 5: miqyoslash va mukammallik ──
+app.include_router(system.router)
+app.include_router(media.router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 

@@ -86,7 +86,11 @@ def instructor_dashboard(
     per_course = []
     for c in courses:
         c_orders = [
-            {"amount": o.amount, "discount_amount": o.discount_amount, "status": o.status}
+            {
+                "amount": o.amount,
+                "discount_amount": o.discount_amount,
+                "status": o.status,
+            }
             for o in db.query(Order).filter(Order.course_id == c.id).all()
         ]
         c_progress = [
@@ -145,9 +149,9 @@ def admin_dashboard(
     new_users_30d = db.query(User).filter(User.created_at >= since).count()
 
     # Konversiya voronkasi: ko'rish → yozilish → to'lov
-    views = db.query(AnalyticsEvent).filter(
-        AnalyticsEvent.name == "course_view"
-    ).count()
+    views = (
+        db.query(AnalyticsEvent).filter(AnalyticsEvent.name == "course_view").count()
+    )
     paid_orders = revenue["paid_orders"]
     funnel_counts = {
         "course_view": views,
@@ -158,10 +162,7 @@ def admin_dashboard(
     # Top kurslar (talabalar bo'yicha)
     top_courses = [
         {"course_id": c.id, "title": c.title, "students_count": c.students_count or 0}
-        for c in db.query(Course)
-        .order_by(Course.students_count.desc())
-        .limit(5)
-        .all()
+        for c in db.query(Course).order_by(Course.students_count.desc()).limit(5).all()
     ]
 
     # Hodisalar taqsimoti

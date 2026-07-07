@@ -42,8 +42,12 @@ def test_instructor_dashboard_scoped_to_own_courses(client, db_session):
     db_session.commit()
     db_session.refresh(course)
 
-    db_session.add(Order(user_id=instr.id, course_id=course.id, amount=100000, status="paid"))
-    db_session.add(Enrollment(user_id=instr.id, course_id=course.id, progress_percent=100))
+    db_session.add(
+        Order(user_id=instr.id, course_id=course.id, amount=100000, status="paid")
+    )
+    db_session.add(
+        Enrollment(user_id=instr.id, course_id=course.id, progress_percent=100)
+    )
     db_session.commit()
 
     resp = client.get("/api/analytics/instructor", headers=_auth("instr@example.com"))

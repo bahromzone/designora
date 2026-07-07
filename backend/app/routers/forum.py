@@ -77,9 +77,7 @@ def list_threads(
         query = query.filter(ForumThread.course_id == course_id)
     total = query.count()
     items = (
-        query.order_by(
-            ForumThread.is_pinned.desc(), ForumThread.created_at.desc()
-        )
+        query.order_by(ForumThread.is_pinned.desc(), ForumThread.created_at.desc())
         .offset((page - 1) * per_page)
         .limit(per_page)
         .all()

@@ -41,9 +41,7 @@ def recompute_course_rating(db: Session, course_id: int) -> tuple[float, int]:
 
     ratings = [
         r
-        for (r,) in db.query(Review.rating)
-        .filter(Review.course_id == course_id)
-        .all()
+        for (r,) in db.query(Review.rating).filter(Review.course_id == course_id).all()
     ]
     avg, count = compute_rating_aggregate(ratings)
     course = db.query(Course).filter(Course.id == course_id).first()

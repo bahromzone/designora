@@ -66,9 +66,7 @@ def my_code(
 ):
     user = _get_user(db, email)
     code = _ensure_code(db, user)
-    referred = (
-        db.query(Referral).filter(Referral.referrer_id == user.id).all()
-    )
+    referred = db.query(Referral).filter(Referral.referrer_id == user.id).all()
     converted = sum(1 for r in referred if r.status == "converted")
     return {
         "code": code,
@@ -96,9 +94,7 @@ def apply_code(
     if referrer.id == user.id:
         raise HTTPException(status_code=400, detail="O'z kodingizni qo'llab bo'lmaydi")
 
-    existing = (
-        db.query(Referral).filter(Referral.referred_user_id == user.id).first()
-    )
+    existing = db.query(Referral).filter(Referral.referred_user_id == user.id).first()
     if existing:
         raise HTTPException(status_code=409, detail="Siz allaqachon kod qo'llagansiz")
 

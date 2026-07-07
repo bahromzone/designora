@@ -65,9 +65,7 @@ def test_review_second_submit_updates_not_duplicates(client, db_session):
     course = _make_course(db_session)
     _enroll(db_session, user, course)
     h = _auth("rev@example.com")
-    client.post(
-        f"/api/reviews/courses/{course.id}", json={"rating": 5}, headers=h
-    )
+    client.post(f"/api/reviews/courses/{course.id}", json={"rating": 5}, headers=h)
     resp = client.post(
         f"/api/reviews/courses/{course.id}", json={"rating": 2}, headers=h
     )

@@ -102,7 +102,9 @@ def search(
 @router.get("/categories")
 def categories(db: Session = Depends(get_db)):
     """Kategoriyalar va ularga tegishli kurslar soni."""
-    rows = db.query(Course.category).filter(Course.is_active == True).all()  # noqa: E712
+    rows = (
+        db.query(Course.category).filter(Course.is_active == True).all()
+    )  # noqa: E712
     counts: dict[str, int] = {}
     for (cat,) in rows:
         if not cat:

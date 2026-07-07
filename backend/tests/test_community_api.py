@@ -30,13 +30,13 @@ def test_notifications_list_and_read(client, db_session):
     assert len(resp.json()) == 1
 
     nid = resp.json()[0]["id"]
-    assert client.get("/api/notifications/unread-count", headers=h).json()[
-        "unread"
-    ] == 1
+    assert (
+        client.get("/api/notifications/unread-count", headers=h).json()["unread"] == 1
+    )
     client.post(f"/api/notifications/{nid}/read", headers=h)
-    assert client.get("/api/notifications/unread-count", headers=h).json()[
-        "unread"
-    ] == 0
+    assert (
+        client.get("/api/notifications/unread-count", headers=h).json()["unread"] == 0
+    )
 
 
 # ── Referrals ──

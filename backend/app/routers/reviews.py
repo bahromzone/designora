@@ -74,9 +74,7 @@ def review_summary(course_id: int, db: Session = Depends(get_db)):
     """Reyting o'rtachasi, soni va yulduzlar taqsimoti (ommaviy)."""
     ratings = [
         r
-        for (r,) in db.query(Review.rating)
-        .filter(Review.course_id == course_id)
-        .all()
+        for (r,) in db.query(Review.rating).filter(Review.course_id == course_id).all()
     ]
     avg, count = review_service.compute_rating_aggregate(ratings)
     return {

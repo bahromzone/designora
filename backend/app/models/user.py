@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -35,6 +35,10 @@ class User(Base):
     location = Column(String, nullable=True)
     website = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
+
+    # ── BOSQICH 4: referral / affiliate ──
+    referral_code = Column(String, unique=True, index=True, nullable=True)
+    referred_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     # Relationships
     progress_records = relationship("Progress", back_populates="user", lazy="dynamic")

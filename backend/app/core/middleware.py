@@ -14,7 +14,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # Limiter config.py dan — bu faylda yangi instance yaratilmaydi
-# from core.config import limiter  ← main.py da import qilinadi
+# from core.config import limiter ← main.py da import qilinadi
 
 
 # ===== SECURITY HEADERS MIDDLEWARE =====
@@ -34,9 +34,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com "
-            "https://unpkg.com https://www.google.com https://www.gstatic.com; "
+            "https://unpkg.com https://www.google.com https://www.gstatic.com "
+            "https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
-            "https://cdn.tailwindcss.com; "
+            "https://cdn.tailwindcss.com https://cdn.jsdelivr.net; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
             "connect-src 'self' https://accounts.google.com; "

@@ -15,7 +15,7 @@ from app.services import recommendation_service
 
 router = APIRouter(prefix="/api/discovery", tags=["Discovery"])
 
-_SORالتABLE = {
+_SORTABLE = {
     "newest": (Course.id, True),
     "rating": (Course.rating_avg, True),
     "popular": (Course.students_count, True),
@@ -43,9 +43,7 @@ def _card(c: Course) -> dict:
 
 
 def _active_cards(db: Session) -> list[dict]:
-    courses = (
-        db.query(Course).filter(Course.is_active == True).all()  # noqa: E712
-    )
+    courses = db.query(Course).filter(Course.is_active == True).all()  # noqa: E712
     return [_card(c) for c in courses]
 
 
@@ -104,9 +102,7 @@ def search(
 @router.get("/categories")
 def categories(db: Session = Depends(get_db)):
     """Kategoriyalar va ularga tegishli kurslar soni."""
-    rows = (
-        db.query(Course.category).filter(Course.is_active == True).all()  # noqa: E712
-    )
+    rows = db.query(Course.category).filter(Course.is_active == True).all()  # noqa: E712
     counts: dict[str, int] = {}
     for (cat,) in rows:
         if not cat:

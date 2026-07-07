@@ -73,11 +73,7 @@ def refresh(
         raise HTTPException(status_code=401, detail="Refresh-token topilmadi")
 
     token_hash = token_service.hash_token(raw)
-    rec = (
-        db.query(RefreshToken)
-        .filter(RefreshToken.token_hash == token_hash)
-        .first()
-    )
+    rec = db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).first()
     if not rec:
         raise HTTPException(status_code=401, detail="Refresh-token yaroqsiz")
 

@@ -69,4 +69,6 @@ def test_delete_success(client, db_session):
         headers=_auth("bye@example.com"),
     )
     assert resp.status_code == 200
-    assert db_session.query(User).filter(User.email == "bye@example.com").first() is None
+    assert (
+        db_session.query(User).filter(User.email == "bye@example.com").first() is None
+    )

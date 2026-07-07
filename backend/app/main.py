@@ -27,22 +27,29 @@ from app.routers import (
     admin_courses,
     assignments,
     auth,
+    blog,
     certificates,
     courses_api,
+    discovery,
+    forum,
     gamification,
     google,
     instructor,
+    instructors,
     learning,
     notes,
+    notifications,
     payments,
     profile,
     qa,
     quiz,
+    referrals,
+    reviews,
     users,
 )
 from app.routers.auth import public_router
 
-# ── LOGGING ───────────────────────────────────────────────
+# ── LOGGING ────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -53,17 +60,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── APP ────────────────────────────────────────────────
+# ── APP ────────────────────────────────
 app = FastAPI(
     title="Designora Platform",
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
 )
 
-# ── DATABASE ─────────────────────────────────────────
+# ── DATABASE ──────────────────────────
 Base.metadata.create_all(bind=engine)
 
-# ── MIDDLEWARES ────────────────────────────────────────
+# ── MIDDLEWARES ──────────────────────
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SESSION_SECRET_KEY,
@@ -86,18 +93,18 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)
 
-# ── RATE LIMITER ───────────────────────────────────────
+# ── RATE LIMITER ─────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── STATIC ────────────────────────────────────────────
+# ── STATIC ────────────────────────────
 # Absolyut yo'l — server qaysi papkadan ishga tushirilishidan qat'i nazar ishlaydi
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 setup_admin(app)
 
-# ── ROUTERS ──────────────────────────────────────────
+# ── ROUTERS ──────────────────────────
 app.include_router(profile.router)
 app.include_router(admin_courses.router)
 app.include_router(courses_api.router)
@@ -116,6 +123,15 @@ app.include_router(certificates.router)
 app.include_router(qa.router)
 app.include_router(notes.router)
 app.include_router(gamification.router)
+
+# ── BOSQICH 4: kashfiyot, community va o'sish ──
+app.include_router(discovery.router)
+app.include_router(reviews.router)
+app.include_router(instructors.router)
+app.include_router(notifications.router)
+app.include_router(referrals.router)
+app.include_router(blog.router)
+app.include_router(forum.router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -152,7 +168,7 @@ def admin_list_users(
 app.include_router(_admin_router)
 
 
-# ── ASOSIY SAHIFA ───────────────────────────────────────
+# ── ASOSIY SAHIFA ───────────────────────
 # UI endi to'liq React frontend'da (frontend/ papkasi, Vite dev: 5173-port).
 # Backend faqat JSON API xizmatini bajaradi.
 @app.get("/")
@@ -165,13 +181,13 @@ def home():
     }
 
 
-# ── /api/me → /api/profile/me ─────────────────────────────────
+# ── /api/me → /api/profile/me ─────────────────
 @app.get("/api/me")
 def me():
     return RedirectResponse(url="/api/profile/me", status_code=307)
 
 
-# ── XATO HANDLERI ───────────────────────────────────────
+# ── XATO HANDLERI ──────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     if settings.ENVIRONMENT == "production":
@@ -185,7 +201,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# ── RUN ───────────────────────────────────────────────
+# ── RUN ─────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",

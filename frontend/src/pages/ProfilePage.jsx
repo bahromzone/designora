@@ -29,7 +29,7 @@ export default function ProfilePage() {
       .catch((e) => setError(e.message));
   }, [token]);
 
-  const initials = user?.full_name?.charAt(0)?.toUpperCase() ?? "D";
+  const initials = user?.name?.charAt(0)?.toUpperCase() ?? "D";
   const isInstructor = INSTRUCTOR_ROLES.includes(user?.role);
   const isAdmin = ADMIN_ROLES.includes(user?.role);
 
@@ -51,7 +51,7 @@ export default function ProfilePage() {
             </div>
             <p className="label mt-4">Profil</p>
             <h1 className="font-serif text-xl font-semibold text-ink">
-              {user?.full_name}
+              {user?.name}
             </h1>
             <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
               {user?.email}
@@ -62,7 +62,9 @@ export default function ProfilePage() {
             {[
               {
                 label: "Rol",
-                val: user?.role === "admin" ? "Administrator" : "Foydalanuvchi",
+                val: ADMIN_ROLES.includes(user?.role)
+                  ? "Administrator"
+                  : "Foydalanuvchi",
               },
               {
                 label: "Qo'shilgan",

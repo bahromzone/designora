@@ -6,13 +6,13 @@ const TOKEN_KEY = "designora-auth-token";
 // FastAPI xato javobini o'qish uchun yordamchi:
 // detail string ham, validatsiya xatolarida massiv ham bo'lishi mumkin.
 function extractErrorMessage(payload) {
-  const detail = payload?.detail;
-  if (!detail) return "So'rovni bajarib bo'lmadi.";
-  if (typeof detail === "string") return detail;
-  if (Array.isArray(detail)) {
-    return detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ");
-  }
-  return "So'rovni bajarib bo'lmadi.";
+ const detail = payload?.detail;
+ if (!detail) return "So'rovni bajarib bo'lmadi.";
+ if (typeof detail === "string") return detail;
+ if (Array.isArray(detail)) {
+ return detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ");
+ }
+ return "So'rovni bajarib bo'lmadi.";
 }
 
 // Bir vaqtning o'zida faqat bitta refresh so'rovi ketishi uchun singleton.
@@ -21,468 +21,480 @@ let refreshPromise = null;
 // httpOnly refresh cookie orqali yangi access-token oladi.
 // Muvaffaqiyatli bo'lsa localStorage'ni yangilaydi va event yuboradi.
 async function refreshAccessToken() {
-  if (refreshPromise) return refreshPromise;
-  refreshPromise = (async () => {
-    const res = await fetch(`${API_URL}/api/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-    });
-    if (!res.ok) throw new Error("refresh failed");
-    const data = await res.json();
-    const newToken = data?.access_token;
-    if (newToken) {
-      try {
-        localStorage.setItem(TOKEN_KEY, newToken);
-        window.dispatchEvent(
-          new CustomEvent("designora-token-refreshed", { detail: newToken })
-        );
-      } catch {
-        // localStorage mavjud emas — e'tiborsiz qoldiramiz.
-      }
-    }
-    return newToken;
-  })().finally(() => {
-    refreshPromise = null;
-  });
-  return refreshPromise;
+ if (refreshPromise) return refreshPromise;
+ refreshPromise = (async () => {
+ const res = await fetch(`${API_URL}/api/auth/refresh`, {
+ method: "POST",
+ credentials: "include",
+ });
+ if (!res.ok) throw new Error("refresh failed");
+ const data = await res.json();
+ const newToken = data?.access_token;
+ if (newToken) {
+ try {
+ localStorage.setItem(TOKEN_KEY, newToken);
+ window.dispatchEvent(
+ new CustomEvent("designora-token-refreshed", { detail: newToken })
+ );
+ } catch {
+ // localStorage mavjud emas — e'tiborsiz qoldiramiz.
+ }
+ }
+ return newToken;
+ })().finally(() => {
+ refreshPromise = null;
+ });
+ return refreshPromise;
 }
 
 async function request(path, options = {}) {
-  const { token, headers, _retry, ...rest } = options;
-  const response = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    // Refresh cookie (httpOnly) yuborilishi uchun credentials kerak.
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+ const { token, headers, _retry, ...rest } = options;
+ const response = await fetch(`${API_URL}${path}`, {
+ ...rest,
+ // Refresh cookie (httpOnly) yuborilishi uchun credentials kerak.
+ credentials: "include",
+ headers: {
+ "Content-Type": "application/json",
+ ...(headers ?? {}),
+ ...(token ? { Authorization: `Bearer ${token}` } : {}),
+ },
+ });
 
-  // Access-token muddati tugagan bo'lsa (401) — bir marta jim refresh qilib,
-  // so'rovni yangi token bilan qayta uramiz. Auth endpointlari bundan mustasno.
-  if (
-    response.status === 401 &&
-    !_retry &&
-    token &&
-    !path.startsWith("/api/auth/")
-  ) {
-    try {
-      const newToken = await refreshAccessToken();
-      if (newToken) {
-        return request(path, { ...options, token: newToken, _retry: true });
-      }
-    } catch {
-      // Refresh ham muvaffaqiyatsiz — asl 401 javob bilan davom etamiz.
-    }
-  }
+ // Access-token muddati tugagan bo'lsa (401) — bir marta jim refresh qilib,
+ // so'rovni yangi token bilan qayta uramiz. Auth endpointlari bundan mustasno.
+ if (
+ response.status === 401 &&
+ !_retry &&
+ token &&
+ !path.startsWith("/api/auth/")
+ ) {
+ try {
+ const newToken = await refreshAccessToken();
+ if (newToken) {
+ return request(path, { ...options, token: newToken, _retry: true });
+ }
+ } catch {
+ // Refresh ham muvaffaqiyatsiz — asl 401 javob bilan davom etamiz.
+ }
+ }
 
-  const contentType = response.headers.get("content-type") ?? "";
-  const payload = contentType.includes("application/json")
-    ? await response.json()
-    : null;
+ const contentType = response.headers.get("content-type") ?? "";
+ const payload = contentType.includes("application/json")
+ ? await response.json()
+ : null;
 
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(payload));
-  }
+ if (!response.ok) {
+ throw new Error(extractErrorMessage(payload));
+ }
 
-  return payload;
+ return payload;
 }
 
 // Query-string yordamchisi — undefined/null/bo'sh qiymatlarni tashlab yuboradi.
 function withQuery(path, params = {}) {
-  const usp = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      usp.append(key, value);
-    }
-  });
-  const qs = usp.toString();
-  return qs ? `${path}?${qs}` : path;
+ const usp = new URLSearchParams();
+ Object.entries(params).forEach(([key, value]) => {
+ if (value !== undefined && value !== null && value !== "") {
+ usp.append(key, value);
+ }
+ });
+ const qs = usp.toString();
+ return qs ? `${path}?${qs}` : path;
 }
 
 export const authApi = {
-  // ✅ TUZATILDI: /login → /api/auth/login
-  login: (body) =>
-    request("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+ // ✅ TUZATILDI: /login → /api/auth/login
+ login: (body) =>
+ request("/api/auth/login", {
+ method: "POST",
+ body: JSON.stringify(body),
+ }),
 
-  // ✅ TUZATILDI: /register → /api/auth/register
-  register: (body) =>
-    request("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+ // ✅ TUZATILDI: /register → /api/auth/register
+ register: (body) =>
+ request("/api/auth/register", {
+ method: "POST",
+ body: JSON.stringify(body),
+ }),
 
-  // ✅ TUZATILDI: /profile → /api/profile/me
-  profile: (token) =>
-    request("/api/profile/me", {
-      method: "GET",
-      token,
-    }),
+ // ✅ TUZATILDI: /profile → /api/profile/me
+ profile: (token) =>
+ request("/api/profile/me", {
+ method: "GET",
+ token,
+ }),
 
-  // ✅ TUZATILDI: /dashboard → /api/dashboard
-  dashboard: (token) =>
-    request("/api/dashboard", {
-      method: "GET",
-      token,
-    }),
+ // Profil sahifasi statistikasi. Backend'dagi haqiqiy endpoint — /api/profile/stats.
+ // Avval /api/dashboard chaqirilardi (mavjud emas) va javobda `metrics` maydoni
+ // kutilardi — bu ProfilePage'ni qulatardi (oq ekran). Bu yerda stats javobini
+ // ProfilePage kutgan { metrics: [...] } shakliga o'giramiz. Qiymatlar himoyalangan.
+ dashboard: async (token) => {
+ const s = await request("/api/profile/stats", { method: "GET", token });
+ return {
+ ...(s ?? {}),
+ metrics: [
+ { label: "Yozilgan kurslar", value: s?.courses_enrolled ?? 0 },
+ { label: "Tugatilgan", value: s?.courses_completed ?? 0 },
+ { label: "O'rganilgan soat", value: s?.hours_learned ?? 0 },
+ { label: "Sertifikatlar", value: s?.certificates ?? 0 },
+ { label: "Ball", value: s?.points ?? 0 },
+ { label: "Streak (kun)", value: s?.streak_days ?? 0 },
+ ],
+ };
+ },
 
-  // Public kurslar katalogi (JSON) — /api/courses
-  courses: () =>
-    request("/api/courses", {
-      method: "GET",
-    }),
+ // Public kurslar katalogi (JSON) — /api/courses
+ courses: () =>
+ request("/api/courses", {
+ method: "GET",
+ }),
 
-  // ── FBosqich 6: refresh-token oqimi ─────────────────────────
-  // Login'dan keyin bir marta chaqiriladi — httpOnly refresh cookie o'rnatadi.
-  issueRefresh: (token) =>
-    request("/api/auth/issue-refresh", { method: "POST", token }),
-  // Refresh cookie orqali yangi access-token (odatda avtomatik chaqiriladi).
-  refresh: () => request("/api/auth/refresh", { method: "POST" }),
-  // Barcha sessiyalarni yopadi (logout paytida).
-  logoutAll: (token) =>
-    request("/api/auth/logout-all", { method: "POST", token }),
+ // ── FBosqich 6: refresh-token oqimi ─────────────────────────
+ // Login'dan keyin bir marta chaqiriladi — httpOnly refresh cookie o'rnatadi.
+ issueRefresh: (token) =>
+ request("/api/auth/issue-refresh", { method: "POST", token }),
+ // Refresh cookie orqali yangi access-token (odatda avtomatik chaqiriladi).
+ refresh: () => request("/api/auth/refresh", { method: "POST" }),
+ // Barcha sessiyalarni yopadi (logout paytida).
+ logoutAll: (token) =>
+ request("/api/auth/logout-all", { method: "POST", token }),
 };
 
 // ── BOSQICH 1: kurs detali (syllabus bilan) ───────────────────
 export const coursesApi = {
-  list: () => request("/api/courses"),
-  detail: (courseId) => request(`/api/courses/${courseId}/detail`),
+ list: () => request("/api/courses"),
+ detail: (courseId) => request(`/api/courses/${courseId}/detail`),
 };
 
 // ── BOSQICH 1: o'quv (learning) API ─────────────────────
 export const learningApi = {
-  enroll: (courseId, token) =>
-    request(`/api/learning/enroll/${courseId}`, { method: "POST", token }),
+ enroll: (courseId, token) =>
+ request(`/api/learning/enroll/${courseId}`, { method: "POST", token }),
 
-  unenroll: (courseId, token) =>
-    request(`/api/learning/enroll/${courseId}`, { method: "DELETE", token }),
+ unenroll: (courseId, token) =>
+ request(`/api/learning/enroll/${courseId}`, { method: "DELETE", token }),
 
-  myCourses: (token) => request("/api/learning/my-courses", { token }),
+ myCourses: (token) => request("/api/learning/my-courses", { token }),
 
-  learn: (courseId, token) =>
-    request(`/api/learning/courses/${courseId}`, { token }),
+ learn: (courseId, token) =>
+ request(`/api/learning/courses/${courseId}`, { token }),
 
-  completeLesson: (lessonId, token) =>
-    request(`/api/learning/lessons/${lessonId}/complete`, {
-      method: "POST",
-      token,
-    }),
+ completeLesson: (lessonId, token) =>
+ request(`/api/learning/lessons/${lessonId}/complete`, {
+ method: "POST",
+ token,
+ }),
 
-  uncompleteLesson: (lessonId, token) =>
-    request(`/api/learning/lessons/${lessonId}/uncomplete`, {
-      method: "POST",
-      token,
-    }),
+ uncompleteLesson: (lessonId, token) =>
+ request(`/api/learning/lessons/${lessonId}/uncomplete`, {
+ method: "POST",
+ token,
+ }),
 };
 
 // ── BOSQICH 1: Kashfiyot — qidiruv / kategoriya / tavsiyalar ─────────────
 export const discoveryApi = {
-  search: (params = {}) => request(withQuery("/api/discovery/search", params)),
-  categories: () => request("/api/discovery/categories"),
-  bestselling: (limit = 6) => {
-    const path = "/api/discovery/recommendations/bestselling";
-    return request(withQuery(path, { limit }));
-  },
-  similar: (courseId, limit = 6) => {
-    const path = `/api/discovery/recommendations/similar/${courseId}`;
-    return request(withQuery(path, { limit }));
-  },
+ search: (params = {}) => request(withQuery("/api/discovery/search", params)),
+ categories: () => request("/api/discovery/categories"),
+ bestselling: (limit = 6) => {
+ const path = "/api/discovery/recommendations/bestselling";
+ return request(withQuery(path, { limit }));
+ },
+ similar: (courseId, limit = 6) => {
+ const path = `/api/discovery/recommendations/similar/${courseId}`;
+ return request(withQuery(path, { limit }));
+ },
 };
 
 // ── BOSQICH 2: Testlar (quiz) ──────────────────────────────
 export const quizApi = {
-  courseQuizzes: (courseId, token) =>
-    request(`/api/quiz/courses/${courseId}/quizzes`, { token }),
-  take: (quizId, token) => request(`/api/quiz/quizzes/${quizId}`, { token }),
-  submit: (quizId, answers, token) =>
-    request(`/api/quiz/quizzes/${quizId}/submit`, {
-      method: "POST",
-      body: JSON.stringify({ answers }),
-      token,
-    }),
+ courseQuizzes: (courseId, token) =>
+ request(`/api/quiz/courses/${courseId}/quizzes`, { token }),
+ take: (quizId, token) => request(`/api/quiz/quizzes/${quizId}`, { token }),
+ submit: (quizId, answers, token) =>
+ request(`/api/quiz/quizzes/${quizId}/submit`, {
+ method: "POST",
+ body: JSON.stringify({ answers }),
+ token,
+ }),
 };
 
 // ── BOSQICH 2: Sharh va reyting (reviews) ───────────────────────
 export const reviewsApi = {
-  summary: (courseId) => request(`/api/reviews/courses/${courseId}/summary`),
-  list: (courseId) => request(`/api/reviews/courses/${courseId}`),
-  upsert: (courseId, body, token) =>
-    request(`/api/reviews/courses/${courseId}`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
-  remove: (reviewId, token) =>
-    request(`/api/reviews/${reviewId}`, { method: "DELETE", token }),
+ summary: (courseId) => request(`/api/reviews/courses/${courseId}/summary`),
+ list: (courseId) => request(`/api/reviews/courses/${courseId}`),
+ upsert: (courseId, body, token) =>
+ request(`/api/reviews/courses/${courseId}`, {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
+ remove: (reviewId, token) =>
+ request(`/api/reviews/${reviewId}`, { method: "DELETE", token }),
 };
 
 // ── BOSQICH 2: Savol-javob (Q&A) ──────────────────────────
 export const qaApi = {
-  list: (lessonId, token) =>
-    request(`/api/qa/lessons/${lessonId}/questions`, { token }),
-  ask: (lessonId, body, token) =>
-    request(`/api/qa/lessons/${lessonId}/questions`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
-  answer: (questionId, body, token) =>
-    request(`/api/qa/questions/${questionId}/answers`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
-  resolve: (questionId, token) =>
-    request(`/api/qa/questions/${questionId}/resolve`, {
-      method: "PATCH",
-      token,
-    }),
+ list: (lessonId, token) =>
+ request(`/api/qa/lessons/${lessonId}/questions`, { token }),
+ ask: (lessonId, body, token) =>
+ request(`/api/qa/lessons/${lessonId}/questions`, {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
+ answer: (questionId, body, token) =>
+ request(`/api/qa/questions/${questionId}/answers`, {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
+ resolve: (questionId, token) =>
+ request(`/api/qa/questions/${questionId}/resolve`, {
+ method: "PATCH",
+ token,
+ }),
 };
 
 // ── BOSQICH 2: Eslatmalar (notes) ───────────────────────────
 export const notesApi = {
-  forLesson: (lessonId, token) =>
-    request(`/api/notes/lessons/${lessonId}`, { token }),
-  create: (lessonId, body, token) =>
-    request(`/api/notes/lessons/${lessonId}`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
-  update: (noteId, body, token) =>
-    request(`/api/notes/${noteId}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-      token,
-    }),
-  remove: (noteId, token) =>
-    request(`/api/notes/${noteId}`, { method: "DELETE", token }),
+ forLesson: (lessonId, token) =>
+ request(`/api/notes/lessons/${lessonId}`, { token }),
+ create: (lessonId, body, token) =>
+ request(`/api/notes/lessons/${lessonId}`, {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
+ update: (noteId, body, token) =>
+ request(`/api/notes/${noteId}`, {
+ method: "PATCH",
+ body: JSON.stringify(body),
+ token,
+ }),
+ remove: (noteId, token) =>
+ request(`/api/notes/${noteId}`, { method: "DELETE", token }),
 };
 
 // ── BOSQICH 2: Sertifikat (certificates) ───────────────────────
 export const certificatesApi = {
-  mine: (token) => request("/api/certificates/my", { token }),
-  issue: (courseId, token) =>
-    request(`/api/certificates/courses/${courseId}/issue`, {
-      method: "POST",
-      token,
-    }),
-  download: (certId, token) =>
-    request(`/api/certificates/${certId}/download`, { token }),
-  // Ommaviy — token talab qilinmaydi
-  verify: (code) => request(`/api/certificates/verify/${code}`),
+ mine: (token) => request("/api/certificates/my", { token }),
+ issue: (courseId, token) =>
+ request(`/api/certificates/courses/${courseId}/issue`, {
+ method: "POST",
+ token,
+ }),
+ download: (certId, token) =>
+ request(`/api/certificates/${certId}/download`, { token }),
+ // Ommaviy — token talab qilinmaydi
+ verify: (code) => request(`/api/certificates/verify/${code}`),
 };
 
 // ── BOSQICH 2: Himoyalangan video (signed media) ───────────────────
 export const mediaApi = {
-  signLesson: (lessonId, token) =>
-    request(`/api/media/lessons/${lessonId}/sign`, { method: "POST", token }),
+ signLesson: (lessonId, token) =>
+ request(`/api/media/lessons/${lessonId}/sign`, { method: "POST", token }),
 };
 
 // ── BOSQICH 3: To'lov va monetizatsiya (payments) ──────────────────
 export const paymentsApi = {
-  // Order yaratadi. Bepul kursda { free: true, order_id, status: "paid" };
-  // pullik kursda { free: false, order_id, amount, discount, provider, pay_url }.
-  // body: { course_id, provider: "payme" | "click", coupon_code? }
-  checkout: (body, token) =>
-    request("/api/payments/checkout", {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
+ // Order yaratadi. Bepul kursda { free: true, order_id, status: "paid" };
+ // pullik kursda { free: false, order_id, amount, discount, provider, pay_url }.
+ // body: { course_id, provider: "payme" | "click", coupon_code? }
+ checkout: (body, token) =>
+ request("/api/payments/checkout", {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
 
-  // Buyurtma holatini tekshiradi (natija sahifasi polling qiladi).
-  orderStatus: (orderId, token) =>
-    request(`/api/payments/orders/${orderId}`, { token }),
+ // Buyurtma holatini tekshiradi (natija sahifasi polling qiladi).
+ orderStatus: (orderId, token) =>
+ request(`/api/payments/orders/${orderId}`, { token }),
 };
 
 // ── BOSQICH 4: Bildirishnomalar (notifications) ──────────────────
 export const notificationsApi = {
-  list: (token, onlyUnread = false) =>
-    request(withQuery("/api/notifications", { only_unread: onlyUnread }), {
-      token,
-    }),
-  unreadCount: (token) => request("/api/notifications/unread-count", { token }),
-  markRead: (id, token) =>
-    request(`/api/notifications/${id}/read`, { method: "POST", token }),
-  markAllRead: (token) =>
-    request("/api/notifications/read-all", { method: "POST", token }),
-  remove: (id, token) =>
-    request(`/api/notifications/${id}`, { method: "DELETE", token }),
+ list: (token, onlyUnread = false) =>
+ request(withQuery("/api/notifications", { only_unread: onlyUnread }), {
+ token,
+ }),
+ unreadCount: (token) => request("/api/notifications/unread-count", { token }),
+ markRead: (id, token) =>
+ request(`/api/notifications/${id}/read`, { method: "POST", token }),
+ markAllRead: (token) =>
+ request("/api/notifications/read-all", { method: "POST", token }),
+ remove: (id, token) =>
+ request(`/api/notifications/${id}`, { method: "DELETE", token }),
 };
 
 // ── BOSQICH 4: Blog ────────────────────────────────────
 export const blogApi = {
-  // { total, page, per_page, pages, results: [...] }
-  list: (params = {}) => request(withQuery("/api/blog", params)),
-  // to'liq post (body + meta), o'qilganda backend views'ni oshiradi
-  getBySlug: (slug) => request(`/api/blog/${slug}`),
+ // { total, page, per_page, pages, results: [...] }
+ list: (params = {}) => request(withQuery("/api/blog", params)),
+ // to'liq post (body + meta), o'qilganda backend views'ni oshiradi
+ getBySlug: (slug) => request(`/api/blog/${slug}`),
 };
 
 // ── BOSQICH 4: Forum ───────────────────────────────────
 export const forumApi = {
-  // { total, page, per_page, pages, results: [...] }
-  listThreads: (params = {}) =>
-    request(withQuery("/api/forum/threads", params)),
-  // to'liq mavzu + javoblar (posts). Ommaviy o'qiladi.
-  getThread: (threadId) => request(`/api/forum/threads/${threadId}`),
-  createThread: (body, token) =>
-    request("/api/forum/threads", {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
-  reply: (threadId, body, token) =>
-    request(`/api/forum/threads/${threadId}/posts`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
+ // { total, page, per_page, pages, results: [...] }
+ listThreads: (params = {}) =>
+ request(withQuery("/api/forum/threads", params)),
+ // to'liq mavzu + javoblar (posts). Ommaviy o'qiladi.
+ getThread: (threadId) => request(`/api/forum/threads/${threadId}`),
+ createThread: (body, token) =>
+ request("/api/forum/threads", {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
+ reply: (threadId, body, token) =>
+ request(`/api/forum/threads/${threadId}/posts`, {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
 };
 
 // ── BOSQICH 4: Referral ─────────────────────────────────
 export const referralApi = {
-  // { code, total_referred, converted, points_earned } — kod bo'lmasa yaratadi
-  myCode: (token) => request("/api/referrals/my-code", { token }),
-  apply: (code, token) =>
-    request("/api/referrals/apply", {
-      method: "POST",
-      body: JSON.stringify({ code }),
-      token,
-    }),
-  myReferrals: (token) => request("/api/referrals/my-referrals", { token }),
+ // { code, total_referred, converted, points_earned } — kod bo'lmasa yaratadi
+ myCode: (token) => request("/api/referrals/my-code", { token }),
+ apply: (code, token) =>
+ request("/api/referrals/apply", {
+ method: "POST",
+ body: JSON.stringify({ code }),
+ token,
+ }),
+ myReferrals: (token) => request("/api/referrals/my-referrals", { token }),
 };
 
 // ── BOSQICH 4: Instruktor profili (ommaviy) ──────────────────────
 export const instructorsApi = {
-  // { id, name, bio, avatar_url, website, location, courses_count,
-  //   total_students, avg_rating, courses: [...] }
-  get: (instructorId) => request(`/api/instructors/${instructorId}`),
-  courses: (instructorId) =>
-    request(`/api/instructors/${instructorId}/courses`),
+ // { id, name, bio, avatar_url, website, location, courses_count,
+ // total_students, avg_rating, courses: [...] }
+ get: (instructorId) => request(`/api/instructors/${instructorId}`),
+ courses: (instructorId) =>
+ request(`/api/instructors/${instructorId}/courses`),
 };
 
 // ── BOSQICH 4: Gamifikatsiya (ball, daraja, nishon, leaderboard) ────────
 export const gamificationApi = {
-  // { points, level, streak_days, points_to_next_level, badges: [...] }
-  me: (token) => request("/api/gamification/me", { token }),
-  // Barcha nishonlar katalogi + foydalanuvchi qaysilarini olgani (earned)
-  badges: (token) => request("/api/gamification/badges", { token }),
-  // Ommaviy reyting jadvali — token shart emas
-  leaderboard: (limit = 20) =>
-    request(withQuery("/api/gamification/leaderboard", { limit })),
+ // { points, level, streak_days, points_to_next_level, badges: [...] }
+ me: (token) => request("/api/gamification/me", { token }),
+ // Barcha nishonlar katalogi + foydalanuvchi qaysilarini olgani (earned)
+ badges: (token) => request("/api/gamification/badges", { token }),
+ // Ommaviy reyting jadvali — token shart emas
+ leaderboard: (limit = 20) =>
+ request(withQuery("/api/gamification/leaderboard", { limit })),
 };
 
 // ── BOSQICH 5: Analitika (instruktor/admin dashboard + tracking) ────────
 export const analyticsApi = {
-  // Instruktor dashboard: { courses_count, revenue, completion_rate,
-  //   average_progress, top_courses: [...], per_course: [...] }
-  instructor: (token) => request("/api/analytics/instructor", { token }),
-  // Admin dashboard: { revenue, users, courses, enrollments, funnel,
-  //   top_courses, events }
-  admin: (token) => request("/api/analytics/admin", { token }),
-  // Xatti-harakat hodisasini yozadi (login shart emas).
-  // body: { name, props?, session_id?, path? }
-  track: (body, token) =>
-    request("/api/analytics/track", {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
+ // Instruktor dashboard: { courses_count, revenue, completion_rate,
+ // average_progress, top_courses: [...], per_course: [...] }
+ instructor: (token) => request("/api/analytics/instructor", { token }),
+ // Admin dashboard: { revenue, users, courses, enrollments, funnel,
+ // top_courses, events }
+ admin: (token) => request("/api/analytics/admin", { token }),
+ // Xatti-harakat hodisasini yozadi (login shart emas).
+ // body: { name, props?, session_id?, path? }
+ track: (body, token) =>
+ request("/api/analytics/track", {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
 };
 
 // ── BOSQICH 5: Instruktor kontent boshqaruvi (CRUD) ─────────────────
 // Ruxsat: role ∈ {instructor, admin, superadmin}. Kurs egasi yoki admin.
 export const instructorApi = {
-  // O'z kurslari ro'yxati (admin uchun barchasi). Har biri admin dict:
-  // { id, title, status, is_active, students_count, modules_count,
-  //   lessons_count, ... }
-  listCourses: (token) => request("/api/instructor/courses", { token }),
-  getCourse: (courseId, token) =>
-    request(`/api/instructor/courses/${courseId}`, { token }),
-  createCourse: (body, token) =>
-    request("/api/instructor/courses", {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
-  updateCourse: (courseId, body, token) =>
-    request(`/api/instructor/courses/${courseId}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-      token,
-    }),
-  publishCourse: (courseId, token) =>
-    request(`/api/instructor/courses/${courseId}/publish`, {
-      method: "POST",
-      token,
-    }),
-  unpublishCourse: (courseId, token) =>
-    request(`/api/instructor/courses/${courseId}/unpublish`, {
-      method: "POST",
-      token,
-    }),
-  // Modullar
-  createModule: (courseId, body, token) =>
-    request(`/api/instructor/courses/${courseId}/modules`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
-  updateModule: (moduleId, body, token) =>
-    request(`/api/instructor/modules/${moduleId}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-      token,
-    }),
-  deleteModule: (moduleId, token) =>
-    request(`/api/instructor/modules/${moduleId}`, {
-      method: "DELETE",
-      token,
-    }),
-  // Darslar
-  createLesson: (courseId, body, token) =>
-    request(`/api/instructor/courses/${courseId}/lessons`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      token,
-    }),
-  updateLesson: (lessonId, body, token) =>
-    request(`/api/instructor/lessons/${lessonId}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-      token,
-    }),
-  deleteLesson: (lessonId, token) =>
-    request(`/api/instructor/lessons/${lessonId}`, {
-      method: "DELETE",
-      token,
-    }),
+ // O'z kurslari ro'yxati (admin uchun barchasi). Har biri admin dict:
+ // { id, title, status, is_active, students_count, modules_count,
+ // lessons_count, ... }
+ listCourses: (token) => request("/api/instructor/courses", { token }),
+ getCourse: (courseId, token) =>
+ request(`/api/instructor/courses/${courseId}`, { token }),
+ createCourse: (body, token) =>
+ request("/api/instructor/courses", {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
+ updateCourse: (courseId, body, token) =>
+ request(`/api/instructor/courses/${courseId}`, {
+ method: "PATCH",
+ body: JSON.stringify(body),
+ token,
+ }),
+ publishCourse: (courseId, token) =>
+ request(`/api/instructor/courses/${courseId}/publish`, {
+ method: "POST",
+ token,
+ }),
+ unpublishCourse: (courseId, token) =>
+ request(`/api/instructor/courses/${courseId}/unpublish`, {
+ method: "POST",
+ token,
+ }),
+ // Modullar
+ createModule: (courseId, body, token) =>
+ request(`/api/instructor/courses/${courseId}/modules`, {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
+ updateModule: (moduleId, body, token) =>
+ request(`/api/instructor/modules/${moduleId}`, {
+ method: "PATCH",
+ body: JSON.stringify(body),
+ token,
+ }),
+ deleteModule: (moduleId, token) =>
+ request(`/api/instructor/modules/${moduleId}`, {
+ method: "DELETE",
+ token,
+ }),
+ // Darslar
+ createLesson: (courseId, body, token) =>
+ request(`/api/instructor/courses/${courseId}/lessons`, {
+ method: "POST",
+ body: JSON.stringify(body),
+ token,
+ }),
+ updateLesson: (lessonId, body, token) =>
+ request(`/api/instructor/lessons/${lessonId}`, {
+ method: "PATCH",
+ body: JSON.stringify(body),
+ token,
+ }),
+ deleteLesson: (lessonId, token) =>
+ request(`/api/instructor/lessons/${lessonId}`, {
+ method: "DELETE",
+ token,
+ }),
 };
 
 // ── Umumiy formatlash yordamchilari ──────────────────────────
 export function formatDuration(totalMinutes) {
-  const mins = Number(totalMinutes) || 0;
-  if (mins < 60) return `${mins} daqiqa`;
-  const hours = Math.floor(mins / 60);
-  const rem = mins % 60;
-  return rem ? `${hours} soat ${rem} daq` : `${hours} soat`;
+ const mins = Number(totalMinutes) || 0;
+ if (mins < 60) return `${mins} daqiqa`;
+ const hours = Math.floor(mins / 60);
+ const rem = mins % 60;
+ return rem ? `${hours} soat ${rem} daq` : `${hours} soat`;
 }
 
 export function formatSeconds(totalSeconds) {
-  const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${m}:${sec.toString().padStart(2, "0")}`;
+ const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+ const m = Math.floor(s / 60);
+ const sec = s % 60;
+ return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
 export function formatPrice(price) {
-  const p = Number(price) || 0;
-  if (p <= 0) return "Bepul";
-  return `${p.toLocaleString("uz-UZ")} so'm`;
+ const p = Number(price) || 0;
+ if (p <= 0) return "Bepul";
+ return `${p.toLocaleString("uz-UZ")} so'm`;
 }

@@ -236,6 +236,21 @@ export const paymentsApi = {
     request(`/api/payments/orders/${orderId}`, { token }),
 };
 
+// ── BOSQICH 4: Bildirishnomalar (notifications) ──────────────────────────────
+export const notificationsApi = {
+  list: (token, onlyUnread = false) =>
+    request(withQuery("/api/notifications", { only_unread: onlyUnread }), {
+      token,
+    }),
+  unreadCount: (token) => request("/api/notifications/unread-count", { token }),
+  markRead: (id, token) =>
+    request(`/api/notifications/${id}/read`, { method: "POST", token }),
+  markAllRead: (token) =>
+    request("/api/notifications/read-all", { method: "POST", token }),
+  remove: (id, token) =>
+    request(`/api/notifications/${id}`, { method: "DELETE", token }),
+};
+
 // ── Umumiy formatlash yordamchilari ─────────────────────────────────────────
 export function formatDuration(totalMinutes) {
   const mins = Number(totalMinutes) || 0;

@@ -4,7 +4,14 @@ import { Link } from "react-router-dom";
 import { instructorApi, formatPrice } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { Button, EmptyState, Input, Modal, Select, Spinner } from "../components/ui";
+import {
+  Button,
+  EmptyState,
+  Input,
+  Modal,
+  Select,
+  Spinner,
+} from "../components/ui";
 
 const LEVELS = [
   { value: "boshlang'ich", label: "Boshlang'ich" },

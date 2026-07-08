@@ -9,6 +9,7 @@ import {
   learningApi,
 } from "../lib/api";
 import RecommendationSection from "../components/RecommendationSection";
+import ReviewsSection from "../components/ReviewsSection";
 import { useAuth } from "../context/AuthContext";
 
 function Stat({ label, value }) {
@@ -357,6 +358,9 @@ export default function CourseDetailPage() {
           </div>
         </aside>
       </div>
+
+      {/* Sharhlar va reyting */}
+      <ReviewsSection courseId={courseId} isEnrolled={isEnrolled} />
 
       {/* Tavsiya: o'xshash kurslar */}
       <RecommendationSection

@@ -53,7 +53,7 @@ from app.routers import (
 )
 from app.routers.auth import public_router
 
-# ── LOGGING ───────────────────────────────
+# ── LOGGING ───────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -64,7 +64,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── APP ────────────────────────────
+# ── APP ───────────────────────────────────────────────────
 app = FastAPI(
     title="Designora Platform",
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
@@ -74,7 +74,7 @@ app = FastAPI(
 # ── DATABASE ──────────────────────────────────────────
 Base.metadata.create_all(bind=engine)
 
-# ── MIDDLEWARES ───────────────────────────────────────
+# ── MIDDLEWARES ────────────────────────────────────────
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SESSION_SECRET_KEY,
@@ -98,18 +98,18 @@ app.add_middleware(MetricsMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)
 
-# ── RATE LIMITER ─────────────────────────────────────
+# ── RATE LIMITER ───────────────────────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── STATIC ─────────────────────────────
+# ── STATIC ───────────────────────────────────────────
 # Absolyut yo'l — server qaysi papkadan ishga tushirilishidan qat'i nazar ishlaydi
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 setup_admin(app)
 
-# ── ROUTERS ──────────────────────────
+# ── ROUTERS ───────────────────────────────────────────
 app.include_router(profile.router)
 app.include_router(admin_courses.router)
 app.include_router(courses_api.router)
@@ -121,7 +121,7 @@ app.include_router(auth.router)
 app.include_router(google.router)
 app.include_router(users.router)
 
-# ── BOSQICH 1-5 routerlari ─────────────────────────
+# ── BOSQICH 1-5 routerlari ──────────────────────────────────
 # Refaktor paytida tushib qolgan include'lar — React frontend va endpoint
 # testlari shularga bog'liq.
 app.include_router(discovery.router)
@@ -176,7 +176,7 @@ def admin_list_users(
 app.include_router(_admin_router)
 
 
-# ── ASOSIY SAHIFA ────────────────────────
+# ── ASOSIY SAHIFA ──────────────────────────────────────
 # UI endi to'liq React frontend'da (frontend/ papkasi, Vite dev: 5173-port).
 # Backend faqat JSON API xizmatini bajaradi.
 @app.get("/")
@@ -195,7 +195,7 @@ def me():
     return RedirectResponse(url="/api/profile/me", status_code=307)
 
 
-# ── XATO HANDLERI ──────────────────────────
+# ── XATO HANDLERI ──────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     if settings.ENVIRONMENT == "production":
@@ -209,7 +209,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# ── RUN ──────────────────────────────
+# ── RUN ────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",

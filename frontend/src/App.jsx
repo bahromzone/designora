@@ -11,6 +11,7 @@ import MyCoursesPage from "./pages/MyCoursesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ProfilePage from "./pages/ProfilePage";
 import RegisterPage from "./pages/RegisterPage";
+import VerifyPage from "./pages/VerifyPage";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
         <Route path="/kirish" element={<LoginPage />} />
         <Route path="/royxatdan-otish" element={<RegisterPage />} />
+        <Route path="/verify/:code" element={<VerifyPage />} />
         <Route
           path="/kurslarim"
           element={

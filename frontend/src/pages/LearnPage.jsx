@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { formatSeconds, learningApi } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import VideoPlayer from "../components/VideoPlayer";
+import QASection from "../components/QASection";
+import NotesSection from "../components/NotesSection";
 
 export default function LearnPage() {
   const { courseId } = useParams();
@@ -212,6 +214,12 @@ export default function LearnPage() {
                 >
                   Keyingi dars →
                 </button>
+              </div>
+
+              {/* Eslatmalar + Savol-javob */}
+              <div className="mt-10 grid gap-8 border-t border-border pt-8 lg:grid-cols-2">
+                <NotesSection lessonId={activeLesson.id} />
+                <QASection lessonId={activeLesson.id} />
               </div>
             </div>
           )}

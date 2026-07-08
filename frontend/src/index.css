@@ -57,6 +57,33 @@ body {
     );
 }
 
+/* ── A11y: klaviatura fokusi ko'rinadigan ring ────────────────────
+ Faqat klaviatura bilan harakatlanganda ko'rinadi (sichqoncha bosishda emas). */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── A11y: "asosiy kontentga o'tish" skip-link ───────────────────
+ Odatda yashirin, Tab bosilganda ekranning tepasida paydo bo'ladi. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 200;
+  padding: 0.6rem 1rem;
+  border-radius: 0.6rem;
+  background: var(--brand);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
 /* ── Umumiy konteyner ── */
 .shell {
   width: 100%;
@@ -229,4 +256,18 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(124, 58, 237, 0.6);
+}
+
+/* ── A11y: harakatni kamaytirish tartibi ───────────────────────
+ Foydalanuvchi OS'da "reduce motion"ni yoqsa, animatsiyalarni deyarli
+ o'chiramiz (vestibulyar buzilishlardan himoya). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

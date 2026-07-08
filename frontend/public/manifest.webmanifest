@@ -1,0 +1,20 @@
+{
+  "name": "Designora — Onlayn dizayn ta'limi",
+  "short_name": "Designora",
+  "description": "Liboslar va moda ta'limi uchun premium onlayn platforma.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f7fc",
+  "theme_color": "#7c3aed",
+  "lang": "uz",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -7,6 +7,8 @@ import BlogPostPage from "./pages/BlogPostPage";
 import CheckoutResultPage from "./pages/CheckoutResultPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CoursesPage from "./pages/CoursesPage";
+import ForumListPage from "./pages/ForumListPage";
+import ForumThreadPage from "./pages/ForumThreadPage";
 import HomePage from "./pages/HomePage";
 import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
@@ -25,6 +27,8 @@ function App() {
         <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/forum" element={<ForumListPage />} />
+        <Route path="/forum/:threadId" element={<ForumThreadPage />} />
         <Route path="/kirish" element={<LoginPage />} />
         <Route path="/royxatdan-otish" element={<RegisterPage />} />
         <Route path="/verify/:code" element={<VerifyPage />} />

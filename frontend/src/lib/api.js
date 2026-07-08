@@ -259,6 +259,26 @@ export const blogApi = {
   getBySlug: (slug) => request(`/api/blog/${slug}`),
 };
 
+// ── BOSQICH 4: Forum ─────────────────────────────────────────────────────────
+export const forumApi = {
+  // { total, page, per_page, pages, results: [...] }
+  listThreads: (params = {}) => request(withQuery("/api/forum/threads", params)),
+  // to'liq mavzu + javoblar (posts). Ommaviy o'qiladi.
+  getThread: (threadId) => request(`/api/forum/threads/${threadId}`),
+  createThread: (body, token) =>
+    request("/api/forum/threads", {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
+    }),
+  reply: (threadId, body, token) =>
+    request(`/api/forum/threads/${threadId}/posts`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
+    }),
+};
+
 // ── Umumiy formatlash yordamchilari ─────────────────────────────────────────
 export function formatDuration(totalMinutes) {
   const mins = Number(totalMinutes) || 0;

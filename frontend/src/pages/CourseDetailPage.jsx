@@ -400,7 +400,9 @@ export default function CourseDetailPage() {
 
                       {/* Kupon kodi */}
                       <div>
-                        <p className="label mb-1.5">Chegirma kodi (ixtiyoriy)</p>
+                        <p className="label mb-1.5">
+                          Chegirma kodi (ixtiyoriy)
+                        </p>
                         <input
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value)}
@@ -427,11 +429,7 @@ export default function CourseDetailPage() {
                     className="block w-full rounded-full px-6 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-60"
                     style={{ background: "var(--amber)" }}
                   >
-                    {busy
-                      ? "..."
-                      : isPaid
-                        ? "Sotib olish"
-                        : "Kursga yozilish"}
+                    {busy ? "..." : isPaid ? "Sotib olish" : "Kursga yozilish"}
                   </button>
                 </>
               )}

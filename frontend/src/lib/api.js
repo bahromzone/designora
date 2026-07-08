@@ -219,6 +219,23 @@ export const mediaApi = {
     request(`/api/media/lessons/${lessonId}/sign`, { method: "POST", token }),
 };
 
+// ── BOSQICH 3: To'lov va monetizatsiya (payments) ────────────────────────────
+export const paymentsApi = {
+  // Order yaratadi. Bepul kursda { free: true, order_id, status: "paid" };
+  // pullik kursda { free: false, order_id, amount, discount, provider, pay_url }.
+  // body: { course_id, provider: "payme" | "click", coupon_code? }
+  checkout: (body, token) =>
+    request("/api/payments/checkout", {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
+    }),
+
+  // Buyurtma holatini tekshiradi (natija sahifasi polling qiladi).
+  orderStatus: (orderId, token) =>
+    request(`/api/payments/orders/${orderId}`, { token }),
+};
+
 // ── Umumiy formatlash yordamchilari ─────────────────────────────────────────
 export function formatDuration(totalMinutes) {
   const mins = Number(totalMinutes) || 0;

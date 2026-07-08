@@ -10,6 +10,7 @@ import CoursesPage from "./pages/CoursesPage";
 import ForumListPage from "./pages/ForumListPage";
 import ForumThreadPage from "./pages/ForumThreadPage";
 import HomePage from "./pages/HomePage";
+import InstructorDashboardPage from "./pages/InstructorDashboardPage";
 import InstructorPage from "./pages/InstructorPage";
 import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
@@ -63,6 +64,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instruktor-panel"
+          element={
+            <ProtectedRoute>
+              <InstructorDashboardPage />
             </ProtectedRoute>
           }
         />

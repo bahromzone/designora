@@ -8,6 +8,8 @@ import {
   formatSeconds,
   learningApi,
 } from "../lib/api";
+import CertificateSection from "../components/CertificateSection";
+import QuizSection from "../components/QuizSection";
 import RecommendationSection from "../components/RecommendationSection";
 import ReviewsSection from "../components/ReviewsSection";
 import { useAuth } from "../context/AuthContext";
@@ -358,6 +360,16 @@ export default function CourseDetailPage() {
           </div>
         </aside>
       </div>
+
+      {/* Testlar */}
+      <QuizSection courseId={courseId} isEnrolled={isEnrolled} />
+
+      {/* Sertifikat */}
+      <CertificateSection
+        courseId={courseId}
+        isEnrolled={isEnrolled}
+        progress={progress}
+      />
 
       {/* Sharhlar va reyting */}
       <ReviewsSection courseId={courseId} isEnrolled={isEnrolled} />

@@ -116,7 +116,10 @@ export default function BlogListPage() {
         >
           Maqolalar va yangiliklar
         </h1>
-        <p className="mt-3 text-lg leading-8" style={{ color: "var(--ink-60)" }}>
+        <p
+          className="mt-3 text-lg leading-8"
+          style={{ color: "var(--ink-60)" }}
+        >
           Dizayn, karyera va Designora hamjamiyati haqida.
         </p>
         {tag && (

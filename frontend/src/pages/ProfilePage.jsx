@@ -90,7 +90,10 @@ export default function ProfilePage() {
             <h2 className="font-serif text-lg font-semibold text-ink">
               Profilingiz muvaffaqiyatli ishlayapti
             </h2>
-            <p className="mt-2 text-sm leading-7" style={{ color: "var(--ink-60)" }}>
+            <p
+              className="mt-2 text-sm leading-7"
+              style={{ color: "var(--ink-60)" }}
+            >
               JWT asosidagi himoyalangan so'rov orqali ma'lumotlaringiz xavfsiz
               va barqaror tarzda yuklandi.
             </p>

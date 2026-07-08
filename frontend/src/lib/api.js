@@ -83,13 +83,13 @@ export const authApi = {
     }),
 };
 
-// ── BOSQICH 1: kurs detali (syllabus bilan) ─────────────────────────────────
+// ── BOSQICH 1: kurs detali (syllabus bilan) ─────────────────────────
 export const coursesApi = {
   list: () => request("/api/courses"),
   detail: (courseId) => request(`/api/courses/${courseId}/detail`),
 };
 
-// ── BOSQICH 1: o'quv (learning) API ─────────────────────────────────────────
+// ── BOSQICH 1: o'quv (learning) API ────────────────────────────
 export const learningApi = {
   enroll: (courseId, token) =>
     request(`/api/learning/enroll/${courseId}`, { method: "POST", token }),
@@ -115,7 +115,7 @@ export const learningApi = {
     }),
 };
 
-// ── BOSQICH 1: Kashfiyot — qidiruv / kategoriya / tavsiyalar ─────────────────
+// ── BOSQICH 1: Kashfiyot — qidiruv / kategoriya / tavsiyalar ─────────────
 export const discoveryApi = {
   search: (params = {}) => request(withQuery("/api/discovery/search", params)),
   categories: () => request("/api/discovery/categories"),
@@ -129,7 +129,7 @@ export const discoveryApi = {
   },
 };
 
-// ── BOSQICH 2: Testlar (quiz) ────────────────────────────────────────────────
+// ── BOSQICH 2: Testlar (quiz) ─────────────────────────────────
 export const quizApi = {
   courseQuizzes: (courseId, token) =>
     request(`/api/quiz/courses/${courseId}/quizzes`, { token }),
@@ -142,7 +142,7 @@ export const quizApi = {
     }),
 };
 
-// ── BOSQICH 2: Sharh va reyting (reviews) ────────────────────────────────────
+// ── BOSQICH 2: Sharh va reyting (reviews) ────────────────────────
 export const reviewsApi = {
   summary: (courseId) => request(`/api/reviews/courses/${courseId}/summary`),
   list: (courseId) => request(`/api/reviews/courses/${courseId}`),
@@ -156,7 +156,7 @@ export const reviewsApi = {
     request(`/api/reviews/${reviewId}`, { method: "DELETE", token }),
 };
 
-// ── BOSQICH 2: Savol-javob (Q&A) ─────────────────────────────────────────────
+// ── BOSQICH 2: Savol-javob (Q&A) ──────────────────────────────
 export const qaApi = {
   list: (lessonId, token) =>
     request(`/api/qa/lessons/${lessonId}/questions`, { token }),
@@ -179,7 +179,7 @@ export const qaApi = {
     }),
 };
 
-// ── BOSQICH 2: Eslatmalar (notes) ────────────────────────────────────────────
+// ── BOSQICH 2: Eslatmalar (notes) ─────────────────────────────
 export const notesApi = {
   forLesson: (lessonId, token) =>
     request(`/api/notes/lessons/${lessonId}`, { token }),
@@ -199,7 +199,7 @@ export const notesApi = {
     request(`/api/notes/${noteId}`, { method: "DELETE", token }),
 };
 
-// ── BOSQICH 2: Sertifikat (certificates) ─────────────────────────────────────
+// ── BOSQICH 2: Sertifikat (certificates) ─────────────────────────
 export const certificatesApi = {
   mine: (token) => request("/api/certificates/my", { token }),
   issue: (courseId, token) =>
@@ -213,13 +213,13 @@ export const certificatesApi = {
   verify: (code) => request(`/api/certificates/verify/${code}`),
 };
 
-// ── BOSQICH 2: Himoyalangan video (signed media) ─────────────────────────────
+// ── BOSQICH 2: Himoyalangan video (signed media) ────────────────────
 export const mediaApi = {
   signLesson: (lessonId, token) =>
     request(`/api/media/lessons/${lessonId}/sign`, { method: "POST", token }),
 };
 
-// ── BOSQICH 3: To'lov va monetizatsiya (payments) ────────────────────────────
+// ── BOSQICH 3: To'lov va monetizatsiya (payments) ────────────────────
 export const paymentsApi = {
   // Order yaratadi. Bepul kursda { free: true, order_id, status: "paid" };
   // pullik kursda { free: false, order_id, amount, discount, provider, pay_url }.
@@ -236,7 +236,7 @@ export const paymentsApi = {
     request(`/api/payments/orders/${orderId}`, { token }),
 };
 
-// ── BOSQICH 4: Bildirishnomalar (notifications) ──────────────────────────────
+// ── BOSQICH 4: Bildirishnomalar (notifications) ────────────────────
 export const notificationsApi = {
   list: (token, onlyUnread = false) =>
     request(withQuery("/api/notifications", { only_unread: onlyUnread }), {
@@ -251,7 +251,7 @@ export const notificationsApi = {
     request(`/api/notifications/${id}`, { method: "DELETE", token }),
 };
 
-// ── BOSQICH 4: Blog ──────────────────────────────────────────────────────────
+// ── BOSQICH 4: Blog ──────────────────────────────────────
 export const blogApi = {
   // { total, page, per_page, pages, results: [...] }
   list: (params = {}) => request(withQuery("/api/blog", params)),
@@ -259,7 +259,7 @@ export const blogApi = {
   getBySlug: (slug) => request(`/api/blog/${slug}`),
 };
 
-// ── BOSQICH 4: Forum ─────────────────────────────────────────────────────────
+// ── BOSQICH 4: Forum ─────────────────────────────────────
 export const forumApi = {
   // { total, page, per_page, pages, results: [...] }
   listThreads: (params = {}) =>
@@ -280,7 +280,7 @@ export const forumApi = {
     }),
 };
 
-// ── BOSQICH 4: Referral ──────────────────────────────────────────────────────
+// ── BOSQICH 4: Referral ───────────────────────────────────
 export const referralApi = {
   // { code, total_referred, converted, points_earned } — kod bo'lmasa yaratadi
   myCode: (token) => request("/api/referrals/my-code", { token }),
@@ -293,7 +293,17 @@ export const referralApi = {
   myReferrals: (token) => request("/api/referrals/my-referrals", { token }),
 };
 
-// ── Umumiy formatlash yordamchilari ─────────────────────────────────────────
+// ── BOSQICH 4: Ommaviy instruktor profillari (instructors) ──────────────
+// Ommaviy — token talab qilinmaydi.
+// get(): { id, name, bio, avatar_url, website, location,
+//          courses_count, total_students, avg_rating, courses: [...] }
+export const instructorsApi = {
+  get: (instructorId) => request(`/api/instructors/${instructorId}`),
+  courses: (instructorId) =>
+    request(`/api/instructors/${instructorId}/courses`),
+};
+
+// ── Umumiy formatlash yordamchilari ────────────────────────────
 export function formatDuration(totalMinutes) {
   const mins = Number(totalMinutes) || 0;
   if (mins < 60) return `${mins} daqiqa`;

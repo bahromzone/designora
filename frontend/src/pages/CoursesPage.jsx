@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
+import CategoryChips from "../components/CategoryChips";
+import RecommendationSection from "../components/RecommendationSection";
 import SearchResultCard from "../components/SearchResultCard";
 import { CourseCardSkeleton, Input, Pagination, Select } from "../components/ui";
 import { discoveryApi } from "../lib/api";
@@ -145,7 +147,7 @@ export default function CoursesPage() {
       {/* Header */}
       <div className="mb-8 max-w-2xl">
         <p className="label">Katalog</p>
-        <h1 className="mt-2 text-4xl font-extrabold text-ink sketch-underline">
+        <h1 className="mt-2 text-4xl font-extrabold text-ink">
           Kurslar katalogi
         </h1>
         <p className="mt-3 text-muted">
@@ -153,6 +155,13 @@ export default function CoursesPage() {
           toping.
         </p>
       </div>
+
+      {/* Kategoriya chiplari */}
+      <CategoryChips
+        categories={categories}
+        value={category}
+        onChange={(c) => setParam("category", c)}
+      />
 
       {/* Qidiruv + filtrlar */}
       <div className="card mb-8 rounded-2xl p-5">
@@ -266,6 +275,16 @@ export default function CoursesPage() {
             />
           </div>
         </>
+      )}
+
+      {/* Tavsiya: ko'p sotilgan kurslar (faqat filtr yo'q bo'lganda) */}
+      {!hasActiveFilters && (
+        <RecommendationSection
+          title="Ko'p sotilgan kurslar"
+          subtitle="O'quvchilar eng ko'p tanlagan dasturlar"
+          fetcher={() => discoveryApi.bestselling(6)}
+          limit={3}
+        />
       )}
     </div>
   );

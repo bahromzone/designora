@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   coursesApi,
+  discoveryApi,
   formatDuration,
   formatPrice,
   formatSeconds,
   learningApi,
 } from "../lib/api";
+import RecommendationSection from "../components/RecommendationSection";
 import { useAuth } from "../context/AuthContext";
 
 function Stat({ label, value }) {
@@ -355,6 +357,14 @@ export default function CourseDetailPage() {
           </div>
         </aside>
       </div>
+
+      {/* Tavsiya: o'xshash kurslar */}
+      <RecommendationSection
+        title="O'xshash kurslar"
+        subtitle="Shu yo'nalishdagi boshqa dasturlar"
+        fetcher={() => discoveryApi.similar(courseId, 6)}
+        limit={3}
+      />
     </section>
   );
 }

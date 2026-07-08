@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import EngagementSection from "../components/EngagementSection";
+import RecommendationSection from "../components/RecommendationSection";
 import WaveAnimation from "../components/WaveAnimation";
-import { authApi } from "../lib/api";
+import { authApi, discoveryApi } from "../lib/api";
 
 // Backend ishlamay qolsa ko'rsatiladigan zaxira kurslar
 const FALLBACK_COURSES = [
@@ -313,6 +314,16 @@ export default function HomePage() {
       </section>
 
       <EngagementSection />
+
+      {/* Tavsiya: ko'p sotilgan kurslar */}
+      <section className="py-16 px-6 max-w-7xl mx-auto">
+        <RecommendationSection
+          title="Ko'p sotilgan kurslar"
+          subtitle="O'quvchilar eng ko'p tanlagan dasturlar"
+          fetcher={() => discoveryApi.bestselling(6)}
+          limit={3}
+        />
+      </section>
 
       {/* Cinematic Call to Action */}
       <section className="py-32 px-6 max-w-7xl mx-auto relative">

@@ -49,10 +49,16 @@ export default function AppShell({ children }) {
 
   return (
     <div className="relative min-h-screen flex flex-col selection:bg-purple-500/20 overflow-x-hidden">
+      {/* Klaviatura foydalanuvchilari uchun — asosiy kontentga sakrash */}
+      <a href="#asosiy-kontent" className="skip-link">
+        Asosiy kontentga o'tish
+      </a>
+
       <Navbar />
 
       <AnimatePresence mode="wait">
         <motion.main
+          id="asosiy-kontent"
           key={location.pathname}
           variants={pageVariants}
           initial="initial"
@@ -78,6 +84,7 @@ export default function AppShell({ children }) {
                   viewBox="0 0 32 32"
                   fill="none"
                   className="group-hover:scale-110 transition-transform duration-300"
+                  aria-hidden="true"
                 >
                   <path
                     d="M16 2L2 9L16 16L30 9L16 2Z"
@@ -129,9 +136,12 @@ export default function AppShell({ children }) {
                   (social) => (
                     <button
                       key={social}
+                      aria-label={social}
                       className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-gray-200 text-slate-400 hover:text-indigo-500 hover:border-indigo-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300"
                     >
-                      <span className="text-xs font-bold">{social[0]}</span>
+                      <span className="text-xs font-bold" aria-hidden="true">
+                        {social[0]}
+                      </span>
                     </button>
                   )
                 )}

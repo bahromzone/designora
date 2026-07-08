@@ -181,8 +181,7 @@ export default function InstructorManagePage() {
                   <StatusBadge status={c.status} />
                 </div>
                 <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
-                  {c.modules_count} modul · {c.lessons_count} dars ·{" "}
-                  {c.students_count} o'quvchi · {formatPrice(c.price)}
+                  {`${c.modules_count} modul · ${c.lessons_count} dars · ${c.students_count} o'quvchi · ${formatPrice(c.price)}`}
                 </p>
               </div>
               <div className="flex items-center gap-2">

@@ -2,6 +2,8 @@ import { Route, Routes } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
+import BlogListPage from "./pages/BlogListPage";
+import BlogPostPage from "./pages/BlogPostPage";
 import CheckoutResultPage from "./pages/CheckoutResultPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CoursesPage from "./pages/CoursesPage";
@@ -21,6 +23,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/kurslar" element={<CoursesPage />} />
         <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
+        <Route path="/blog" element={<BlogListPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/kirish" element={<LoginPage />} />
         <Route path="/royxatdan-otish" element={<RegisterPage />} />
         <Route path="/verify/:code" element={<VerifyPage />} />

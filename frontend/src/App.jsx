@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CheckoutResultPage from "./pages/CheckoutResultPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CoursesPage from "./pages/CoursesPage";
 import HomePage from "./pages/HomePage";
@@ -36,6 +37,14 @@ function App() {
           element={
             <ProtectedRoute>
               <LearnPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tolov/natija/:orderId"
+          element={
+            <ProtectedRoute>
+              <CheckoutResultPage />
             </ProtectedRoute>
           }
         />

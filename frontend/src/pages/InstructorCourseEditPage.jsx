@@ -369,7 +369,10 @@ export default function InstructorCourseEditPage() {
                     )}
                   </div>
                 </div>
-                <ul className="divide-y" style={{ borderColor: "var(--border)" }}>
+                <ul
+                  className="divide-y"
+                  style={{ borderColor: "var(--border)" }}
+                >
                   {(m.lessons || []).length === 0 ? (
                     <li
                       className="px-4 py-3 text-sm"

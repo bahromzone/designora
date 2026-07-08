@@ -150,7 +150,8 @@ export default function CertificateSection({ courseId, isEnrolled, progress }) {
               Tabriklaymiz! Kursni yakunladingiz.
             </p>
             <p className="mt-1 text-sm text-muted">
-              Sertifikatingizni oling (barcha testlardan o'tilgan bo'lishi kerak).
+              Sertifikatingizni oling (barcha testlardan o'tilgan bo'lishi
+              kerak).
             </p>
             <button
               type="button"
@@ -173,7 +174,9 @@ export default function CertificateSection({ courseId, isEnrolled, progress }) {
                 style={{ width: `${progress ?? 0}%` }}
               />
             </div>
-            <p className="mt-2 text-xs text-muted">{progress ?? 0}% tugatildi</p>
+            <p className="mt-2 text-xs text-muted">
+              {progress ?? 0}% tugatildi
+            </p>
           </div>
         )}
       </div>

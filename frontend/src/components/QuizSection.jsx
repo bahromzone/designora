@@ -49,8 +49,8 @@ function QuizList({ quizzes, onStart }) {
                 <p className="mt-1 text-sm text-muted">{quiz.description}</p>
               )}
               <p className="mt-1 text-xs text-muted">
-                {quiz.questions_count} savol · o'tish uchun {quiz.passing_score}%
-                {attemptsLeft != null && ` · ${attemptsLeft} urinish qoldi`}
+                {quiz.questions_count} savol · o'tish uchun {quiz.passing_score}
+                %{attemptsLeft != null && ` · ${attemptsLeft} urinish qoldi`}
               </p>
             </div>
             <button
@@ -222,10 +222,18 @@ function QuizResult({ quiz, result, onRetry, onBack }) {
       )}
 
       <div className="mt-6 flex gap-2">
-        <button type="button" onClick={onRetry} className="btn-outline px-5 py-2 text-sm">
+        <button
+          type="button"
+          onClick={onRetry}
+          className="btn-outline px-5 py-2 text-sm"
+        >
           Qayta urinish
         </button>
-        <button type="button" onClick={onBack} className="btn-primary px-5 py-2 text-sm">
+        <button
+          type="button"
+          onClick={onBack}
+          className="btn-primary px-5 py-2 text-sm"
+        >
           Testlar ro'yxati
         </button>
       </div>

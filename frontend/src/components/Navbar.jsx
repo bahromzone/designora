@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 
@@ -382,7 +382,6 @@ export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false); // YANGI: Sichqoncha holati uchun state
-  const location = useLocation();
 
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);

@@ -4,7 +4,12 @@ import { useSearchParams } from "react-router-dom";
 import CategoryChips from "../components/CategoryChips";
 import RecommendationSection from "../components/RecommendationSection";
 import SearchResultCard from "../components/SearchResultCard";
-import { CourseCardSkeleton, Input, Pagination, Select } from "../components/ui";
+import {
+  CourseCardSkeleton,
+  Input,
+  Pagination,
+  Select,
+} from "../components/ui";
 import { discoveryApi } from "../lib/api";
 
 const LEVEL_OPTIONS = [

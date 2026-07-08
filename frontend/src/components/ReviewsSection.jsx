@@ -168,10 +168,7 @@ export default function ReviewsSection({ courseId, isEnrolled }) {
           <div>
             {/* Yozish/tahrirlash formasi */}
             {showForm ? (
-              <form
-                onSubmit={handleSubmit}
-                className="card rounded-2xl p-5"
-              >
+              <form onSubmit={handleSubmit} className="card rounded-2xl p-5">
                 <p className="mb-2 text-sm font-semibold text-ink">
                   {myReview ? "Sharhingizni tahrirlang" : "Sharh qoldiring"}
                 </p>

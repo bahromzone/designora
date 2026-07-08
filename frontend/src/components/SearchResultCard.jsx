@@ -77,7 +77,9 @@ export default function SearchResultCard({ course }) {
 
         <div className="mt-auto flex items-center justify-between pt-4 text-sm text-muted">
           <span>{studentsCount} o'quvchi</span>
-          {durationMinutes ? <span>{formatDuration(durationMinutes)}</span> : null}
+          {durationMinutes ? (
+            <span>{formatDuration(durationMinutes)}</span>
+          ) : null}
         </div>
 
         <div className="text-gradient mt-3 text-xl font-extrabold">

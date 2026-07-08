@@ -11,7 +11,9 @@ import CoursesPage from "./pages/CoursesPage";
 import ForumListPage from "./pages/ForumListPage";
 import ForumThreadPage from "./pages/ForumThreadPage";
 import HomePage from "./pages/HomePage";
+import InstructorCourseEditPage from "./pages/InstructorCourseEditPage";
 import InstructorDashboardPage from "./pages/InstructorDashboardPage";
+import InstructorManagePage from "./pages/InstructorManagePage";
 import InstructorPage from "./pages/InstructorPage";
 import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
@@ -73,6 +75,22 @@ function App() {
           element={
             <ProtectedRoute>
               <InstructorDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instruktor/boshqaruv"
+          element={
+            <ProtectedRoute>
+              <InstructorManagePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instruktor/boshqaruv/:courseId"
+          element={
+            <ProtectedRoute>
+              <InstructorCourseEditPage />
             </ProtectedRoute>
           }
         />

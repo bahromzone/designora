@@ -83,13 +83,13 @@ export const authApi = {
     }),
 };
 
-// ── BOSQICH 1: kurs detali (syllabus bilan) ─────────────────────────
+// ── BOSQICH 1: kurs detali (syllabus bilan) ───────────────────
 export const coursesApi = {
   list: () => request("/api/courses"),
   detail: (courseId) => request(`/api/courses/${courseId}/detail`),
 };
 
-// ── BOSQICH 1: o'quv (learning) API ───────────────────────────
+// ── BOSQICH 1: o'quv (learning) API ─────────────────────
 export const learningApi = {
   enroll: (courseId, token) =>
     request(`/api/learning/enroll/${courseId}`, { method: "POST", token }),
@@ -327,6 +327,75 @@ export const analyticsApi = {
     request("/api/analytics/track", {
       method: "POST",
       body: JSON.stringify(body),
+      token,
+    }),
+};
+
+// ── BOSQICH 5: Instruktor kontent boshqaruvi (CRUD) ─────────────────
+// Ruxsat: role ∈ {instructor, admin, superadmin}. Kurs egasi yoki admin.
+export const instructorApi = {
+  // O'z kurslari ro'yxati (admin uchun barchasi). Har biri admin dict:
+  // { id, title, status, is_active, students_count, modules_count,
+  //   lessons_count, ... }
+  listCourses: (token) => request("/api/instructor/courses", { token }),
+  getCourse: (courseId, token) =>
+    request(`/api/instructor/courses/${courseId}`, { token }),
+  createCourse: (body, token) =>
+    request("/api/instructor/courses", {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
+    }),
+  updateCourse: (courseId, body, token) =>
+    request(`/api/instructor/courses/${courseId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      token,
+    }),
+  publishCourse: (courseId, token) =>
+    request(`/api/instructor/courses/${courseId}/publish`, {
+      method: "POST",
+      token,
+    }),
+  unpublishCourse: (courseId, token) =>
+    request(`/api/instructor/courses/${courseId}/unpublish`, {
+      method: "POST",
+      token,
+    }),
+  // Modullar
+  createModule: (courseId, body, token) =>
+    request(`/api/instructor/courses/${courseId}/modules`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
+    }),
+  updateModule: (moduleId, body, token) =>
+    request(`/api/instructor/modules/${moduleId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      token,
+    }),
+  deleteModule: (moduleId, token) =>
+    request(`/api/instructor/modules/${moduleId}`, {
+      method: "DELETE",
+      token,
+    }),
+  // Darslar
+  createLesson: (courseId, body, token) =>
+    request(`/api/instructor/courses/${courseId}/lessons`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
+    }),
+  updateLesson: (lessonId, body, token) =>
+    request(`/api/instructor/lessons/${lessonId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      token,
+    }),
+  deleteLesson: (lessonId, token) =>
+    request(`/api/instructor/lessons/${lessonId}`, {
+      method: "DELETE",
       token,
     }),
 };

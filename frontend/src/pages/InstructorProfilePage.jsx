@@ -129,9 +129,7 @@ export default function InstructorProfilePage() {
   }
 
   const courses = data.courses ?? [];
-  const avgRating = data.avg_rating
-    ? Number(data.avg_rating).toFixed(1)
-    : "0.0";
+  const avgRating = data.avg_rating ? Number(data.avg_rating).toFixed(1) : "0.0";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">

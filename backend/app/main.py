@@ -175,6 +175,7 @@ def admin_list_users(
 
 app.include_router(_admin_router)
 
+
 # ── ASOSIY SAHIFA ────────────────────────────
 # UI endi to'liq React frontend'da (frontend/ papkasi, Vite dev: 5173-port).
 # Backend faqat JSON API xizmatini bajaradi.

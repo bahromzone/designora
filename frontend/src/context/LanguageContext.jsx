@@ -76,9 +76,7 @@ const LanguageContext = createContext(null);
 export function LanguageProvider({ children }) {
   const [lang, setLangState] = useState(() => {
     try {
-      return normalize(
-        localStorage.getItem(STORAGE_KEY) || navigator.language
-      );
+      return normalize(localStorage.getItem(STORAGE_KEY) || navigator.language);
     } catch {
       return DEFAULT_LANG;
     }
@@ -105,9 +103,7 @@ export function LanguageProvider({ children }) {
   );
 
   return (
-    <LanguageContext.Provider
-      value={{ lang, setLang, t, supported: SUPPORTED }}
-    >
+    <LanguageContext.Provider value={{ lang, setLang, t, supported: SUPPORTED }}>
       {children}
     </LanguageContext.Provider>
   );

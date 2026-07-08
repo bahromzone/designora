@@ -141,7 +141,10 @@ export default function InstructorCourseEditPage() {
     try {
       await instructorApi.createModule(
         courseId,
-        { title: moduleForm.title.trim(), order: Number(moduleForm.order) || 0 },
+        {
+          title: moduleForm.title.trim(),
+          order: Number(moduleForm.order) || 0,
+        },
         token
       );
       toast.success("Modul qo'shildi");
@@ -338,8 +341,8 @@ export default function InstructorCourseEditPage() {
 
         {tree.length === 0 ? (
           <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>
-            Mundarija bo'sh yoki kurs qoralama. Modul va dars qo'shing;
-            qoralama kursda mundarija chop etilgandan keyin to'liq ko'rinadi.
+            Mundarija bo'sh yoki kurs qoralama. Modul va dars qo'shing; qoralama
+            kursda mundarija chop etilgandan keyin to'liq ko'rinadi.
           </p>
         ) : (
           <div className="mt-5 space-y-4">

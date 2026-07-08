@@ -175,9 +175,7 @@ export default function InstructorManagePage() {
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-3">
-                  <h3 className="truncate font-semibold text-ink">
-                    {c.title}
-                  </h3>
+                  <h3 className="truncate font-semibold text-ink">{c.title}</h3>
                   <StatusBadge status={c.status} />
                 </div>
                 <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>

@@ -119,12 +119,14 @@ export const learningApi = {
 export const discoveryApi = {
   search: (params = {}) => request(withQuery("/api/discovery/search", params)),
   categories: () => request("/api/discovery/categories"),
-  bestselling: (limit = 6) =>
-    request(withQuery("/api/discovery/recommendations/bestselling", { limit })),
-  similar: (courseId, limit = 6) =>
-    request(
-      withQuery(`/api/discovery/recommendations/similar/${courseId}`, { limit })
-    ),
+  bestselling: (limit = 6) => {
+    const path = "/api/discovery/recommendations/bestselling";
+    return request(withQuery(path, { limit }));
+  },
+  similar: (courseId, limit = 6) => {
+    const path = `/api/discovery/recommendations/similar/${courseId}`;
+    return request(withQuery(path, { limit }));
+  },
 };
 
 // ── BOSQICH 2: Testlar (quiz) ────────────────────────────────────────────────

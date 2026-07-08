@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../lib/api";
+import GamificationSection from "../components/GamificationSection";
 import ReferralSection from "../components/ReferralSection";
 
 function formatDate(d) {
@@ -98,6 +99,9 @@ export default function ProfilePage() {
               va barqaror tarzda yuklandi.
             </p>
           </div>
+
+          {/* Gamifikatsiya — ball, daraja, nishon, leaderboard */}
+          <GamificationSection />
 
           {/* Dashboard metrics */}
           <div

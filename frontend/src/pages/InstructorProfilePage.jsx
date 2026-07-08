@@ -24,6 +24,10 @@ function StatCard({ value, label }) {
 }
 
 function InstructorCourseCard({ course }) {
+  const rating = Number(course.rating_avg ?? 0).toFixed(1);
+  const hasRating = (course.rating_count ?? 0) > 0;
+  const hasStudents = (course.students_count ?? 0) > 0;
+
   return (
     <Link
       to={`/kurslar/${course.id}`}
@@ -39,28 +43,22 @@ function InstructorCourseCard({ course }) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-4xl">
-            🎨
+            DA
           </div>
         )}
-        {course.level && (
+        {course.level ? (
           <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-slate-700 backdrop-blur">
             {course.level}
           </span>
-        )}
+        ) : null}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="line-clamp-2 font-semibold text-slate-900 group-hover:text-indigo-600">
           {course.title}
         </h3>
         <div className="mt-2 flex items-center gap-3 text-sm text-slate-500">
-          {(course.rating_count ?? 0) > 0 && (
-            <span className="inline-flex items-center gap-1">
-              ⭐ {Number(course.rating_avg).toFixed(1)}
-            </span>
-          )}
-          {(course.students_count ?? 0) > 0 && (
-            <span>{course.students_count} o'quvchi</span>
-          )}
+          {hasRating ? <span>{rating} reyting</span> : null}
+          {hasStudents ? <span>{course.students_count} o'quvchi</span> : null}
         </div>
         <div className="mt-auto pt-3 text-lg font-bold text-slate-900">
           {formatPrice(course.price)}
@@ -114,7 +112,6 @@ export default function InstructorProfilePage() {
   if (error || !data) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center">
-        <div className="text-5xl">🔍</div>
         <h1 className="mt-4 text-2xl font-bold text-slate-900">
           Instruktor topilmadi
         </h1>
@@ -132,10 +129,12 @@ export default function InstructorProfilePage() {
   }
 
   const courses = data.courses ?? [];
+  const avgRating = data.avg_rating
+    ? Number(data.avg_rating).toFixed(1)
+    : "0.0";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      {/* Hero */}
       <section className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
         <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-indigo-500 to-sky-500 text-3xl font-bold text-white shadow-md">
           {data.avatar_url ? (
@@ -155,35 +154,30 @@ export default function InstructorProfilePage() {
           </span>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">{data.name}</h1>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-slate-500 sm:justify-start">
-            {data.location && <span>📍 {data.location}</span>}
-            {data.website && (
+            {data.location ? <span>{data.location}</span> : null}
+            {data.website ? (
               <a
                 href={data.website}
                 target="_blank"
                 rel="noreferrer"
                 className="text-indigo-600 hover:underline"
               >
-                🌐 Veb-sayt
+                Veb-sayt
               </a>
-            )}
+            ) : null}
           </div>
-          {data.bio && (
+          {data.bio ? (
             <p className="mt-4 max-w-2xl text-slate-600">{data.bio}</p>
-          )}
+          ) : null}
         </div>
       </section>
 
-      {/* Statistika */}
       <section className="mt-8 grid grid-cols-3 gap-4">
         <StatCard value={data.courses_count ?? 0} label="Kurslar" />
         <StatCard value={data.total_students ?? 0} label="O'quvchilar" />
-        <StatCard
-          value={data.avg_rating ? Number(data.avg_rating).toFixed(1) : "—"}
-          label="O'rtacha reyting"
-        />
+        <StatCard value={avgRating} label="O'rtacha reyting" />
       </section>
 
-      {/* Kurslar */}
       <section className="mt-12">
         <h2 className="text-xl font-bold text-slate-900">
           {data.name} ning kurslari

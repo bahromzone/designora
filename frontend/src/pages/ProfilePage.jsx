@@ -78,13 +78,22 @@ export default function ProfilePage() {
 
           {/* Instruktor/admin — dashboard'ga kirish */}
           {isInstructor && (
-            <Link
-              to="/instruktor-panel"
-              className="block w-full rounded-full px-6 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
-              style={{ background: "var(--amber)" }}
-            >
-              📊 Instruktor paneli
-            </Link>
+            <div className="space-y-3">
+              <Link
+                to="/instruktor-panel"
+                className="block w-full rounded-full px-6 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
+                style={{ background: "var(--amber)" }}
+              >
+                📊 Instruktor paneli
+              </Link>
+              <Link
+                to="/instruktor/boshqaruv"
+                className="block w-full rounded-full border px-6 py-3 text-center text-sm font-bold transition-transform hover:-translate-y-0.5"
+                style={{ borderColor: "var(--border)", color: "var(--ink)" }}
+              >
+                📚 Kurslarni boshqarish
+              </Link>
+            </div>
           )}
 
           {/* Admin — platforma dashboard */}

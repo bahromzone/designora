@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
+import LanguageSwitcher from "./LanguageSwitcher";
+import OnboardingModal from "./OnboardingModal";
 import { trackEvent } from "../lib/track";
 
 const pageVariants = {
@@ -53,6 +55,9 @@ export default function AppShell({ children }) {
       <a href="#asosiy-kontent" className="skip-link">
         Asosiy kontentga o'tish
       </a>
+
+      {/* Yangi foydalanuvchi uchun onboarding (o'zi shartni tekshiradi) */}
+      <OnboardingModal />
 
       <Navbar />
 
@@ -173,6 +178,7 @@ export default function AppShell({ children }) {
           {/* Bottom Bar */}
           <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
             <p>© 2026 Designora. Barcha huquqlar himoyalangan.</p>
+            <LanguageSwitcher />
           </div>
         </div>
       </footer>

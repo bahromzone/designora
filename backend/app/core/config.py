@@ -53,6 +53,18 @@ class Settings(BaseSettings):
     media_signing_key: str = "dev-media-signing-key-change-in-prod"
     MEDIA_CDN_BASE_URL: str = ""
 
+    # ===== PAYME =====
+    # Merchant API kaliti (webhook auth) + checkout uchun merchant ID/URL.
+    PAYME_KEY: str = ""
+    PAYME_MERCHANT_ID: str = ""
+    PAYME_CHECKOUT_URL: str = "https://checkout.paycom.uz"
+
+    # ===== CLICK =====
+    CLICK_SECRET_KEY: str = ""
+    CLICK_SERVICE_ID: str = ""
+    CLICK_MERCHANT_ID: str = ""
+    CLICK_CHECKOUT_URL: str = "https://my.click.uz/services/pay"
+
     class Config:
         env_file = ".env"
         # ✅ BUG #17 FIX: "forbid" → "ignore"

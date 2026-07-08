@@ -227,6 +227,27 @@ export default function CourseDetailPage() {
             </p>
           )}
 
+          {/* Instruktor — ommaviy profilga link */}
+          {course.instructor_id && course.instructor_name && (
+            <Link
+              to={`/instruktor/${course.instructor_id}`}
+              className="mt-6 inline-flex items-center gap-2.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors hover:-translate-y-0.5"
+              style={{ borderColor: "var(--border)", color: "var(--ink)" }}
+            >
+              <span
+                className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
+                style={{ background: "var(--amber)" }}
+                aria-hidden
+              >
+                {course.instructor_name.charAt(0).toUpperCase()}
+              </span>
+              <span>
+                <span style={{ color: "var(--muted)" }}>Instruktor: </span>
+                {course.instructor_name}
+              </span>
+            </Link>
+          )}
+
           <div className="mt-8 flex flex-wrap gap-10">
             <Stat label="Daraja" value={course.level || "—"} />
             <Stat label="Darslar" value={`${course.lessons_count} ta`} />

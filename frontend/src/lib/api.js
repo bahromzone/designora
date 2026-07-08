@@ -262,7 +262,8 @@ export const blogApi = {
 // ── BOSQICH 4: Forum ─────────────────────────────────────────────────────────
 export const forumApi = {
   // { total, page, per_page, pages, results: [...] }
-  listThreads: (params = {}) => request(withQuery("/api/forum/threads", params)),
+  listThreads: (params = {}) =>
+    request(withQuery("/api/forum/threads", params)),
   // to'liq mavzu + javoblar (posts). Ommaviy o'qiladi.
   getThread: (threadId) => request(`/api/forum/threads/${threadId}`),
   createThread: (body, token) =>

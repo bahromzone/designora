@@ -10,6 +10,7 @@ import CoursesPage from "./pages/CoursesPage";
 import ForumListPage from "./pages/ForumListPage";
 import ForumThreadPage from "./pages/ForumThreadPage";
 import HomePage from "./pages/HomePage";
+import InstructorDashboardPage from "./pages/InstructorDashboardPage";
 import InstructorPage from "./pages/InstructorPage";
 import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
@@ -39,6 +40,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MyCoursesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/instruktor"
+          element={
+            <ProtectedRoute>
+              <InstructorDashboardPage />
             </ProtectedRoute>
           }
         />

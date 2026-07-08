@@ -313,6 +313,25 @@ export const gamificationApi = {
     request(withQuery("/api/gamification/leaderboard", { limit })),
 };
 
+// ── BOSQICH 5: Analitika (instruktor/admin dashboard + event tracking) ────
+export const analyticsApi = {
+  // { courses_count, revenue: {gross_revenue, net_revenue, discounts,
+  //   paid_orders, average_order_value}, completion_rate, average_progress,
+  //   top_courses: [...], per_course: [...] }
+  instructor: (token) => request("/api/analytics/instructor", { token }),
+  // { revenue, users, courses, enrollments, funnel: [...], top_courses,
+  //   events }
+  admin: (token) => request("/api/analytics/admin", { token }),
+  // Xatti-harakat hodisasini yozadi (login shart emas).
+  // body: { name, props?, session_id?, path? }
+  track: (body, token) =>
+    request("/api/analytics/track", {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
+    }),
+};
+
 // ── Umumiy formatlash yordamchilari ──────────────────────────
 export function formatDuration(totalMinutes) {
   const mins = Number(totalMinutes) || 0;

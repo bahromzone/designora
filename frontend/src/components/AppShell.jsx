@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
+import { trackEvent } from "../lib/track";
 
 const pageVariants = {
   initial: { opacity: 0, filter: "blur(10px)" },
@@ -39,6 +41,11 @@ export default function AppShell({ children }) {
 
   // Faqat joriy manzil "/" bo'lsa, rost (true) bo'ladi
   const isHomePage = location.pathname === "/";
+
+  // Har sahifa almashganda page_view hodisasini yuboramiz (fire-and-forget).
+  useEffect(() => {
+    trackEvent("page_view", { path: location.pathname });
+  }, [location.pathname]);
 
   return (
     <div className="relative min-h-screen flex flex-col selection:bg-purple-500/20 overflow-x-hidden">

@@ -280,6 +280,20 @@ export const forumApi = {
     }),
 };
 
+// ── BOSQICH 4: Referral ──────────────────────────────────────────────────────
+export const referralApi = {
+  // { code, total_referred, converted, points_earned }
+  myCode: (token) => request("/api/referrals/my-code", { token }),
+  // body: { code }
+  apply: (code, token) =>
+    request("/api/referrals/apply", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+      token,
+    }),
+  myReferrals: (token) => request("/api/referrals/my-referrals", { token }),
+};
+
 // ── Umumiy formatlash yordamchilari ─────────────────────────────────────────
 export function formatDuration(totalMinutes) {
   const mins = Number(totalMinutes) || 0;

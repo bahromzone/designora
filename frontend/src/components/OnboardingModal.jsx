@@ -61,8 +61,8 @@ export default function OnboardingModal() {
   return (
     <Modal open={open} onClose={finish} title="Xush kelibsiz! 🎨">
       <p className="text-sm text-muted">
-        Nimalarni o'rganmoqchisiz? Tanlovlaringiz bo'yicha sizga kurslar
-        tavsiya qilamiz.
+        Nimalarni o'rganmoqchisiz? Tanlovlaringiz bo'yicha sizga kurslar tavsiya
+        qilamiz.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         {INTERESTS.map((item) => {

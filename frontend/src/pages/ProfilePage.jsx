@@ -76,10 +76,11 @@ export default function ProfilePage() {
 
           {isInstructor && (
             <Link
-              to="/instruktor-panel"
-              className="btn-primary w-full justify-center"
+              to="/dashboard/instruktor"
+              className="block w-full rounded-full px-5 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
+              style={{ background: "var(--amber)" }}
             >
-              Instruktor paneli
+              📊 Instruktor paneli
             </Link>
           )}
 

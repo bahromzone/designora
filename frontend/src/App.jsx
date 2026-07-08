@@ -44,6 +44,14 @@ function App() {
           }
         />
         <Route
+          path="/dashboard/instruktor"
+          element={
+            <ProtectedRoute>
+              <InstructorDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/organish/:courseId"
           element={
             <ProtectedRoute>
@@ -64,14 +72,6 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/instruktor-panel"
-          element={
-            <ProtectedRoute>
-              <InstructorDashboardPage />
             </ProtectedRoute>
           }
         />

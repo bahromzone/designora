@@ -8,6 +8,7 @@ const links = [
   { label: "Bosh sahifa", to: "/" },
   { label: "Kurslar", to: "/kurslar" },
   { label: "Blog", to: "/blog" },
+  { label: "Forum", to: "/forum" },
 ];
 
 function AuthModal({ isOpen, onClose, initialMode = "login" }) {

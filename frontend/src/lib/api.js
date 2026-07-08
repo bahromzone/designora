@@ -120,14 +120,10 @@ export const discoveryApi = {
   search: (params = {}) => request(withQuery("/api/discovery/search", params)),
   categories: () => request("/api/discovery/categories"),
   bestselling: (limit = 6) =>
-    request(
-      withQuery("/api/discovery/recommendations/bestselling", { limit })
-    ),
+    request(withQuery("/api/discovery/recommendations/bestselling", { limit })),
   similar: (courseId, limit = 6) =>
     request(
-      withQuery(`/api/discovery/recommendations/similar/${courseId}`, {
-        limit,
-      })
+      withQuery(`/api/discovery/recommendations/similar/${courseId}`, { limit })
     ),
 };
 

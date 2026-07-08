@@ -37,19 +37,6 @@ class Settings(BaseSettings):
     # ===== RECAPTCHA =====
     RECAPTCHA_SECRET_KEY: str
 
-    # ===== TO'LOV: PAYME (Paycom Merchant API) =====
-    PAYME_MERCHANT_ID: str | None = None
-    PAYME_MERCHANT_KEY: str | None = None  # X-Auth kaliti (webhook tekshiruvi)
-    PAYME_TEST_KEY: str | None = None
-    PAYME_KEY: str | None = None
-    PAYME_CHECKOUT_URL: str = "https://checkout.paycom.uz"
-
-    # ===== TO'LOV: CLICK =====
-    CLICK_SERVICE_ID: str | None = None
-    CLICK_MERCHANT_ID: str | None = None
-    CLICK_SECRET_KEY: str | None = None
-    CLICK_CHECKOUT_URL: str = "https://my.click.uz/services/pay"
-
     # ===== CORS =====
     # 5173 — Vite dev server (React frontend)
     ALLOWED_ORIGINS: str = (
@@ -60,17 +47,11 @@ class Settings(BaseSettings):
     # ===== FRONTEND =====
     FRONTEND_URL: str = "http://localhost:5173"
 
-    # ===== BOSQICH 5: MIQYOSLASH VA MUKAMMALLIK =====
-    # Kesh / navbat (ixtiyoriy — o'rnatilmasa xotiradagi kesh ishlatiladi)
-    REDIS_URL: str | None = None
-    # Monitoring (ixtiyoriy — DSN bo'lmasa Sentry o'chirilgan)
-    SENTRY_DSN: str | None = None
-    # Video kontent himoyasi uchun signed URL kaliti (bo'lmasa SECRET_KEY)
-    MEDIA_SIGNING_KEY: str | None = None
-    # Video CDN bazaviy manzili (Mux / Bunny / Cloudflare Stream)
+    # ===== MEDIA (signed video URL) =====
+    # HMAC imzo kaliti va (ixtiyoriy) CDN bazasi. CDN bo'lmasa nisbiy
+    # /video/... havola ishlatiladi. Prod'da media_signing_key ni almashtiring.
+    media_signing_key: str = "dev-media-signing-key-change-in-prod"
     MEDIA_CDN_BASE_URL: str = ""
-    # Ko'p tillilik (i18n)
-    DEFAULT_LANGUAGE: str = "uz"
 
     class Config:
         env_file = ".env"
@@ -81,11 +62,6 @@ class Settings(BaseSettings):
 
     def get_allowed_origins(self) -> list[str]:
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
-
-    @property
-    def media_signing_key(self) -> str:
-        """Video signed URL kaliti — alohida belgilanmagan bo'lsa SECRET_KEY."""
-        return self.MEDIA_SIGNING_KEY or self.SECRET_KEY
 
 
 settings = Settings()

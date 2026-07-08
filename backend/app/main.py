@@ -25,19 +25,28 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.routers import (
     admin_courses,
+    analytics,
     auth,
+    blog,
     certificates,
     courses_api,
     discovery,
+    forum,
     google,
     instructor,
     learning,
     media,
     notes,
+    notifications,
+    payments,
+    privacy,
     profile,
     qa,
     quiz,
+    referrals,
     reviews,
+    system,
+    token,
     users,
 )
 from app.routers.auth import public_router
@@ -108,7 +117,9 @@ app.include_router(auth.router)
 app.include_router(google.router)
 app.include_router(users.router)
 
-# ── BOSQICH 1-2 routerlari (React frontend ulanishi uchun) ────────────────────
+# ── BOSQICH 1-5 routerlari ────────────────────────────────────────────────────
+# Refaktor paytida tushib qolgan include'lar — React frontend va endpoint
+# testlari shularga bog'liq.
 app.include_router(discovery.router)
 app.include_router(quiz.router)
 app.include_router(reviews.router)
@@ -116,6 +127,15 @@ app.include_router(qa.router)
 app.include_router(notes.router)
 app.include_router(certificates.router)
 app.include_router(media.router)
+app.include_router(blog.router)
+app.include_router(forum.router)
+app.include_router(notifications.router)
+app.include_router(referrals.router)
+app.include_router(analytics.router)
+app.include_router(payments.router)
+app.include_router(privacy.router)
+app.include_router(system.router)
+app.include_router(token.router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 

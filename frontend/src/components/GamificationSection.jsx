@@ -64,7 +64,8 @@ export default function GamificationSection() {
 
   const toNext = me.points_to_next_level ?? 0;
   const inLevel = Math.max(0, POINTS_PER_LEVEL - toNext);
-  const progress = Math.min(100, Math.round((inLevel / POINTS_PER_LEVEL) * 100));
+  const pct = Math.round((inLevel / POINTS_PER_LEVEL) * 100);
+  const progress = Math.min(100, pct);
   const earnedCount = catalog.filter((b) => b.earned).length;
 
   return (

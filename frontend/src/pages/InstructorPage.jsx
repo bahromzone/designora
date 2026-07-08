@@ -40,12 +40,11 @@ export default function InstructorPage() {
   }
 
   if (error || !data) {
+    const notFoundMsg =
+      error || "Bunday instruktor mavjud emas yoki o'chirilgan.";
     return (
       <section className="shell py-24">
-        <EmptyState
-          title="Instruktor topilmadi"
-          description={error || "Bunday instruktor mavjud emas yoki o'chirilgan."}
-        />
+        <EmptyState title="Instruktor topilmadi" description={notFoundMsg} />
         <div className="mt-6 text-center">
           <Link to="/kurslar" className="btn-outline">
             ← Kataloga qaytish
@@ -57,10 +56,11 @@ export default function InstructorPage() {
 
   const initials = data.name?.charAt(0)?.toUpperCase() ?? "D";
   const courses = data.courses ?? [];
+  const avgRating = Number(data.avg_rating ?? 0).toFixed(1);
   const stats = [
     { label: "Kurslar", value: data.courses_count ?? courses.length },
     { label: "O'quvchilar", value: data.total_students ?? 0 },
-    { label: "O'rtacha reyting", value: Number(data.avg_rating ?? 0).toFixed(1) },
+    { label: "O'rtacha reyting", value: avgRating },
   ];
 
   return (

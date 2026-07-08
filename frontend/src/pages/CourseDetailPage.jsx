@@ -14,6 +14,7 @@ import QuizSection from "../components/QuizSection";
 import RecommendationSection from "../components/RecommendationSection";
 import ReviewsSection from "../components/ReviewsSection";
 import { useAuth } from "../context/AuthContext";
+import { trackEvent } from "../lib/track";
 
 const PROVIDERS = [
   { value: "payme", label: "Payme" },
@@ -131,6 +132,14 @@ export default function CourseDetailPage() {
   useEffect(() => {
     loadEnrollment();
   }, [loadEnrollment]);
+
+  // Kurs yuklangach course_view hodisasini yuboramiz (admin voronkasi
+  // shu nomdagi hodisalarni sanaydi).
+  useEffect(() => {
+    if (course?.id) {
+      trackEvent("course_view", { course_id: course.id });
+    }
+  }, [course?.id]);
 
   async function handleEnroll() {
     if (!isAuthenticated) {

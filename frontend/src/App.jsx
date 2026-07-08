@@ -10,6 +10,7 @@ import CoursesPage from "./pages/CoursesPage";
 import ForumListPage from "./pages/ForumListPage";
 import ForumThreadPage from "./pages/ForumThreadPage";
 import HomePage from "./pages/HomePage";
+import InstructorPage from "./pages/InstructorPage";
 import LearnPage from "./pages/LearnPage";
 import LoginPage from "./pages/LoginPage";
 import MyCoursesPage from "./pages/MyCoursesPage";
@@ -25,6 +26,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/kurslar" element={<CoursesPage />} />
         <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
+        <Route path="/instruktor/:instructorId" element={<InstructorPage />} />
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/forum" element={<ForumListPage />} />

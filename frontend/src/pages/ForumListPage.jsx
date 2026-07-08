@@ -204,7 +204,10 @@ export default function ForumListPage() {
                         {t.title}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+                    <p
+                      className="mt-1 text-xs"
+                      style={{ color: "var(--muted)" }}
+                    >
                       {t.author || "Foydalanuvchi"} · {timeAgo(t.created_at)}
                     </p>
                   </div>

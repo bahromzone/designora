@@ -7,6 +7,7 @@ import {
   formatPrice,
   formatSeconds,
   learningApi,
+  paymentsApi,
 } from "../lib/api";
 import CertificateSection from "../components/CertificateSection";
 import QuizSection from "../components/QuizSection";
@@ -129,9 +130,18 @@ export default function CourseDetailPage() {
     }
     setBusy(true);
     try {
-      await learningApi.enroll(courseId, token);
-      setIsEnrolled(true);
-      navigate(`/organish/${courseId}`);
+      // Checkout: bepul kurs darhol enroll bo'ladi, pullik kurs to'lov
+      // provayderiga (Payme) yo'naltiriladi.
+      const res = await paymentsApi.checkout(
+        { course_id: Number(courseId), provider: "payme" },
+        token
+      );
+      if (res.free) {
+        setIsEnrolled(true);
+        navigate(`/organish/${courseId}`);
+      } else {
+        window.location.href = res.pay_url;
+      }
     } catch (e) {
       setError(e.message);
     } finally {

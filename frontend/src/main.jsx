@@ -21,3 +21,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// PWA: service worker'ni faqat productionda ro'yxatdan o'tkazamiz
+// (dev rejimida HMR bilan ziddiyatga bormasligi uchun).
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // Ro'yxatdan o'tkazib bo'lmadi — ilova baribir ishlaydi.
+    });
+  });
+}

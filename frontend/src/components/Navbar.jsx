@@ -7,6 +7,7 @@ import NotificationBell from "./NotificationBell";
 const links = [
   { label: "Bosh sahifa", to: "/" },
   { label: "Kurslar", to: "/kurslar" },
+  { label: "Blog", to: "/blog" },
 ];
 
 function AuthModal({ isOpen, onClose, initialMode = "login" }) {

@@ -251,6 +251,14 @@ export const notificationsApi = {
     request(`/api/notifications/${id}`, { method: "DELETE", token }),
 };
 
+// ── BOSQICH 4: Blog ──────────────────────────────────────────────────────────
+export const blogApi = {
+  // { total, page, per_page, pages, results: [...] }
+  list: (params = {}) => request(withQuery("/api/blog", params)),
+  // to'liq post (body + meta), o'qilganda backend views'ni oshiradi
+  getBySlug: (slug) => request(`/api/blog/${slug}`),
+};
+
 // ── Umumiy formatlash yordamchilari ─────────────────────────────────────────
 export function formatDuration(totalMinutes) {
   const mins = Number(totalMinutes) || 0;

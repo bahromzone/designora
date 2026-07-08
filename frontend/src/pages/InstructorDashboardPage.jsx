@@ -230,7 +230,11 @@ export default function InstructorDashboardPage() {
                     formatter={(v) => [`${v}%`, "Tugatish"]}
                     labelFormatter={(_, p) => p?.[0]?.payload?.fullName ?? ""}
                   />
-                  <Bar dataKey="completion" radius={[6, 6, 0, 0]} fill="#4f46e5" />
+                  <Bar
+                    dataKey="completion"
+                    radius={[6, 6, 0, 0]}
+                    fill="#4f46e5"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>

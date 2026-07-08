@@ -15,6 +15,11 @@ import RecommendationSection from "../components/RecommendationSection";
 import ReviewsSection from "../components/ReviewsSection";
 import { useAuth } from "../context/AuthContext";
 
+const PROVIDERS = [
+  { value: "payme", label: "Payme" },
+  { value: "click", label: "Click" },
+];
+
 function Stat({ label, value }) {
   return (
     <div>
@@ -92,6 +97,10 @@ export default function CourseDetailPage() {
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
 
+  // Checkout holati
+  const [provider, setProvider] = useState("payme");
+  const [couponCode, setCouponCode] = useState("");
+
   const loadEnrollment = useCallback(async () => {
     if (!token) {
       setIsEnrolled(false);
@@ -129,11 +138,16 @@ export default function CourseDetailPage() {
       return;
     }
     setBusy(true);
+    setError("");
     try {
-      // Checkout: bepul kurs darhol enroll bo'ladi, pullik kurs to'lov
-      // provayderiga (Payme) yo'naltiriladi.
+      // Checkout: bepul kurs darhol enroll bo'ladi, pullik kurs tanlangan
+      // to'lov provayderiga (Payme/Click) yo'naltiriladi.
       const res = await paymentsApi.checkout(
-        { course_id: Number(courseId), provider: "payme" },
+        {
+          course_id: Number(courseId),
+          provider,
+          coupon_code: couponCode.trim() || undefined,
+        },
         token
       );
       if (res.free) {
@@ -159,7 +173,7 @@ export default function CourseDetailPage() {
       </section>
     );
   }
-  if (error || !course) {
+  if (error && !course) {
     return (
       <section className="shell py-24">
         <div
@@ -178,10 +192,12 @@ export default function CourseDetailPage() {
       </section>
     );
   }
+  if (!course) return null;
 
   const outcomes = course.learning_outcomes || [];
   const requirements = course.requirements || [];
   const modules = course.modules || [];
+  const isPaid = (course.price || 0) > 0;
 
   return (
     <section className="shell py-16 sm:py-20">
@@ -350,14 +366,72 @@ export default function CourseDetailPage() {
                   </p>
                 </>
               ) : (
-                <button
-                  onClick={handleEnroll}
-                  disabled={busy}
-                  className="block w-full rounded-full px-6 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-60"
-                  style={{ background: "var(--amber)" }}
-                >
-                  {busy ? "..." : "Kursga yozilish"}
-                </button>
+                <>
+                  {isPaid && (
+                    <div className="space-y-3">
+                      {/* To'lov provayderi tanlash */}
+                      <div>
+                        <p className="label mb-1.5">To'lov usuli</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {PROVIDERS.map((p) => {
+                            const active = provider === p.value;
+                            return (
+                              <button
+                                key={p.value}
+                                type="button"
+                                onClick={() => setProvider(p.value)}
+                                className="rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors"
+                                style={{
+                                  borderColor: active
+                                    ? "var(--amber)"
+                                    : "var(--border)",
+                                  background: active
+                                    ? "var(--amber)"
+                                    : "transparent",
+                                  color: active ? "#fff" : "var(--ink)",
+                                }}
+                              >
+                                {p.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Kupon kodi */}
+                      <div>
+                        <p className="label mb-1.5">
+                          Chegirma kodi (ixtiyoriy)
+                        </p>
+                        <input
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="masalan: SALE20"
+                          className="w-full rounded-xl border px-4 py-2.5 text-sm uppercase outline-none"
+                          style={{ borderColor: "var(--border)" }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {error && (
+                    <p
+                      className="rounded-xl px-4 py-2.5 text-xs"
+                      style={{ background: "#fff0ef", color: "#c0392b" }}
+                    >
+                      {error}
+                    </p>
+                  )}
+
+                  <button
+                    onClick={handleEnroll}
+                    disabled={busy}
+                    className="block w-full rounded-full px-6 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-60"
+                    style={{ background: "var(--amber)" }}
+                  >
+                    {busy ? "..." : isPaid ? "Sotib olish" : "Kursga yozilish"}
+                  </button>
+                </>
               )}
 
               <p

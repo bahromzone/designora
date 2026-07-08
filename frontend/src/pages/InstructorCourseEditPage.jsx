@@ -30,6 +30,12 @@ const EMPTY_LESSON = {
   is_free_preview: false,
 };
 
+function lessonIcon(lesson) {
+  if (lesson.type === "quiz") return "❓";
+  if (lesson.is_free_preview) return "▶";
+  return "🔒";
+}
+
 export default function InstructorCourseEditPage() {
   const { courseId } = useParams();
   const { token } = useAuth();
@@ -244,7 +250,7 @@ export default function InstructorCourseEditPage() {
           >
             ← Kurslar
           </Link>
-          <h1 className="mt-2 font-serif text-2xl font-semibold text-ink sm:text-3xl">
+          <h1 className="mt-2 font-serif text-2xl font-semibold text-ink">
             {course.title}
           </h1>
           <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
@@ -387,13 +393,7 @@ export default function InstructorCourseEditPage() {
                         className="flex items-center justify-between px-4 py-3 text-sm"
                       >
                         <span className="flex items-center gap-2 text-ink">
-                          <span aria-hidden>
-                            {l.type === "quiz"
-                              ? "❓"
-                              : l.is_free_preview
-                                ? "▶"
-                                : "🔒"}
-                          </span>
+                          <span aria-hidden>{lessonIcon(l)}</span>
                           {l.title}
                         </span>
                         <span className="flex items-center gap-3">

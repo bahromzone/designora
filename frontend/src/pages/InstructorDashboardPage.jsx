@@ -16,13 +16,7 @@ import { useAuth } from "../context/AuthContext";
 import { EmptyState, Spinner } from "../components/ui";
 
 // Grafiklar uchun binafsha palitra (dizayn tizimiga mos).
-const BAR_COLORS = [
-  "#7c3aed",
-  "#a855f7",
-  "#4f46e5",
-  "#ec4899",
-  "#8b5cf6",
-];
+const BAR_COLORS = ["#7c3aed", "#a855f7", "#4f46e5", "#ec4899", "#8b5cf6"];
 
 // Uzun kurs nomlarini grafik o'qida qisqartirish.
 function shortLabel(title, max = 14) {
@@ -205,10 +199,7 @@ export default function InstructorDashboardPage() {
                   />
                   <Bar dataKey="revenue" radius={[6, 6, 0, 0]}>
                     {revenueChart.map((_, i) => (
-                      <Cell
-                        key={i}
-                        fill={BAR_COLORS[i % BAR_COLORS.length]}
-                      />
+                      <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -239,11 +230,7 @@ export default function InstructorDashboardPage() {
                     formatter={(v) => [`${v}%`, "Tugatish"]}
                     labelFormatter={(_, p) => p?.[0]?.payload?.fullName ?? ""}
                   />
-                  <Bar
-                    dataKey="completion"
-                    radius={[6, 6, 0, 0]}
-                    fill="#4f46e5"
-                  />
+                  <Bar dataKey="completion" radius={[6, 6, 0, 0]} fill="#4f46e5" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>

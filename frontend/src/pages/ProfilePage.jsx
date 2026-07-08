@@ -6,6 +6,7 @@ import GamificationSection from "../components/GamificationSection";
 import ReferralSection from "../components/ReferralSection";
 
 const INSTRUCTOR_ROLES = ["instructor", "admin", "superadmin"];
+const ADMIN_ROLES = ["admin", "superadmin"];
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString("uz-UZ", {
@@ -30,6 +31,7 @@ export default function ProfilePage() {
 
   const initials = user?.full_name?.charAt(0)?.toUpperCase() ?? "D";
   const isInstructor = INSTRUCTOR_ROLES.includes(user?.role);
+  const isAdmin = ADMIN_ROLES.includes(user?.role);
 
   return (
     <section className="shell py-16 sm:py-20">
@@ -82,6 +84,17 @@ export default function ProfilePage() {
               style={{ background: "var(--amber)" }}
             >
               📊 Instruktor paneli
+            </Link>
+          )}
+
+          {/* Admin — platforma dashboard */}
+          {isAdmin && (
+            <Link
+              to="/admin-panel"
+              className="block w-full rounded-full border px-6 py-3 text-center text-sm font-bold transition-transform hover:-translate-y-0.5"
+              style={{ borderColor: "var(--border)", color: "var(--ink)" }}
+            >
+              🛠️ Admin paneli
             </Link>
           )}
 

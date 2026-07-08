@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 import BlogListPage from "./pages/BlogListPage";
 import BlogPostPage from "./pages/BlogPostPage";
 import CheckoutResultPage from "./pages/CheckoutResultPage";
@@ -72,6 +73,14 @@ function App() {
           element={
             <ProtectedRoute>
               <InstructorDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-panel"
+          element={
+            <ProtectedRoute>
+              <AdminDashboardPage />
             </ProtectedRoute>
           }
         />

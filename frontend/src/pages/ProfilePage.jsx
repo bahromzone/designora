@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../lib/api";
 import GamificationSection from "../components/GamificationSection";
 import ReferralSection from "../components/ReferralSection";
+
+const INSTRUCTOR_ROLES = ["instructor", "admin", "superadmin"];
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString("uz-UZ", {
@@ -26,6 +29,7 @@ export default function ProfilePage() {
   }, [token]);
 
   const initials = user?.full_name?.charAt(0)?.toUpperCase() ?? "D";
+  const isInstructor = INSTRUCTOR_ROLES.includes(user?.role);
 
   return (
     <section className="shell py-16 sm:py-20">
@@ -69,6 +73,17 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
+
+          {/* Instruktor/admin — dashboard'ga kirish */}
+          {isInstructor && (
+            <Link
+              to="/instruktor-panel"
+              className="block w-full rounded-full px-6 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
+              style={{ background: "var(--amber)" }}
+            >
+              📊 Instruktor paneli
+            </Link>
+          )}
 
           {error && (
             <p

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 const links = [
   { label: "Bosh sahifa", to: "/" },
@@ -488,6 +489,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-5">
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
+                <NotificationBell />
                 <Link
                   to="/profil"
                   className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors"

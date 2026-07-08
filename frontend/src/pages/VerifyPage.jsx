@@ -56,7 +56,10 @@ export default function VerifyPage() {
               {data.course_title}
             </h1>
             <p className="mt-4 text-muted">
-              Egasi: <span className="font-semibold text-ink">{data.student_name}</span>
+              Egasi:{" "}
+              <span className="font-semibold text-ink">
+                {data.student_name}
+              </span>
             </p>
             <div className="mt-4 space-y-1 text-sm text-muted">
               <p>
@@ -80,7 +83,10 @@ export default function VerifyPage() {
         )}
 
         <div className="mt-6 text-center">
-          <Link to="/" className="text-sm font-semibold text-violet-700 hover:underline">
+          <Link
+            to="/"
+            className="text-sm font-semibold text-violet-700 hover:underline"
+          >
             ← Bosh sahifaga
           </Link>
         </div>

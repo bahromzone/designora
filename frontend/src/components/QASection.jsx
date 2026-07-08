@@ -48,7 +48,11 @@ function AnswerForm({ questionId, onDone }) {
         onChange={(e) => setBody(e.target.value)}
         placeholder="Javob yozing..."
       />
-      <button type="submit" disabled={busy} className="btn-outline shrink-0 px-4 py-2 text-sm">
+      <button
+        type="submit"
+        disabled={busy}
+        className="btn-outline shrink-0 px-4 py-2 text-sm"
+      >
         {busy ? "..." : "Javob"}
       </button>
     </form>
@@ -125,7 +129,11 @@ export default function QASection({ lessonId }) {
           onChange={(e) => setBody(e.target.value)}
           placeholder="Ushbu dars bo'yicha savolingiz..."
         />
-        <button type="submit" disabled={asking} className="btn-primary shrink-0 px-4 py-2 text-sm">
+        <button
+          type="submit"
+          disabled={asking}
+          className="btn-primary shrink-0 px-4 py-2 text-sm"
+        >
           {asking ? "..." : "So'rash"}
         </button>
       </form>
@@ -183,17 +191,15 @@ export default function QASection({ lessonId }) {
                 >
                   Javob berish
                 </button>
-                {!q.is_resolved &&
-                  user &&
-                  q.user_id === user.id && (
-                    <button
-                      type="button"
-                      onClick={() => resolve(q.id)}
-                      className="font-semibold text-emerald-600 hover:underline"
-                    >
-                      Hal qilindi deb belgilash
-                    </button>
-                  )}
+                {!q.is_resolved && user && q.user_id === user.id && (
+                  <button
+                    type="button"
+                    onClick={() => resolve(q.id)}
+                    className="font-semibold text-emerald-600 hover:underline"
+                  >
+                    Hal qilindi deb belgilash
+                  </button>
+                )}
               </div>
 
               {replyTo === q.id && (

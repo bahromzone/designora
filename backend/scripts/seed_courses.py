@@ -263,9 +263,7 @@ def seed(force: bool = False) -> None:
             db.flush()  # course.id olish uchun
 
             for m_order, m in enumerate(modules):
-                module = Module(
-                    course_id=course.id, title=m["title"], order=m_order
-                )
+                module = Module(course_id=course.id, title=m["title"], order=m_order)
                 db.add(module)
                 db.flush()
 

@@ -1,14 +1,16 @@
 """
-Security Middleware — CORS, Rate Limiting, Security Headers
+Security Middleware — CORS, Rate Limiting, Security Headers, Metrics
 """
 
 import logging
+import time
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.core import metrics
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -45,6 +47,24 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
         response.headers["Content-Security-Policy"] = csp
 
+        return response
+
+
+# ===== METRICS MIDDLEWARE =====
+class MetricsMiddleware(BaseHTTPMiddleware):
+    """Har bir so'rov uchun http_requests_total hisoblagichini va so'rov
+    davomiyligini yozadi. /metrics endpointi shulardan o'qiydi."""
+
+    async def dispatch(self, request: Request, call_next):
+        start = time.perf_counter()
+        response = await call_next(request)
+        elapsed = time.perf_counter() - start
+        metrics.inc_counter(
+            "http_requests_total",
+            method=request.method,
+            status=str(response.status_code),
+        )
+        metrics.observe("http_request_duration_seconds", elapsed)
         return response
 
 

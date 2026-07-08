@@ -1,5 +1,8 @@
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
+// AuthContext token'ni shu kalitda saqlaydi (ikkovi bir xil bo'lishi shart).
+const TOKEN_KEY = "designora-auth-token";
+
 // FastAPI xato javobini o'qish uchun yordamchi:
 // detail string ham, validatsiya xatolarida massiv ham bo'lishi mumkin.
 function extractErrorMessage(payload) {
@@ -12,16 +15,68 @@ function extractErrorMessage(payload) {
   return "So'rovni bajarib bo'lmadi.";
 }
 
+// Bir vaqtning o'zida faqat bitta refresh so'rovi ketishi uchun singleton.
+let refreshPromise = null;
+
+// httpOnly refresh cookie orqali yangi access-token oladi.
+// Muvaffaqiyatli bo'lsa localStorage'ni yangilaydi va event yuboradi.
+async function refreshAccessToken() {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    const res = await fetch(`${API_URL}/api/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error("refresh failed");
+    const data = await res.json();
+    const newToken = data?.access_token;
+    if (newToken) {
+      try {
+        localStorage.setItem(TOKEN_KEY, newToken);
+        window.dispatchEvent(
+          new CustomEvent("designora-token-refreshed", { detail: newToken })
+        );
+      } catch {
+        // localStorage mavjud emas — e'tiborsiz qoldiramiz.
+      }
+    }
+    return newToken;
+  })().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+}
+
 async function request(path, options = {}) {
-  const { token, headers, ...rest } = options;
+  const { token, headers, _retry, ...rest } = options;
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
+    // Refresh cookie (httpOnly) yuborilishi uchun credentials kerak.
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(headers ?? {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
+
+  // Access-token muddati tugagan bo'lsa (401) — bir marta jim refresh qilib,
+  // so'rovni yangi token bilan qayta uramiz. Auth endpointlari bundan mustasno.
+  if (
+    response.status === 401 &&
+    !_retry &&
+    token &&
+    !path.startsWith("/api/auth/")
+  ) {
+    try {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        return request(path, { ...options, token: newToken, _retry: true });
+      }
+    } catch {
+      // Refresh ham muvaffaqiyatsiz — asl 401 javob bilan davom etamiz.
+    }
+  }
 
   const contentType = response.headers.get("content-type") ?? "";
   const payload = contentType.includes("application/json")
@@ -81,6 +136,16 @@ export const authApi = {
     request("/api/courses", {
       method: "GET",
     }),
+
+  // ── FBosqich 6: refresh-token oqimi ─────────────────────────
+  // Login'dan keyin bir marta chaqiriladi — httpOnly refresh cookie o'rnatadi.
+  issueRefresh: (token) =>
+    request("/api/auth/issue-refresh", { method: "POST", token }),
+  // Refresh cookie orqali yangi access-token (odatda avtomatik chaqiriladi).
+  refresh: () => request("/api/auth/refresh", { method: "POST" }),
+  // Barcha sessiyalarni yopadi (logout paytida).
+  logoutAll: (token) =>
+    request("/api/auth/logout-all", { method: "POST", token }),
 };
 
 // ── BOSQICH 1: kurs detali (syllabus bilan) ───────────────────

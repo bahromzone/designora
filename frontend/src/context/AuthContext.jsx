@@ -12,6 +12,17 @@ export function AuthProvider({ children }) {
     Boolean(localStorage.getItem(STORAGE_KEY))
   );
 
+  // Jim refresh bo'lganda (api.js dan) token'ni sinxronlaymiz.
+  useEffect(() => {
+    function onRefreshed(e) {
+      const next = e.detail || localStorage.getItem(STORAGE_KEY);
+      if (next) setToken(next);
+    }
+    window.addEventListener("designora-token-refreshed", onRefreshed);
+    return () =>
+      window.removeEventListener("designora-token-refreshed", onRefreshed);
+  }, []);
+
   useEffect(() => {
     if (!token) {
       setLoading(false);
@@ -52,6 +63,8 @@ export function AuthProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, response.access_token);
     setToken(response.access_token);
     setUser(response.user);
+    // Refresh cookie'ni o'rnatamiz — sessiya jim uzaytiriladi.
+    authApi.issueRefresh(response.access_token).catch(() => {});
     return response;
   }
 
@@ -60,10 +73,13 @@ export function AuthProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, response.access_token);
     setToken(response.access_token);
     setUser(response.user);
+    authApi.issueRefresh(response.access_token).catch(() => {});
     return response;
   }
 
   function logout() {
+    // Server tomonda barcha refresh sessiyalarni yopamiz (jim).
+    if (token) authApi.logoutAll(token).catch(() => {});
     localStorage.removeItem(STORAGE_KEY);
     setToken(null);
     setUser(null);

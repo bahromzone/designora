@@ -156,7 +156,7 @@ export default function HomePage() {
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
               {/* Premium Apple-style Hover Button */}
-              <Link to="/royxatdan-otish">
+              <Link to="/?modal=signup">
                 <motion.span
                   whileHover={{
                     scale: 1.03,
@@ -354,7 +354,7 @@ export default function HomePage() {
             Minglab mutaxassislar qatoriga qo'shiling va yangi ko'nikmalarni
             chuqur amaliyot orqali egallang.
           </p>
-          <Link to="/royxatdan-otish" className="relative z-10 inline-block">
+          <Link to="/?modal=signup" className="relative z-10 inline-block">
             <motion.span
               whileHover={{
                 scale: 1.03,

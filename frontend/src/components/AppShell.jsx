@@ -20,22 +20,31 @@ const pageVariants = {
   },
 };
 
-const FOOTER_LINKS = [
+// Skillshare uslubidagi 5 ustunli footer menyulari.
+const FOOTER_COLUMNS = [
   {
-    title: "Platforma",
-    links: ["Kurslar", "Yo'nalishlar", "Narxlar", "Sertifikatlar"],
+    title: "Kompaniya",
+    links: ["Biz haqimizda", "Karyera", "Matbuot", "Blog"],
   },
-  { title: "Kompaniya", links: ["Biz haqimizda", "Karyera", "Blog", "Aloqa"] },
   {
-    title: "Yordam",
-    links: [
-      "Yordam markazi",
-      "Savol-javob",
-      "Foydalanish shartlari",
-      "Maxfiylik siyosati",
-    ],
+    title: "Hamkorlik",
+    links: ["Affiliate dastur", "Hamkorликlar"],
   },
-  { title: "Resurslar", links: ["Hamjamiyat", "Darsliklar", "Qo'llanmalar"] },
+  {
+    title: "O'qituvchilar uchun",
+    links: ["O'qituvchi bo'lish", "Yordam markazi", "Qoidalar va talablar"],
+  },
+  {
+    title: "Do'kon",
+    links: ["Sovg'a a'zoliklari", "Raqamli mahsulotlar", "1-on-1 sessiyalar"],
+  },
+];
+
+const BOTTOM_LINKS = [
+  "Yordam",
+  "Maxfiylik",
+  "Shartlar",
+  "Maxfiylik tanlovlari",
 ];
 
 export default function AppShell({ children }) {
@@ -76,108 +85,99 @@ export default function AppShell({ children }) {
         </motion.main>
       </AnimatePresence>
 
-      {/* RICH MULTI-COLUMN FOOTER */}
-      <footer className="bg-white border-t border-gray-200 mt-24 relative z-10">
+      {/* ── DARK FOOTER (Skillshare uslubi) ─────────────────────── */}
+      <footer className="relative z-10 mt-24 bg-[#0e0e10] text-white">
         <div className="max-w-7xl mx-auto px-6 py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-12 lg:gap-8">
-            {/* Left Section: Branding & Socials */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-2 group cursor-pointer w-max">
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 32 32"
-                  fill="none"
-                  className="group-hover:scale-110 transition-transform duration-300"
-                  aria-hidden="true"
+          {/* Ustunlar: 4 ta menyu + Ilova tugmalari */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-8 gap-y-12">
+            {FOOTER_COLUMNS.map((col) => (
+              <div key={col.title}>
+                <h4 className="text-base font-bold text-white mb-5">
+                  {col.title}
+                </h4>
+                <ul className="space-y-3">
+                  {col.links.map((link) => (
+                    <li key={link}>
+                      <a
+                        href="#"
+                        className="text-sm text-white/60 hover:text-white transition-colors duration-200"
+                      >
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
+            {/* Ilova ustuni — App Store + Google Play */}
+            <div>
+              <h4 className="text-base font-bold text-white mb-5">Ilova</h4>
+              <div className="space-y-3">
+                <a
+                  href="#"
+                  aria-label="App Store'dan yuklab olish"
+                  className="flex items-center gap-3 w-full max-w-[190px] rounded-xl border border-white/20 px-4 py-2.5 hover:border-white/50 transition-colors"
                 >
-                  <path
-                    d="M16 2L2 9L16 16L30 9L16 2Z"
-                    fill="url(#footer_grad1)"
-                  />
-                  <path
-                    d="M2 23L16 30L30 23V9L16 16L2 9V23Z"
-                    fill="url(#footer_grad2)"
-                    opacity="0.9"
-                  />
-                  <defs>
-                    <linearGradient
-                      id="footer_grad1"
-                      x1="2"
-                      y1="9"
-                      x2="30"
-                      y2="9"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop stopColor="#EC4899" />
-                      <stop offset="1" stopColor="#6366F1" />
-                    </linearGradient>
-                    <linearGradient
-                      id="footer_grad2"
-                      x1="16"
-                      y1="30"
-                      x2="16"
-                      y2="9"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop stopColor="#A855F7" />
-                      <stop offset="1" stopColor="#4F46E5" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <span className="font-bold text-xl tracking-tight text-slate-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-pink-500 group-hover:to-indigo-500 transition-all">
-                  Designora
-                </span>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M17.05 12.5c-.03-2.5 2.05-3.7 2.14-3.76-1.17-1.7-2.98-1.94-3.62-1.97-1.54-.16-3 .9-3.78.9-.78 0-1.98-.88-3.25-.86-1.67.03-3.21.97-4.07 2.46-1.74 3.02-.44 7.48 1.24 9.93.83 1.2 1.81 2.54 3.1 2.49 1.25-.05 1.72-.8 3.23-.8 1.5 0 1.93.8 3.25.78 1.34-.03 2.19-1.22 3.01-2.42.95-1.39 1.34-2.74 1.36-2.81-.03-.01-2.61-1-2.64-3.97zM14.6 4.7c.69-.83 1.15-1.99 1.02-3.15-.99.04-2.19.66-2.9 1.49-.64.73-1.2 1.91-1.05 3.04 1.1.09 2.24-.56 2.93-1.38z" />
+                  </svg>
+                  <span className="leading-tight text-left">
+                    <span className="block text-[10px] text-white/60">Yuklab olish</span>
+                    <span className="block text-sm font-semibold">App Store</span>
+                  </span>
+                </a>
+                <a
+                  href="#"
+                  aria-label="Google Play'dan yuklab olish"
+                  className="flex items-center gap-3 w-full max-w-[190px] rounded-xl border border-white/20 px-4 py-2.5 hover:border-white/50 transition-colors"
+                >
+                  <svg width="20" height="20" viewBox="0 0 512 512" aria-hidden="true">
+                    <path fill="#00D0FF" d="M47 24c-5 3-8 8-8 15v434c0 7 3 12 8 15l246-232L47 24z" />
+                    <path fill="#00F076" d="M47 24l246 232 68-64L94 15c-18-10-38-4-47 9z" />
+                    <path fill="#FFD500" d="M361 192l-68 64 68 64 90-51c15-9 15-27 0-36l-90-41z" />
+                    <path fill="#FF3A44" d="M47 488l246-232 68 64L94 497c-18 10-38 4-47-9z" />
+                  </svg>
+                  <span className="leading-tight text-left">
+                    <span className="block text-[10px] text-white/60">Oling</span>
+                    <span className="block text-sm font-semibold">Google Play</span>
+                  </span>
+                </a>
               </div>
-              <p className="mt-5 text-sm text-slate-500 max-w-xs leading-relaxed">
-                Zamonaviy dizayn va moda ta'limi platformasi. Premium, kinematik
-                ta'lim tajribasi orqali bilimingizni yangi darajaga olib
-                chiqamiz.
-              </p>
-
-              {/* Social Icons */}
-              <div className="flex gap-4 mt-8">
-                {["Instagram", "Telegram", "YouTube", "Twitter"].map(
-                  (social) => (
-                    <button
-                      key={social}
-                      aria-label={social}
-                      className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-gray-200 text-slate-400 hover:text-indigo-500 hover:border-indigo-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300"
-                    >
-                      <span className="text-xs font-bold" aria-hidden="true">
-                        {social[0]}
-                      </span>
-                    </button>
-                  )
-                )}
-              </div>
-            </div>
-
-            {/* Right Section: Multi-column Menus */}
-            <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-8">
-              {FOOTER_LINKS.map((col) => (
-                <div key={col.title}>
-                  <h4 className="font-bold text-slate-900 mb-6">{col.title}</h4>
-                  <ul className="space-y-4">
-                    {col.links.map((link) => (
-                      <li key={link}>
-                        <a
-                          href="#"
-                          className="text-sm text-slate-500 hover:text-indigo-600 transition-colors duration-200"
-                        >
-                          {link}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
             </div>
           </div>
 
-          {/* Bottom Bar */}
-          <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <p>© 2026 Designora. Barcha huquqlar himoyalangan.</p>
+          {/* Ajratuvchi chiziq */}
+          <div className="mt-14 border-t border-white/10" />
+
+          {/* Markazlashgan copyright + inline havolalar */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/60">
+            <span>© 2026 Designora</span>
+            {BOTTOM_LINKS.map((link) => (
+              <span key={link} className="flex items-center gap-x-4">
+                <span aria-hidden="true" className="text-white/25">•</span>
+                <a href="#" className="hover:text-white transition-colors">
+                  {link}
+                </a>
+              </span>
+            ))}
+          </div>
+
+          {/* Markazlashgan ijtimoiy tarmoqlar */}
+          <div className="mt-6 flex items-center justify-center gap-4">
+            {["Instagram", "Telegram", "YouTube", "Twitter"].map((social) => (
+              <button
+                key={social}
+                aria-label={social}
+                className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-xs font-bold text-white/70 hover:text-white hover:border-white/60 hover:-translate-y-0.5 transition-all duration-300"
+              >
+                <span aria-hidden="true">{social[0]}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Til tanlagich */}
+          <div className="mt-8 flex justify-center">
             <LanguageSwitcher />
           </div>
         </div>

@@ -26,15 +26,15 @@ export default function AuthCallbackPage() {
     if (!token) {
       setError("Google orqali kirishda xatolik yuz berdi.");
       const t = setTimeout(
-        () => navigate("/kirish?error=oauth_failed", { replace: true }),
+        () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
         1500
       );
       return () => clearTimeout(t);
     }
 
     loginWithToken(token);
-    // Token'ni URL'da qoldirmasdan profilga o'tamiz.
-    navigate("/profil", { replace: true });
+    // Sessiya boshlandi — bosh sahifaga o'tamiz (token URL'da qolmaydi).
+    navigate("/", { replace: true });
   }, [loginWithToken, navigate]);
 
   return (

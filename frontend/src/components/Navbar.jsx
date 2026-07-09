@@ -160,8 +160,14 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                 </p>
 
                 <form className="w-full space-y-4" onSubmit={handleSubmit}>
-                  {/* Google orqali kirish (faqat login rejimida) */}
-                  {mode === "login" && <GoogleAuthButton />}
+                  {/* Google orqali kirish/ro'yxatdan o'tish (ikkala rejimda ham) */}
+                  <GoogleAuthButton
+                    label={
+                      mode === "login"
+                        ? "Google orqali kirish"
+                        : "Google bilan ro'yxatdan o'tish"
+                    }
+                  />
 
                   {/* Name Input (Signup Only) */}
                   <AnimatePresence mode="popLayout">

@@ -77,6 +77,16 @@ export function AuthProvider({ children }) {
     return response;
   }
 
+  // Google OAuth qaytishida (AuthCallbackPage) yoki parolni tiklagandan so'ng
+  // faqat access-token bilan sessiyani boshlaymiz. Profil yuqoridagi useEffect
+  // orqali avtomatik yuklanadi.
+  function loginWithToken(nextToken) {
+    if (!nextToken) return;
+    localStorage.setItem(STORAGE_KEY, nextToken);
+    setToken(nextToken);
+    authApi.issueRefresh(nextToken).catch(() => {});
+  }
+
   function logout() {
     // Server tomonda barcha refresh sessiyalarni yopamiz (jim).
     if (token) authApi.logoutAll(token).catch(() => {});
@@ -104,6 +114,7 @@ export function AuthProvider({ children }) {
         isAuthenticated: Boolean(token && user),
         login,
         register,
+        loginWithToken,
         logout,
         refreshProfile,
       }}

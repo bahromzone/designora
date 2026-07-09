@@ -21,7 +21,6 @@ from app.core.database import get_db
 from app.core.logger import logger
 from app.core.security import create_access_token
 from app.models.user import User
-from app.utils.routes import dashboard_path_for_role
 
 router = APIRouter()
 
@@ -49,11 +48,13 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as e:
         logger.warning(f"Google OAuth error: {e}")
-        return RedirectResponse("/?modal=login&error=oauth_failed")
+        return RedirectResponse(f"{settings.FRONTEND_URL}/kirish?error=oauth_failed")
 
     userinfo = token["userinfo"]
     if not userinfo.get("email_verified", False):
-        return RedirectResponse("/?modal=login&error=email_not_verified")
+        return RedirectResponse(
+            f"{settings.FRONTEND_URL}/kirish?error=email_not_verified"
+        )
 
     email = userinfo["email"]
     name = userinfo.get("name")
@@ -64,18 +65,24 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         user = User(email=email, name=name, provider="google", role="user")
         db.add(user)
         db.commit()
+        db.refresh(user)
 
     jwt_token = create_access_token(email)
 
-    response = RedirectResponse(dashboard_path_for_role(user.role))
-    response.set_cookie(
+    # ✅ SPA (React, 5173/prod) localStorage'dan Bearer token o'qiydi. Shuning uchun
+    # backend dashboard path'iga emas, frontend'dagi /auth/callback sahifasiga
+    # yo'naltiramiz va token'ni URL fragment (#) orqali uzatamiz. Fragment server
+    # loglariga va Referer header'iga tushmaydi — token shu bois xavfsizroq uzatiladi.
+    redirect = RedirectResponse(
+        f"{settings.FRONTEND_URL}/auth/callback#token={jwt_token}"
+    )
+    # Same-origin (prod) stsenariysida cookie ham foydali bo'lib qoladi.
+    redirect.set_cookie(
         key="access_token",
         value=f"Bearer {jwt_token}",
         httponly=True,
-        # ✅ BUG #8 FIX: secure=False hardcode edi → settings dan o'qiladi
-        # ✅ BUG #8 FIX: samesite="lax" edi → auth.py bilan mos "strict" ga o'zgartirildi
         secure=settings.ENVIRONMENT == "production",
         samesite="strict",
         max_age=3600,
     )
-    return response
+    return redirect

@@ -32,6 +32,11 @@ const InstructorCourseEditPage = lazy(
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
+// ── Auth: Google OAuth qaytishi + parolni tiklash oqimi ─────────
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
+
 // Sahifa chunk'i yuklanayotganda ko'rsatiladigan fallback.
 function RouteFallback() {
   return (
@@ -60,6 +65,9 @@ function App() {
           <Route path="/kirish" element={<LoginPage />} />
           <Route path="/royxatdan-otish" element={<RegisterPage />} />
           <Route path="/verify/:code" element={<VerifyPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route
             path="/kurslarim"
             element={

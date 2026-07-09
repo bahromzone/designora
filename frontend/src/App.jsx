@@ -64,10 +64,8 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
-
-          {/* Eski auth sahifalari olib tashlandi — endi modal orqali ochiladi.
-              Qolib ketgan havolalar (masalan HomePage hero/CTA) 404 bermasin
-              deb modalga yo'naltiramiz. */}
+          {/* Eski auth sahifalari olib tashlandi — endi modal ochadi.
+              Har qanday eski havola/bookmark shu redirect orqali ishlaydi. */}
           <Route
             path="/kirish"
             element={<Navigate to="/?modal=login" replace />}

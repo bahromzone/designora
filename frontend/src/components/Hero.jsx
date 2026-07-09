@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 
-/* ── Dashboard Mockup (right side) ─────────────────────── */
+/* ── Dashboard Mockup (right side) ────────────────────────── */
 function DashboardMockup() {
   return (
     <div
@@ -307,7 +307,7 @@ export default function Hero({ isAuthenticated }) {
             className="mt-8 flex flex-wrap items-center gap-3 opacity-0"
           >
             <Link
-              to={isAuthenticated ? "/kurslar" : "/royxatdan-otish"}
+              to={isAuthenticated ? "/kurslar" : "/?modal=signup"}
               className="btn-primary"
             >
               {isAuthenticated ? "Kurslarni ochish" : "Hozir boshlash"} ↗

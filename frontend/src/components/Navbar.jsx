@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -400,12 +400,27 @@ export default function Navbar() {
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState("login");
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Google callback / ProtectedRoute / Hero "?modal=" orqali modalni ochadi,
+  // so'ng parametrni URL'dan tozalaydi (yangilashda qayta ochilmasin).
+  useEffect(() => {
+    const modal = searchParams.get("modal");
+    if (modal === "login" || modal === "signup") {
+      setAuthModalMode(modal);
+      setIsAuthModalOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete("modal");
+      next.delete("error");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const openModal = (mode) => {
     setAuthModalMode(mode);

@@ -20,7 +20,11 @@ export default function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) {
     return (
-      <Navigate to="/kirish" replace state={{ from: location.pathname }} />
+      <Navigate
+        to="/?modal=login"
+        replace
+        state={{ from: location.pathname }}
+      />
     );
   }
 

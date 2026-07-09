@@ -15,8 +15,6 @@ const BlogListPage = lazy(() => import("./pages/BlogListPage"));
 const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 const ForumListPage = lazy(() => import("./pages/ForumListPage"));
 const ForumThreadPage = lazy(() => import("./pages/ForumThreadPage"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
-const RegisterPage = lazy(() => import("./pages/RegisterPage"));
 const VerifyPage = lazy(() => import("./pages/VerifyPage"));
 const MyCoursesPage = lazy(() => import("./pages/MyCoursesPage"));
 const LearnPage = lazy(() => import("./pages/LearnPage"));
@@ -62,8 +60,6 @@ function App() {
           <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/forum" element={<ForumListPage />} />
           <Route path="/forum/:threadId" element={<ForumThreadPage />} />
-          <Route path="/kirish" element={<LoginPage />} />
-          <Route path="/royxatdan-otish" element={<RegisterPage />} />
           <Route path="/verify/:code" element={<VerifyPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

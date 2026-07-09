@@ -48,12 +48,14 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as e:
         logger.warning(f"Google OAuth error: {e}")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/kirish?error=oauth_failed")
+        return RedirectResponse(
+            f"{settings.FRONTEND_URL}/?modal=login&error=oauth_failed"
+        )
 
     userinfo = token["userinfo"]
     if not userinfo.get("email_verified", False):
         return RedirectResponse(
-            f"{settings.FRONTEND_URL}/kirish?error=email_not_verified"
+            f"{settings.FRONTEND_URL}/?modal=login&error=email_not_verified"
         )
 
     email = userinfo["email"]

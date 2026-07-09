@@ -3,6 +3,11 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 // AuthContext token'ni shu kalitda saqlaydi (ikkovi bir xil bo'lishi shart).
 const TOKEN_KEY = "designora-auth-token";
 
+// Google OAuth — backend'dagi to'liq sahifa redirect oqimi (fetch emas).
+// Foydalanuvchi shu manzilga o'tadi, Google'da tasdiqlaydi, backend callback
+// JWT cookie o'rnatib rolga qarab yo'naltiradi. Modaldagi tugma shunga link beradi.
+export const GOOGLE_LOGIN_URL = `${API_URL}/auth/google`;
+
 // FastAPI xato javobini o'qish uchun yordamchi:
 // detail string ham, validatsiya xatolarida massiv ham bo'lishi mumkin.
 function extractErrorMessage(payload) {
@@ -124,6 +129,22 @@ export const authApi = {
  token,
  }),
 
+ // Parolni unutdingizmi — tiklash havolasini emailga yuboradi.
+ // Backend xavfsizlik uchun email mavjud/mavjud emasligidan qat'i nazar
+ // bir xil javob qaytaradi (timing attackdan himoya).
+ forgotPassword: (email) =>
+ request("/api/auth/forgot-password", {
+ method: "POST",
+ body: JSON.stringify({ email }),
+ }),
+
+ // Reset-password sahifasi ishlatadi: token + yangi parol.
+ resetPassword: (token, password) =>
+ request("/api/auth/reset-password", {
+ method: "POST",
+ body: JSON.stringify({ token, password }),
+ }),
+
  // Profil sahifasi statistikasi. Backend'dagi haqiqiy endpoint — /api/profile/stats.
  // Avval /api/dashboard chaqirilardi (mavjud emas) va javobda `metrics` maydoni
  // kutilardi — bu ProfilePage'ni qulatardi (oq ekran). Bu yerda stats javobini
@@ -149,7 +170,7 @@ export const authApi = {
  method: "GET",
  }),
 
- // ── FBosqich 6: refresh-token oqimi ─────────────────────────
+ // ── FBosqich 6: refresh-token oqimi ────────────────────────
  // Login'dan keyin bir marta chaqiriladi — httpOnly refresh cookie o'rnatadi.
  issueRefresh: (token) =>
  request("/api/auth/issue-refresh", { method: "POST", token }),
@@ -206,7 +227,7 @@ export const discoveryApi = {
  },
 };
 
-// ── BOSQICH 2: Testlar (quiz) ──────────────────────────────
+// ── BOSQICH 2: Testlar (quiz) ─────────────────────────────
 export const quizApi = {
  courseQuizzes: (courseId, token) =>
  request(`/api/quiz/courses/${courseId}/quizzes`, { token }),
@@ -219,7 +240,7 @@ export const quizApi = {
  }),
 };
 
-// ── BOSQICH 2: Sharh va reyting (reviews) ───────────────────────
+// ── BOSQICH 2: Sharh va reyting (reviews) ────────────────────
 export const reviewsApi = {
  summary: (courseId) => request(`/api/reviews/courses/${courseId}/summary`),
  list: (courseId) => request(`/api/reviews/courses/${courseId}`),
@@ -233,7 +254,7 @@ export const reviewsApi = {
  request(`/api/reviews/${reviewId}`, { method: "DELETE", token }),
 };
 
-// ── BOSQICH 2: Savol-javob (Q&A) ──────────────────────────
+// ── BOSQICH 2: Savol-javob (Q&A) ────────────────────────
 export const qaApi = {
  list: (lessonId, token) =>
  request(`/api/qa/lessons/${lessonId}/questions`, { token }),
@@ -256,7 +277,7 @@ export const qaApi = {
  }),
 };
 
-// ── BOSQICH 2: Eslatmalar (notes) ───────────────────────────
+// ── BOSQICH 2: Eslatmalar (notes) ────────────────────────
 export const notesApi = {
  forLesson: (lessonId, token) =>
  request(`/api/notes/lessons/${lessonId}`, { token }),
@@ -276,7 +297,7 @@ export const notesApi = {
  request(`/api/notes/${noteId}`, { method: "DELETE", token }),
 };
 
-// ── BOSQICH 2: Sertifikat (certificates) ───────────────────────
+// ── BOSQICH 2: Sertifikat (certificates) ────────────────────
 export const certificatesApi = {
  mine: (token) => request("/api/certificates/my", { token }),
  issue: (courseId, token) =>
@@ -328,7 +349,7 @@ export const notificationsApi = {
  request(`/api/notifications/${id}`, { method: "DELETE", token }),
 };
 
-// ── BOSQICH 4: Blog ────────────────────────────────────
+// ── BOSQICH 4: Blog ───────────────────────────────────────
 export const blogApi = {
  // { total, page, per_page, pages, results: [...] }
  list: (params = {}) => request(withQuery("/api/blog", params)),
@@ -370,7 +391,7 @@ export const referralApi = {
  myReferrals: (token) => request("/api/referrals/my-referrals", { token }),
 };
 
-// ── BOSQICH 4: Instruktor profili (ommaviy) ──────────────────────
+// ── BOSQICH 4: Instruktor profili (ommaviy) ────────────────────
 export const instructorsApi = {
  // { id, name, bio, avatar_url, website, location, courses_count,
  // total_students, avg_rating, courses: [...] }
@@ -477,7 +498,7 @@ export const instructorApi = {
  }),
 };
 
-// ── Umumiy formatlash yordamchilari ──────────────────────────
+// ── Umumiy formatlash yordamchilari ────────────────────────
 export function formatDuration(totalMinutes) {
  const mins = Number(totalMinutes) || 0;
  if (mins < 60) return `${mins} daqiqa`;

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -64,6 +64,15 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          {/* Eski auth sahifalari olib tashlandi — endi modalga yo'naltiramiz. */}
+          <Route
+            path="/kirish"
+            element={<Navigate to="/?modal=login" replace />}
+          />
+          <Route
+            path="/royxatdan-otish"
+            element={<Navigate to="/?modal=signup" replace />}
+          />
           <Route
             path="/kurslarim"
             element={

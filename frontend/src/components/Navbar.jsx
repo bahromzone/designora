@@ -3,6 +3,7 @@ import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
+import GoogleAuthButton from "./GoogleAuthButton";
 
 const links = [
   { label: "Bosh sahifa", to: "/" },
@@ -159,6 +160,9 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                 </p>
 
                 <form className="w-full space-y-4" onSubmit={handleSubmit}>
+                  {/* Google orqali kirish (faqat login rejimida) */}
+                  {mode === "login" && <GoogleAuthButton />}
+
                   {/* Name Input (Signup Only) */}
                   <AnimatePresence mode="popLayout">
                     {mode === "signup" && (
@@ -309,12 +313,13 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                         </span>
                       </label>
 
-                      <a
-                        href="#"
+                      <Link
+                        to="/forgot-password"
+                        onClick={onClose}
                         className="text-[12px] font-medium text-[#A0A6B5] hover:text-[#813BFF] transition-colors"
                       >
                         Parolni unutdingizmi?
-                      </a>
+                      </Link>
                     </div>
                   )}
 

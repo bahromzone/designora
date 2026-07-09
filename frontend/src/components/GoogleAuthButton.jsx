@@ -3,7 +3,10 @@ import { GOOGLE_AUTH_URL } from "../lib/authExtra";
 // Login modali (Navbar) va boshqa joylarda qayta ishlatiladigan
 // "Google orqali kirish" tugmasi. Modal uslubiga mos (rounded-full).
 // Pastida ixtiyoriy "yoki" ajratgichi bor — forma tepasiga qo'yish uchun.
-export default function GoogleAuthButton({ label = "Google orqali kirish", showDivider = true }) {
+export default function GoogleAuthButton({
+  label = "Google orqali kirish",
+  showDivider = true,
+}) {
   return (
     <>
       <a

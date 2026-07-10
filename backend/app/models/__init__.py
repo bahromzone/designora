@@ -4,6 +4,7 @@ from .assignment_submission import AssignmentSubmission
 from .certificate import Certificate
 from .Course import Course
 from .enrollment import Enrollment
+from .learning_path import UserLearningPath
 from .lesson import Lesson
 from .lesson_progress import LessonProgress
 from .module import Module

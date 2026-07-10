@@ -23,6 +23,8 @@ import InstructorManagePage from "./pages/InstructorManagePage";
 import InstructorPage from "./pages/InstructorPage";
 import InstructorReviewPage from "./pages/InstructorReviewPage";
 import LearnPage from "./pages/LearnPage";
+import LearningPathDetailPage from "./pages/LearningPathDetailPage";
+import LearningPathsPage from "./pages/LearningPathsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import PortfolioBuilderPage from "./pages/PortfolioBuilderPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -44,6 +46,8 @@ function App() {
         <Route path="/qidiruv" element={<GlobalSearchPage />} />
         <Route path="/kurslar" element={<CoursesPage />} />
         <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
+        <Route path="/learning-paths" element={<LearningPathsPage />} />
+        <Route path="/learning-paths/:slug" element={<LearningPathDetailPage />} />
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/forum" element={<ForumListPage />} />

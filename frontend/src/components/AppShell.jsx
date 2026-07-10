@@ -53,8 +53,12 @@ export default function AppShell({ children }) {
   // Faqat joriy manzil "/" bo'lsa, rost (true) bo'ladi
   const isHomePage = location.pathname === "/";
 
-  // Har sahifa almashganda page_view hodisasini yuboramiz (fire-and-forget).
+  // Har sahifa almashganda: yuqoriga scroll + page_view hodisasini yuboramiz.
+  // Scroll reset — React Router eski scroll pozitsiyasini saqlab qolgani uchun
+  // footer'dan (yoki istalgan pastki joydan) menyu bosilganda yangi sahifa ham
+  // pastda ochilib qolardi. Har navigatsiyada tepaga qaytaramiz.
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     trackEvent("page_view", { path: location.pathname });
   }, [location.pathname]);
 
@@ -85,7 +89,7 @@ export default function AppShell({ children }) {
         </motion.main>
       </AnimatePresence>
 
-      {/* ── DARK FOOTER (Skillshare uslubi) ─────────────────────── */}
+      {/* ── DARK FOOTER (Skillshare uslubi) ────────────────────────── */}
       <footer className="relative z-10 mt-24 bg-[#0e0e10] text-white">
         <div className="max-w-7xl mx-auto px-6 py-16">
           {/* Ustunlar: 4 ta menyu + Ilova tugmalari */}

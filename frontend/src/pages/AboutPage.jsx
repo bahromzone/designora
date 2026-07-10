@@ -6,6 +6,12 @@ const STATS = [
   { value: "4.9/5", label: "O'rtacha baho" },
 ];
 
+const INTRO =
+  "Designora — O'zbekistondagi dizaynerlar uchun premium onlayn ta'lim platformasi. Biz oddiy videodarslardan voz kechib, soha yetakchilaridan kinematik sifatdagi jonli masterklasslar, amaliy loyihalar va shaxsiy mentorlik taklif qilamiz.";
+
+const MISSION =
+  "Maqsadimiz — har bir o'quvchini moodboarddan tayyor mahsulotgacha bo'lgan yo'lda kuzatib borish va ularni haqiqiy bozorga tayyorlash. UI/UX, moda dizayni, brending va styling yo'nalishlarida amaliy bilim beramiz.";
+
 export default function AboutPage() {
   return (
     <section className="shell py-12 sm:py-16">
@@ -14,23 +20,14 @@ export default function AboutPage() {
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-ink mb-6 leading-tight">
           Designora — dizayn ta'limining yangi bosqichi
         </h1>
-        <p
-          className="text-lg leading-8 mb-6"
-          style={{ color: "var(--ink-60)" }}
-        >
-          Designora — O'zbekistondagi dizaynerlar uchun premium onlayn ta'lim
-          platformasi. Biz oddiy videodarslardan voz kechib, soha
-          yetakchilaridan kinematik sifatdagi jonli masterklasslar, amaliy
-          loyihalar va shaxsiy mentorlik taklif qilamiz.
+        <p className="text-lg leading-8 mb-6" style={{ color: "var(--ink-60)" }}>
+          {INTRO}
         </p>
         <p
           className="text-base leading-8 mb-10"
           style={{ color: "var(--ink-60)" }}
         >
-          Maqsadimiz — har bir o'quvchini moodboarddan tayyor mahsulotgacha
-          bo'lgan yo'lda kuzatib borish va ularni haqiqiy bozorga tayyorlash.
-          UI/UX, moda dizayni, brending va styling yo'nalishlarida amaliy
-          bilim beramiz.
+          {MISSION}
         </p>
 
         <div className="grid grid-cols-3 gap-4 mb-12">

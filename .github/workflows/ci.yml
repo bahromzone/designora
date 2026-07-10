@@ -66,7 +66,15 @@ jobs:
       - name: ESLint
         run: npm run lint
       - name: Prettier (format check)
-        run: npm run format:check
+        shell: bash
+        run: |
+          files=$(npx prettier --list-different "src/**/*.{js,jsx,css}")
+          if [ -n "$files" ]; then
+            while IFS= read -r file; do
+              echo "::error file=$file::Prettier formatting required"
+            done <<< "$files"
+            exit 1
+          fi
       - name: Vitest
         run: npm run test:run
       - name: Build

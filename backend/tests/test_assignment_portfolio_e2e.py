@@ -1,8 +1,8 @@
 """Critical journey: assignment submission -> mentor grade -> public portfolio."""
 
 from app.core.security import create_access_token
-from app.models.Course import Course
 from app.models.assignment import Assignment
+from app.models.Course import Course
 from app.models.enrollment import Enrollment
 from app.models.portfolio_project import PortfolioProject
 from app.models.user import User
@@ -23,7 +23,6 @@ def _user(db, email: str, role: str = "user") -> User:
 def test_assignment_feedback_to_public_portfolio(client, db_session):
     instructor = _user(db_session, "mentor@example.com", "instructor")
     student = _user(db_session, "student@example.com")
-
     course = Course(
         title="Brand identity",
         instructor_id=instructor.id,
@@ -33,7 +32,6 @@ def test_assignment_feedback_to_public_portfolio(client, db_session):
     db_session.add(course)
     db_session.commit()
     db_session.refresh(course)
-
     db_session.add(Enrollment(user_id=student.id, course_id=course.id))
     assignment = Assignment(
         user_id=instructor.id,
@@ -48,7 +46,6 @@ def test_assignment_feedback_to_public_portfolio(client, db_session):
 
     student_headers = _headers(student.email)
     mentor_headers = _headers(instructor.email)
-
     submitted = client.post(
         f"/api/assignments/{assignment.id}/submit",
         headers=student_headers,
@@ -113,7 +110,10 @@ def test_assignment_feedback_to_public_portfolio(client, db_session):
     public = client.get(f"/api/portfolio/public/{student.id}")
     assert public.status_code == 200
     assert public.json()["projects"][0]["id"] == project_id
-    assert public.json()["projects"][0]["skills"] == ["Branding", "Art direction"]
+    assert public.json()["projects"][0]["skills"] == [
+        "Branding",
+        "Art direction",
+    ]
 
 
 def test_ungraded_submission_cannot_be_imported(client, db_session):

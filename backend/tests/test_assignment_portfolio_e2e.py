@@ -1,8 +1,9 @@
 """Critical journey: assignment submission -> mentor grade -> public portfolio."""
 
 from app.core.security import create_access_token
-from app.models.assignment import Assignment
 from app.models.Course import Course
+from app.models.assignment import Assignment
+from app.models.assignment_submission import AssignmentSubmission
 from app.models.enrollment import Enrollment
 from app.models.portfolio_project import PortfolioProject
 from app.models.user import User
@@ -20,7 +21,7 @@ def _user(db, email: str, role: str = "user") -> User:
     return user
 
 
-def test_assignment_feedback_to_public_portfolio(client, db_session):
+def _assignment_fixture(db_session):
     instructor = _user(db_session, "mentor@example.com", "instructor")
     student = _user(db_session, "student@example.com")
     course = Course(
@@ -43,9 +44,14 @@ def test_assignment_feedback_to_public_portfolio(client, db_session):
     db_session.add(assignment)
     db_session.commit()
     db_session.refresh(assignment)
+    return instructor, student, assignment
 
+
+def test_assignment_feedback_to_public_portfolio(client, db_session):
+    instructor, student, assignment = _assignment_fixture(db_session)
     student_headers = _headers(student.email)
     mentor_headers = _headers(instructor.email)
+
     submitted = client.post(
         f"/api/assignments/{assignment.id}/submit",
         headers=student_headers,
@@ -117,9 +123,42 @@ def test_assignment_feedback_to_public_portfolio(client, db_session):
 
 
 def test_ungraded_submission_cannot_be_imported(client, db_session):
-    student = _user(db_session, "draft@example.com")
+    _, student, assignment = _assignment_fixture(db_session)
+    submission = AssignmentSubmission(
+        assignment_id=assignment.id,
+        user_id=student.id,
+        content="Draft case study",
+        status="submitted",
+    )
+    db_session.add(submission)
+    db_session.commit()
+    db_session.refresh(submission)
+
     response = client.post(
-        "/api/portfolio/from-submission/9999",
+        f"/api/portfolio/from-submission/{submission.id}",
         headers=_headers(student.email),
     )
     assert response.status_code == 409
+    assert db_session.query(PortfolioProject).count() == 0
+
+
+def test_student_cannot_import_another_students_work(client, db_session):
+    _, owner, assignment = _assignment_fixture(db_session)
+    stranger = _user(db_session, "stranger@example.com")
+    submission = AssignmentSubmission(
+        assignment_id=assignment.id,
+        user_id=owner.id,
+        content="Completed identity",
+        status="graded",
+        grade=95,
+    )
+    db_session.add(submission)
+    db_session.commit()
+    db_session.refresh(submission)
+
+    response = client.post(
+        f"/api/portfolio/from-submission/{submission.id}",
+        headers=_headers(stranger.email),
+    )
+    assert response.status_code == 409
+    assert db_session.query(PortfolioProject).count() == 0

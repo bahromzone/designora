@@ -6,8 +6,12 @@ import ReferralSection from "../components/ReferralSection";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../lib/api";
 
-function formatDate(date) {
-  return new Date(date).toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric" });
+function formatDate(value) {
+  return new Date(value).toLocaleDateString("uz-UZ", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export default function ProfilePage() {
@@ -28,32 +32,31 @@ export default function ProfilePage() {
       <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
         <aside className="space-y-6 rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full text-2xl font-bold text-white" style={{ background: "var(--amber)" }}>
-              {user?.avatar_url ? <img src={user.avatar_url} alt="" className="h-full w-full object-cover" /> : initials}
-            </div>
+            <div className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white" style={{ background: "var(--amber)" }}>{initials}</div>
             <p className="label mt-4">Profil</p>
             <h1 className="font-serif text-xl font-semibold text-ink">{displayName}</h1>
             <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>{user?.email}</p>
           </div>
 
           <div className="space-y-3">
-            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Rol</span><span className="font-semibold text-ink">{user?.role === "admin" ? "Administrator" : "Foydalanuvchi"}</span></div>
+            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Rol</span><span className="font-semibold text-ink">{user?.role === "admin" ? "Administrator" : user?.role === "instructor" ? "Instruktor" : "Talaba"}</span></div>
             <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Qo‘shilgan</span><span className="font-semibold text-ink">{user?.created_at ? formatDate(user.created_at) : "—"}</span></div>
           </div>
 
-          <Link to="/portfolioim" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
-            Portfolio studio <span>→</span>
+          <Link to="/portfolio-studio" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
+            Portfolio Studio <span aria-hidden>→</span>
           </Link>
 
+          {user?.id && <Link to={`/portfolio/${user.id}`} target="_blank" className="block text-center text-sm font-semibold" style={{ color: "var(--muted)" }}>Public portfolio ↗</Link>}
           {error && <p className="rounded-xl px-4 py-2.5 text-xs" style={{ background: "#fff0ef", color: "#c0392b" }}>{error}</p>}
         </aside>
 
         <div className="space-y-6">
           <div className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
-            <p className="label mb-2">Sizning vitriningiz</p>
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            <p className="label mb-2">Keyingi qadam</p>
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div><h2 className="font-serif text-lg font-semibold text-ink">Eng yaxshi ishlaringizni ko‘rsating</h2><p className="mt-2 max-w-2xl text-sm leading-7" style={{ color: "var(--ink-60)" }}>Baholangan topshiriqlarni professional case study’ga aylantiring va bitta public havola bilan ulashing.</p></div>
-              <Link to="/portfolioim" className="btn-primary">Portfolio yaratish</Link>
+              <Link to="/portfolio-studio" className="btn-primary">Portfolio yaratish</Link>
             </div>
           </div>
 

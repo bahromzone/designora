@@ -1,15 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 150" role="img" aria-labelledby="title desc">
   <title id="title">DESIGNORA</title>
-  <desc id="desc">Designora lockup: opposing-D monogram above a fine serif wordmark</desc>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&amp;display=swap');
-  </style>
-  <!-- Opposing-D monogram, centered over the wordmark -->
-  <g transform="translate(310 34)" fill="none" stroke="#cfcdca" stroke-width="5.5" stroke-linejoin="miter" stroke-linecap="butt">
-    <path d="M20 8 L40 8 C62 8 62 72 40 72 L20 72 Z"/>
-    <path d="M120 8 L100 8 C78 8 78 72 100 72 L120 72 Z"/>
+  <desc id="desc">Designora lockup: opposing-D monogram above a classical serif wordmark, on a transparent background</desc>
+
+  <!-- Opposing-D monogram, centered. Two mirrored D's whose bowls meet at the center. -->
+  <g transform="translate(240 6)" fill="none" stroke="#242326" stroke-width="4.6" stroke-linecap="square" stroke-linejoin="miter">
+    <!-- left D -->
+    <path d="M6 4h24"/>
+    <path d="M6 68h24"/>
+    <path d="M6 4v64"/>
+    <path d="M30 4c10 4 16 16 16 32s-6 28-16 32"/>
+    <!-- right D (mirror) -->
+    <path d="M74 4H50"/>
+    <path d="M74 68H50"/>
+    <path d="M74 4v64"/>
+    <path d="M50 4c-10 4-16 16-16 32s6 28 16 32"/>
   </g>
-  <text x="380" y="258" text-anchor="middle" fill="#cfcdca"
-    font-family="'Cormorant Garamond', 'Trajan Pro', 'Bodoni MT', Didot, Georgia, serif"
-    font-size="104" font-weight="500" letter-spacing="13">DESIGNORA</text>
+
+  <!-- Classical serif wordmark. System serif stack renders reliably when the SVG is embedded. -->
+  <text x="280" y="132" text-anchor="middle" fill="#242326"
+    font-family="'Cormorant Garamond', Georgia, 'Times New Roman', 'Nimbus Roman', serif"
+    font-size="58" font-weight="500" letter-spacing="9">DESIGNORA</text>
 </svg>

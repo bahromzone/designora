@@ -27,6 +27,7 @@ const InstructorManagePage = lazy(() => import("./pages/InstructorManagePage"));
 const InstructorCourseEditPage = lazy(
   () => import("./pages/InstructorCourseEditPage")
 );
+const InstructorApplyPage = lazy(() => import("./pages/InstructorApplyPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
@@ -35,7 +36,7 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
 
-// ── Statik sahifalar (footer havolalari) ─────────────────────
+// ── Statik sahifalar (footer havolalari) ──────────────────────
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
@@ -73,6 +74,11 @@ function App() {
           <Route path="/biz-haqimizda" element={<AboutPage />} />
           <Route path="/maxfiylik" element={<PrivacyPage />} />
           <Route path="/shartlar" element={<TermsPage />} />
+          {/* O'qituvchi bo'lish arizasi (sahifa o'zi auth holatini boshqaradi) */}
+          <Route
+            path="/instruktor-boshlash"
+            element={<InstructorApplyPage />}
+          />
           {/* Eski auth sahifalari olib tashlandi — endi modal ochadi.
               Har qanday eski havola/bookmark shu redirect orqali ishlaydi. */}
           <Route

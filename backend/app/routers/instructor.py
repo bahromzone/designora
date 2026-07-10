@@ -27,7 +27,7 @@ router = APIRouter(prefix="/api/instructor", tags=["Instructor"])
 _INSTRUCTOR_ROLES = {"instructor", "admin", "superadmin"}
 
 
-# ── YORDAMCHILAR ──────────────────────────────────────────────────────────────
+# ── YORDAMCHILAR ────────────────────────────────────────────
 def require_instructor(
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -73,7 +73,13 @@ def _unique_slug(db: Session, base: str, exclude_id: int | None = None) -> str:
         slug = f"{base}-{n}"
 
 
-# ── SCHEMAS ───────────────────────────────────────────────────────────────────
+# ── SCHEMAS ────────────────────────────────────────────────
+class InstructorApplyIn(BaseModel):
+    name: Annotated[str, StringConstraints(min_length=2, max_length=100)]
+    bio: Annotated[str, StringConstraints(min_length=10, max_length=500)]
+    portfolio_url: str | None = None
+
+
 class CourseIn(BaseModel):
     title: Annotated[str, StringConstraints(min_length=3, max_length=200)]
     subtitle: str | None = None
@@ -162,7 +168,44 @@ def _course_admin_dict(c: Course, db: Session) -> dict:
     }
 
 
-# ── COURSES ───────────────────────────────────────────────────────────────────
+# ── INSTRUKTOR BO'LISH (apply) ────────────────────────────────
+# Oddiy foydalanuvchini instruktorga aylantiradi. require_instructor bu yerda
+# ISHLAMAYDI (u faqat mavjud instruktorlarni o'tkazadi), shuning uchun to'g'ridan-
+# to'g'ri get_current_user ishlatamiz. Yangi ustun qo'shmaymiz — bio/website
+# mavjud ustunlarga yoziladi (eski baza buzilmaydi).
+@router.post("/apply")
+def apply_instructor(
+    data: InstructorApplyIn,
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
+
+    if user.role in _INSTRUCTOR_ROLES:
+        return {"message": "Siz allaqachon instruktorsiz", "role": user.role}
+
+    user.name = data.name or user.name
+    user.bio = data.bio
+    if data.portfolio_url:
+        user.website = data.portfolio_url
+    user.role = "instructor"
+
+    try:
+        db.commit()
+        db.refresh(user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Saqlashda xatolik: {e}")
+
+    return {
+        "message": "Tabriklaymiz! Endi siz instruktorsiz.",
+        "role": user.role,
+    }
+
+
+# ── COURSES ────────────────────────────────────────────────
 @router.get("/courses")
 def list_my_courses(
     db: Session = Depends(get_db),
@@ -275,7 +318,7 @@ def get_course_admin(
     return _course_admin_dict(course, db)
 
 
-# ── MODULES ───────────────────────────────────────────────────────────────────
+# ── MODULES ────────────────────────────────────────────────
 @router.post("/courses/{course_id}/modules", status_code=201)
 def create_module(
     course_id: int,
@@ -330,7 +373,7 @@ def delete_module(
     return {"message": "Modul o'chirildi", "id": module_id}
 
 
-# ── LESSONS ───────────────────────────────────────────────────────────────────
+# ── LESSONS ────────────────────────────────────────────────
 @router.post("/courses/{course_id}/lessons", status_code=201)
 def create_lesson(
     course_id: int,

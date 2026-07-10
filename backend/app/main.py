@@ -154,10 +154,7 @@ def list_instructor_applications(
     admin: User = Depends(_require_admin),
 ):
     pending = (
-        db.query(User)
-        .filter(User.role == _PENDING_ROLE)
-        .order_by(User.id.desc())
-        .all()
+        db.query(User).filter(User.role == _PENDING_ROLE).order_by(User.id.desc()).all()
     )
     return [_application_dict(u) for u in pending]
 

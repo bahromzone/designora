@@ -1,6 +1,7 @@
 # Barcha modellar shu yerda import qilinishi shart.
 from .assignment import Assignment
 from .assignment_submission import AssignmentSubmission
+from .calendar_event import CalendarEvent
 from .certificate import Certificate
 from .Course import Course
 from .enrollment import Enrollment

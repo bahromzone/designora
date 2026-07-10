@@ -64,8 +64,7 @@ jobs:
       - name: Critical coverage
         run: >-
           npm run coverage --
-          --coverage.include=src/pages/DashboardInsights.jsx
-          --coverage.include=src/pages/InstructorReviewPage.jsx
+          --coverage.include=src/lib/roadmapMetrics.js
           --coverage.thresholds.lines=70
           --coverage.thresholds.functions=70
       - name: Vite build

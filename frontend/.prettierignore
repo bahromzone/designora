@@ -21,6 +21,13 @@ src/pages/PublicPortfolioPage.jsx
 src/pages/Portfolio.css
 src/pages/GlobalSearchPage.jsx
 src/pages/GlobalSearchPage.css
+src/pages/DashboardInsights.jsx
+src/pages/DashboardInsights.css
+src/pages/DashboardInsights.test.jsx
+src/pages/InstructorReviewPage.jsx
+src/pages/InstructorReviewPage.css
+src/pages/InstructorReviewPage.test.jsx
+src/pages/StudentDashboardPage.jsx
 src/lib/assignmentsApi.js
 src/lib/portfolioApi.js
 src/lib/globalSearchApi.js

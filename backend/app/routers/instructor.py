@@ -27,7 +27,7 @@ router = APIRouter(prefix="/api/instructor", tags=["Instructor"])
 _INSTRUCTOR_ROLES = {"instructor", "admin", "superadmin"}
 
 
-# ── YORDAMCHILAR ──────────────────────────────────────────────────────────────
+# ── YORDAMCHILAR ───────────────────────────────────────────────
 def require_instructor(
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -73,7 +73,80 @@ def _unique_slug(db: Session, base: str, exclude_id: int | None = None) -> str:
         slug = f"{base}-{n}"
 
 
-# ── SCHEMAS ───────────────────────────────────────────────────────────────────
+# ── O'QITUVCHI BO'LISH (ARIZA) ───────────────────────────────────
+class InstructorApplyIn(BaseModel):
+    bio: Annotated[str, StringConstraints(min_length=10, max_length=1000)]
+    expertise: Annotated[str, StringConstraints(min_length=2, max_length=200)]
+    portfolio: str | None = None
+
+
+@router.get("/application")
+def get_application(
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Joriy foydalanuvchining instruktorlik holatini qaytaradi.
+
+    Frontend shu asosda "O'qituvchi bo'lish" tugmasini boshqaradi:
+    allaqachon instruktor bo'lsa — to'g'ridan-to'g'ri panelga, aks holda ariza.
+    """
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
+    return {
+        "role": user.role,
+        "is_instructor": user.role in _INSTRUCTOR_ROLES,
+        "status": getattr(user, "instructor_status", "none") or "none",
+        "bio": getattr(user, "instructor_bio", None),
+        "expertise": getattr(user, "instructor_expertise", None),
+        "portfolio": getattr(user, "instructor_portfolio", None),
+    }
+
+
+@router.post("/apply")
+def apply_instructor(
+    data: InstructorApplyIn,
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Oddiy foydalanuvchini instruktorga aylantiradi.
+
+    MVP: ariza avtomatik tasdiqlanadi (approved). Admin tasdig'i kerak bo'lsa,
+    kelajakda bu yerda status="pending" qilinadi va alohida admin endpoint
+    orqali tasdiqlanadi.
+    """
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
+
+    if user.role in _INSTRUCTOR_ROLES:
+        return {
+            "message": "Siz allaqachon instruktorsiz",
+            "role": user.role,
+            "status": "approved",
+        }
+
+    user.instructor_bio = data.bio
+    user.instructor_expertise = data.expertise
+    user.instructor_portfolio = data.portfolio
+    user.role = "instructor"
+    user.instructor_status = "approved"
+
+    try:
+        db.commit()
+        db.refresh(user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Saqlashda xatolik: {e}")
+
+    return {
+        "message": "Tabriklaymiz! Siz endi instruktorsiz.",
+        "role": user.role,
+        "status": user.instructor_status,
+    }
+
+
+# ── SCHEMAS ─────────────────────────────────────────────────
 class CourseIn(BaseModel):
     title: Annotated[str, StringConstraints(min_length=3, max_length=200)]
     subtitle: str | None = None
@@ -162,7 +235,7 @@ def _course_admin_dict(c: Course, db: Session) -> dict:
     }
 
 
-# ── COURSES ───────────────────────────────────────────────────────────────────
+# ── COURSES ─────────────────────────────────────────────────
 @router.get("/courses")
 def list_my_courses(
     db: Session = Depends(get_db),
@@ -275,7 +348,7 @@ def get_course_admin(
     return _course_admin_dict(course, db)
 
 
-# ── MODULES ───────────────────────────────────────────────────────────────────
+# ── MODULES ─────────────────────────────────────────────────
 @router.post("/courses/{course_id}/modules", status_code=201)
 def create_module(
     course_id: int,
@@ -330,7 +403,7 @@ def delete_module(
     return {"message": "Modul o'chirildi", "id": module_id}
 
 
-# ── LESSONS ───────────────────────────────────────────────────────────────────
+# ── LESSONS ─────────────────────────────────────────────────
 @router.post("/courses/{course_id}/lessons", status_code=201)
 def create_lesson(
     course_id: int,

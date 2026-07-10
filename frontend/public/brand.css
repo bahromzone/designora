@@ -1,23 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap');
+
 :root {
   --designora-black: #242326;
 }
 
-/* Reference lockup: a compact black plaque, pale opposing-D mark, ultra-light spaced wordmark. */
+/* Canonical lockup from the supplied reference: pale opposing-D mark above a fine serif
+   wordmark. The mark ships transparent; the dark plaque is the only thing added (the
+   "background" the brief excludes) so the silver stays legible on any header state. */
 header a[href="/"]:has(svg) {
   display: inline-block !important;
-  width: 206px !important;
-  height: 74px !important;
-  min-width: 206px;
+  width: 210px !important;
+  height: 82px !important;
+  min-width: 210px;
   overflow: hidden;
   background-color: var(--designora-black) !important;
   background-image: url('/brand-logo.svg') !important;
   background-position: center !important;
-  background-size: 184px auto !important;
+  background-size: 190px auto !important;
   background-repeat: no-repeat !important;
   color: transparent !important;
   font-size: 0 !important;
   line-height: 0 !important;
-  border-radius: 0 !important;
+  border-radius: 3px !important;
 }
 
 header a[href="/"]:has(svg) > * { display: none !important; }
@@ -29,9 +33,9 @@ header a[href="/"]:has(svg):focus-visible {
 
 @media (max-width: 767px) {
   header a[href="/"]:has(svg) {
-    width: 154px !important;
-    height: 57px !important;
-    min-width: 154px;
-    background-size: 138px auto !important;
+    width: 156px !important;
+    height: 61px !important;
+    min-width: 156px;
+    background-size: 142px auto !important;
   }
 }

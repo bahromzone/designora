@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
   <title id="title">Designora</title>
   <rect width="64" height="64" rx="4" fill="#242326"/>
-  <g transform="translate(8 10) scale(.585)" fill="none" stroke="#d7d5d4" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter">
-    <path d="M2 2h27v68H2V2Z"/>
-    <path d="M80 2H53v68h27V2Z"/>
-    <path d="M28.5 2.5C50 4 64 18 64 36s-14 32-35.5 33.5"/>
-    <path d="M53.5 2.5C32 4 18 18 18 36s14 32 35.5 33.5"/>
+  <g transform="translate(7 12) scale(.357)" fill="none" stroke="#cfcdca" stroke-width="6.5" stroke-linejoin="miter" stroke-linecap="butt">
+    <path d="M20 8 L40 8 C62 8 62 72 40 72 L20 72 Z"/>
+    <path d="M120 8 L100 8 C78 8 78 72 100 72 L120 72 Z"/>
   </g>
 </svg>

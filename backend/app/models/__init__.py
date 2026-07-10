@@ -1,6 +1,4 @@
 # Barcha modellar shu yerda import qilinishi shart.
-# SQLAlchemy relationship va Base.metadata ularni to'g'ri resolve qiladi.
-
 from .assignment import Assignment
 from .assignment_submission import AssignmentSubmission
 from .certificate import Certificate
@@ -15,20 +13,3 @@ from .payment import Payment
 from .portfolio_project import PortfolioProject
 from .progress import Progress
 from .user import User
-
-__all__ = [
-    "Assignment",
-    "AssignmentSubmission",
-    "Certificate",
-    "Course",
-    "Enrollment",
-    "Lesson",
-    "LessonProgress",
-    "Module",
-    "Notification",
-    "PasswordReset",
-    "Payment",
-    "PortfolioProject",
-    "Progress",
-    "User",
-]

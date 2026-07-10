@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 # fmt: off
 import logging
 import os

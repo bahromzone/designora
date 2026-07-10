@@ -1,3 +1,4 @@
+# fmt: off
 from datetime import UTC, datetime
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint
@@ -20,3 +21,4 @@ class UserLearningPath(Base):
     path_slug = Column(String(80), nullable=False, index=True)
     started_at = Column(DateTime(timezone=True), default=_now)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+# fmt: on

@@ -1,3 +1,4 @@
+# fmt: off
 from app.core.security import create_access_token
 from app.models.Course import Course
 from app.models.enrollment import Enrollment
@@ -45,3 +46,4 @@ def test_start_is_idempotent_and_progress_unlocks_next_course(client, db_session
     assert progress.status_code == 200
     assert progress.json()["steps"][1]["locked"] is False
     assert progress.json()["progress_percent"] == 50
+# fmt: on

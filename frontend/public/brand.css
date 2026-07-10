@@ -2,19 +2,26 @@
   --designora-ink: #242326;
 }
 
-/* Canonical header lockup. Transparent (no plaque): the mark + serif wordmark only,
-   in dark ink so it reads on the light header. */
+/* The supplied logo is silver on transparent. On the light header we back it with the
+   same dark plaque as the reference so the metallic mark stays legible and identical. */
 header a[href="/"]:has(svg) {
-  display: inline-block !important;
-  width: 190px !important;
-  height: 52px !important;
-  min-width: 190px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 208px !important;
+  height: 60px !important;
+  min-width: 208px;
+  padding: 0 18px;
   overflow: hidden;
-  background: url('/brand-logo.svg') center / contain no-repeat !important;
+  background-color: var(--designora-ink) !important;
+  background-image: url('/brand-logo.svg') !important;
+  background-position: center !important;
+  background-size: 176px auto !important;
+  background-repeat: no-repeat !important;
   color: transparent !important;
   font-size: 0 !important;
   line-height: 0 !important;
-  border-radius: 0 !important;
+  border-radius: 6px !important;
 }
 
 header a[href="/"]:has(svg) > * { display: none !important; }
@@ -26,8 +33,9 @@ header a[href="/"]:has(svg):focus-visible {
 
 @media (max-width: 767px) {
   header a[href="/"]:has(svg) {
-    width: 150px !important;
-    height: 42px !important;
-    min-width: 150px;
+    width: 164px !important;
+    height: 48px !important;
+    min-width: 164px;
+    background-size: 138px auto !important;
   }
 }

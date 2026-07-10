@@ -2,29 +2,19 @@
   --designora-ink: #242326;
 }
 
-/*
-  Pixel-identical to the reference: we use the uploaded artwork itself (brand-logo.png).
-  Its background is not truly transparent, so we back it with the same dark plaque
-  from the reference to keep the silver mark clean on the light header.
-*/
+/* Pixel-identical: the uploaded dark logo (brand-logo.png) placed directly on the
+   light header. No plaque, since the artwork is dark on a light/transparent field. */
 header a[href="/"]:has(svg) {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 210px !important;
-  height: 62px !important;
-  min-width: 210px;
-  padding: 0 18px;
+  display: inline-block !important;
+  width: 196px !important;
+  height: 56px !important;
+  min-width: 196px;
   overflow: hidden;
-  background-color: var(--designora-ink) !important;
-  background-image: url('/brand-logo.png') !important;
-  background-position: center !important;
-  background-size: 176px auto !important;
-  background-repeat: no-repeat !important;
+  background: url('/brand-logo.png') center / contain no-repeat !important;
   color: transparent !important;
   font-size: 0 !important;
   line-height: 0 !important;
-  border-radius: 6px !important;
+  border-radius: 0 !important;
 }
 
 /* Hide the old inline gradient mark and text. */
@@ -38,9 +28,8 @@ header a[href="/"]:has(svg):focus-visible {
 
 @media (max-width: 767px) {
   header a[href="/"]:has(svg) {
-    width: 166px !important;
-    height: 50px !important;
-    min-width: 166px;
-    background-size: 138px auto !important;
+    width: 156px !important;
+    height: 46px !important;
+    min-width: 156px;
   }
 }

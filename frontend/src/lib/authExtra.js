@@ -1,4 +1,4 @@
-// Parolni tiklash va Google OAuth uchun yordamchilar.
+// Parolni tiklash, Google OAuth va instruktor arizasi uchun yordamchilar.
 // api.js ni o'zgartirmaslik uchun alohida, mustaqil modul sifatida ajratildi.
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
@@ -16,11 +16,14 @@ function extractErrorMessage(payload) {
   return "So'rovni bajarib bo'lmadi.";
 }
 
-async function post(path, body) {
+async function post(path, body, token) {
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify(body),
   });
   const contentType = res.headers.get("content-type") ?? "";
@@ -40,3 +43,8 @@ export const forgotPassword = (email) =>
 // Muvaffaqiyatli javob: { message, redirect, access_token, token_type, user }.
 export const resetPassword = (token, password) =>
   post("/api/auth/reset-password", { token, password });
+
+// Oddiy foydalanuvchini instruktorga aylantiradi (auth talab qilinadi).
+// body: { name, bio, portfolio_url? }
+export const applyInstructor = (token, body) =>
+  post("/api/instructor/apply", body, token);

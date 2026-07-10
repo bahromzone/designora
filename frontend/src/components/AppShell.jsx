@@ -33,7 +33,7 @@ const FOOTER_COLUMNS = [
     title: "Yordam",
     links: [
       { label: "Forum", to: "/forum" },
-      { label: "O'qituvchi bo'lish", to: "/?modal=signup" },
+      { label: "O'qituvchi bo'lish", to: "/instruktor-boshlash" },
     ],
   },
   {

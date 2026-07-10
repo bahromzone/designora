@@ -1,3 +1,4 @@
+# ruff: noqa: E701,E702
 # fmt: off
 """Roadmap 3.14: timezone-aware day/week/month learning calendar."""
 from datetime import UTC, datetime

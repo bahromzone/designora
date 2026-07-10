@@ -1,4 +1,4 @@
-"""Discovery API: course filters, recommendations and global search."""
+"""Discovery: course catalogue, cross-platform search and recommendations."""
 
 from difflib import SequenceMatcher
 
@@ -25,14 +25,12 @@ _SORTABLE = {
 }
 
 
-def _course_card(course: Course) -> dict:
+def _card(course: Course) -> dict:
     return {
         "id": course.id,
-        "type": "course",
         "title": course.title,
         "slug": course.slug,
         "subtitle": course.subtitle,
-        "description": course.description,
         "price": course.price,
         "category": course.category,
         "level": course.level,
@@ -42,168 +40,192 @@ def _course_card(course: Course) -> dict:
         "rating_count": course.rating_count or 0,
         "students_count": course.students_count or 0,
         "duration_minutes": course.duration_minutes or 0,
-        "url": f"/kurslar/{course.id}",
     }
 
 
 def _active_cards(db: Session) -> list[dict]:
-    rows = db.query(Course).filter(Course.is_active == True).all()
-    return [_course_card(course) for course in rows]
+    courses = db.query(Course).filter(Course.is_active == True).all()
+    return [_card(course) for course in courses]
 
 
-def _score(query: str, *values: str | None) -> float:
-    query = query.casefold().strip()
+def _score(needle: str, *values: str | None) -> float:
+    query = needle.casefold().strip()
     haystack = " ".join(value or "" for value in values).casefold()
-    if not query:
-        return 1.0
+    if not query or not haystack:
+        return 0
     if query in haystack:
-        position_bonus = 0.2 if haystack.startswith(query) else 0
-        return 1.0 + position_bonus
+        return 1.0 - min(haystack.find(query), 100) / 1000
     words = haystack.split()
     return max(
-        [SequenceMatcher(None, query, word).ratio() for word in words] + [0.0]
+        [SequenceMatcher(None, query, word).ratio() for word in words] + [0]
     )
 
 
-def _excerpt(value: str | None, limit: int = 160) -> str | None:
-    if not value:
-        return None
-    clean = " ".join(value.split())
-    return clean if len(clean) <= limit else f"{clean[: limit - 1]}…"
+def _rank(needle: str, rows: list[dict], limit: int) -> list[dict]:
+    scored = []
+    for row in rows:
+        relevance = _score(
+            needle,
+            row.get("title"),
+            row.get("subtitle"),
+            row.get("description"),
+            row.get("meta"),
+        )
+        if relevance >= 0.56:
+            scored.append({**row, "relevance": round(relevance, 3)})
+    return sorted(scored, key=lambda row: row["relevance"], reverse=True)[:limit]
 
 
-@router.get("/global")
+@router.get("/global-search")
 def global_search(
-    q: str = Query("", max_length=120),
+    q: str = Query(min_length=2, max_length=100),
     types: str | None = None,
     limit: int = Query(8, ge=1, le=20),
     db: Session = Depends(get_db),
 ):
-    """Search all public learning content, with lightweight typo tolerance."""
-    query = q.strip()
+    """Search courses, lessons, instructors, blog and forum in one request.
+
+    Exact substring matches rank first. Sequence matching provides lightweight typo
+    tolerance without adding an external search service during the MVP phase.
+    """
     requested = {
         value.strip()
         for value in (types or "course,lesson,instructor,blog,forum").split(",")
         if value.strip()
     }
-    threshold = 0.58 if len(query) >= 4 else 0.72
-    groups: dict[str, list[dict]] = {
-        "course": [],
-        "lesson": [],
-        "instructor": [],
-        "blog": [],
-        "forum": [],
-    }
+    groups: dict[str, list[dict]] = {}
 
     if "course" in requested:
-        for course in db.query(Course).filter(Course.is_active == True).all():
-            score = _score(query, course.title, course.subtitle, course.description, course.category)
-            if not query or score >= threshold:
-                item = _course_card(course)
-                item["score"] = score
-                groups["course"].append(item)
+        rows = db.query(Course).filter(Course.is_active == True).limit(300).all()
+        groups["course"] = _rank(
+            q,
+            [
+                {
+                    "type": "course",
+                    "id": row.id,
+                    "title": row.title,
+                    "subtitle": row.subtitle,
+                    "description": row.description,
+                    "meta": " · ".join(filter(None, [row.category, row.level, row.language])),
+                    "image_url": row.thumbnail_url,
+                    "url": f"/kurslar/{row.id}",
+                }
+                for row in rows
+            ],
+            limit,
+        )
 
     if "lesson" in requested:
         rows = (
             db.query(Lesson, Course)
             .join(Course, Lesson.course_id == Course.id)
             .filter(Course.is_active == True)
+            .limit(500)
             .all()
         )
-        for lesson, course in rows:
-            score = _score(query, lesson.title, lesson.description, course.title)
-            if query and score >= threshold:
-                groups["lesson"].append(
-                    {
-                        "id": lesson.id,
-                        "type": "lesson",
-                        "title": lesson.title,
-                        "subtitle": course.title,
-                        "description": _excerpt(lesson.description),
-                        "course_id": course.id,
-                        "duration_seconds": lesson.duration_seconds or 0,
-                        "url": f"/kurslar/{course.id}",
-                        "score": score,
-                    }
-                )
+        groups["lesson"] = _rank(
+            q,
+            [
+                {
+                    "type": "lesson",
+                    "id": lesson.id,
+                    "title": lesson.title,
+                    "subtitle": course.title,
+                    "description": lesson.description,
+                    "meta": lesson.type or "Dars",
+                    "image_url": course.thumbnail_url,
+                    "url": f"/organish/{course.id}?lesson={lesson.id}",
+                }
+                for lesson, course in rows
+            ],
+            limit,
+        )
 
     if "instructor" in requested:
         rows = (
             db.query(User)
-            .filter(User.is_active == True, User.role.in_(["instructor", "admin", "superadmin"]))
+            .filter(
+                User.is_active == True,
+                User.role.in_(["instructor", "admin", "superadmin"]),
+            )
+            .limit(200)
             .all()
         )
-        for user in rows:
-            score = _score(query, user.name, user.bio, user.location)
-            if query and score >= threshold:
-                groups["instructor"].append(
-                    {
-                        "id": user.id,
-                        "type": "instructor",
-                        "title": user.name or "Designora instruktor",
-                        "subtitle": user.location or "Instruktor",
-                        "description": _excerpt(user.bio),
-                        "image_url": user.avatar_url,
-                        "url": f"/instruktor/{user.id}",
-                        "score": score,
-                    }
-                )
+        groups["instructor"] = _rank(
+            q,
+            [
+                {
+                    "type": "instructor",
+                    "id": row.id,
+                    "title": row.name or "Designora instruktor",
+                    "subtitle": row.bio,
+                    "description": row.bio,
+                    "meta": row.location or "Instruktor",
+                    "image_url": row.avatar_url,
+                    "url": f"/instruktor/{row.id}",
+                }
+                for row in rows
+            ],
+            limit,
+        )
 
     if "blog" in requested:
-        for post in db.query(BlogPost).filter(BlogPost.is_published == True).all():
-            score = _score(query, post.title, post.excerpt, post.body, post.tags)
-            if query and score >= threshold:
-                groups["blog"].append(
-                    {
-                        "id": post.id,
-                        "type": "blog",
-                        "title": post.title,
-                        "subtitle": "Blog",
-                        "description": _excerpt(post.excerpt or post.body),
-                        "image_url": post.cover_image_url,
-                        "url": f"/blog/{post.slug}",
-                        "score": score,
-                    }
-                )
+        rows = (
+            db.query(BlogPost)
+            .filter(BlogPost.is_published == True)
+            .order_by(BlogPost.published_at.desc())
+            .limit(300)
+            .all()
+        )
+        groups["blog"] = _rank(
+            q,
+            [
+                {
+                    "type": "blog",
+                    "id": row.id,
+                    "title": row.title,
+                    "subtitle": row.excerpt,
+                    "description": row.excerpt or row.meta_description,
+                    "meta": row.tags or "Maqola",
+                    "image_url": row.cover_image_url,
+                    "url": f"/blog/{row.slug}",
+                }
+                for row in rows
+            ],
+            limit,
+        )
 
     if "forum" in requested:
-        for thread in db.query(ForumThread).all():
-            score = _score(query, thread.title, thread.body, thread.category)
-            if query and score >= threshold:
-                groups["forum"].append(
-                    {
-                        "id": thread.id,
-                        "type": "forum",
-                        "title": thread.title,
-                        "subtitle": thread.category or "Forum",
-                        "description": _excerpt(thread.body),
-                        "views": thread.views or 0,
-                        "url": f"/forum/{thread.id}",
-                        "score": score,
-                    }
-                )
-
-    for key in groups:
-        groups[key] = sorted(groups[key], key=lambda item: item["score"], reverse=True)[:limit]
-        for item in groups[key]:
-            item.pop("score", None)
+        rows = (
+            db.query(ForumThread)
+            .order_by(ForumThread.updated_at.desc())
+            .limit(500)
+            .all()
+        )
+        groups["forum"] = _rank(
+            q,
+            [
+                {
+                    "type": "forum",
+                    "id": row.id,
+                    "title": row.title,
+                    "subtitle": row.body[:180],
+                    "description": row.body[:300],
+                    "meta": f"{row.category} · {row.views or 0} ko‘rish",
+                    "image_url": None,
+                    "url": f"/forum/{row.id}",
+                }
+                for row in rows
+            ],
+            limit,
+        )
 
     total = sum(len(items) for items in groups.values())
-    suggestions = []
-    if query and total == 0:
-        candidates = [
-            title
-            for (title,) in db.query(Course.title).filter(Course.is_active == True).all()
-            if SequenceMatcher(None, query.casefold(), title.casefold()).ratio() >= 0.35
-        ]
-        suggestions = candidates[:3]
-
     return {
-        "query": query,
+        "query": q,
         "total": total,
         "groups": groups,
-        "counts": {key: len(items) for key, items in groups.items()},
-        "suggestions": suggestions,
+        "suggestion": None if total else "Kengroq yoki boshqa kalit so‘z kiriting",
     }
 
 
@@ -224,7 +246,13 @@ def search(
     query = db.query(Course).filter(Course.is_active == True)
     if q:
         like = f"%{q.strip()}%"
-        query = query.filter(or_(Course.title.ilike(like), Course.subtitle.ilike(like), Course.description.ilike(like)))
+        query = query.filter(
+            or_(
+                Course.title.ilike(like),
+                Course.subtitle.ilike(like),
+                Course.description.ilike(like),
+            )
+        )
     if category:
         query = query.filter(Course.category == category.lower())
     if level:
@@ -241,7 +269,13 @@ def search(
     query = query.order_by(column.desc() if descending else column.asc())
     total = query.count()
     items = query.offset((page - 1) * per_page).limit(per_page).all()
-    return {"total": total, "page": page, "per_page": per_page, "pages": (total + per_page - 1) // per_page, "results": [_course_card(course) for course in items]}
+    return {
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "pages": (total + per_page - 1) // per_page,
+        "results": [_card(course) for course in items],
+    }
 
 
 @router.get("/categories")
@@ -251,15 +285,32 @@ def categories(db: Session = Depends(get_db)):
     for (category,) in rows:
         if category:
             counts[category] = counts.get(category, 0) + 1
-    return [{"category": category, "count": count} for category, count in sorted(counts.items(), key=lambda pair: pair[1], reverse=True)]
+    return [
+        {"category": category, "count": count}
+        for category, count in sorted(
+            counts.items(), key=lambda item: item[1], reverse=True
+        )
+    ]
 
 
 @router.get("/recommendations/bestselling")
-def bestselling(limit: int = Query(6, ge=1, le=24), db: Session = Depends(get_db)):
+def bestselling(
+    limit: int = Query(6, ge=1, le=24),
+    db: Session = Depends(get_db),
+):
     return recommendation_service.bestselling(_active_cards(db), limit=limit)
 
 
 @router.get("/recommendations/similar/{course_id}")
-def similar(course_id: int, limit: int = Query(6, ge=1, le=24), db: Session = Depends(get_db)):
+def similar(
+    course_id: int,
+    limit: int = Query(6, ge=1, le=24),
+    db: Session = Depends(get_db),
+):
     course = db.query(Course).filter(Course.id == course_id).first()
-    return recommendation_service.similar(_active_cards(db), category=course.category if course else None, exclude_ids={course_id}, limit=limit)
+    return recommendation_service.similar(
+        _active_cards(db),
+        category=course.category if course else None,
+        exclude_ids={course_id},
+        limit=limit,
+    )

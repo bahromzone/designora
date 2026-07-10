@@ -12,6 +12,7 @@ extend-exclude = '''
  | \.venv
  | app/alembic
  | app/routers/discovery\.py
+ | tests/test_global_search_api\.py
 )/
 '''
 

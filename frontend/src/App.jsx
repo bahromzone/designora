@@ -1,8 +1,8 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
 import AppShell from "./components/AppShell";
+import GlobalSearchLauncher from "./components/GlobalSearchLauncher";
 import ProtectedRoute from "./components/ProtectedRoute";
-import SearchShortcut from "./components/SearchShortcut";
 import BlogListPage from "./pages/BlogListPage";
 import BlogPostPage from "./pages/BlogPostPage";
 import CheckoutResultPage from "./pages/CheckoutResultPage";
@@ -14,19 +14,22 @@ import GlobalSearchPage from "./pages/GlobalSearchPage";
 import HomePage from "./pages/HomePage";
 import InstructorPage from "./pages/InstructorPage";
 import LearnPage from "./pages/LearnPage";
+import LoginPage from "./pages/LoginPage";
 import MyCoursesPage from "./pages/MyCoursesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import PortfolioBuilderPage from "./pages/PortfolioBuilderPage";
 import ProfilePage from "./pages/ProfilePage";
 import PublicPortfolioPage from "./pages/PublicPortfolioPage";
+import RegisterPage from "./pages/RegisterPage";
 import VerifyPage from "./pages/VerifyPage";
 
 function App() {
   return (
     <AppShell>
-      <SearchShortcut />
+      <GlobalSearchLauncher />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/qidiruv" element={<GlobalSearchPage />} />
         <Route path="/kurslar" element={<CoursesPage />} />
         <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
         <Route path="/instruktor/:instructorId" element={<InstructorPage />} />
@@ -34,9 +37,8 @@ function App() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/forum" element={<ForumListPage />} />
         <Route path="/forum/:threadId" element={<ForumThreadPage />} />
-        <Route path="/qidiruv" element={<GlobalSearchPage />} />
-        <Route path="/kirish" element={<Navigate to="/" replace />} />
-        <Route path="/royxatdan-otish" element={<Navigate to="/" replace />} />
+        <Route path="/kirish" element={<LoginPage />} />
+        <Route path="/royxatdan-otish" element={<RegisterPage />} />
         <Route path="/verify/:code" element={<VerifyPage />} />
         <Route path="/portfolio/u/:userId" element={<PublicPortfolioPage />} />
         <Route path="/kurslarim" element={<ProtectedRoute><MyCoursesPage /></ProtectedRoute>} />

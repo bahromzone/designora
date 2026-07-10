@@ -19,7 +19,7 @@ const pageVariants = {
   },
 };
 
-// Skillshare uslubidagi footer menyulari.
+// Skillshare uslubidagi 4 ustunli footer menyulari.
 const FOOTER_COLUMNS = [
   {
     title: "Kompaniya",

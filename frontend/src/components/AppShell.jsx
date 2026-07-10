@@ -19,14 +19,14 @@ const pageVariants = {
   },
 };
 
-// Footer menyulari — har biri haqiqiy route'ga bog'langan.
+// Footer menyulari — faqat haqiqiy sahifaga ega havolalar.
+// { label, to } — ichki (react-router) havola.
 const FOOTER_COLUMNS = [
   {
     title: "Kompaniya",
     links: [
       { label: "Biz haqimizda", to: "/biz-haqimizda" },
       { label: "Blog", to: "/blog" },
-      { label: "Kurslar", to: "/kurslar" },
     ],
   },
   {
@@ -39,16 +39,16 @@ const FOOTER_COLUMNS = [
   {
     title: "Huquqiy",
     links: [
-      { label: "Maxfiylik siyosati", to: "/maxfiylik" },
-      { label: "Foydalanish shartlari", to: "/shartlar" },
+      { label: "Maxfiylik", to: "/maxfiylik" },
+      { label: "Shartlar", to: "/shartlar" },
     ],
   },
 ];
 
+// Pastki qatordagi kichik havolalar.
 const BOTTOM_LINKS = [
   { label: "Maxfiylik", to: "/maxfiylik" },
   { label: "Shartlar", to: "/shartlar" },
-  { label: "Forum", to: "/forum" },
 ];
 
 // Ijtimoiy tarmoqlar — haqiqiy profillarga havolalar.

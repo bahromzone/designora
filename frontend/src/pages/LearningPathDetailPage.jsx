@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
-import { learningPathLogic, nextLearningStep, pathStatus } from "../lib/learningPathLogic";
+import { nextLearningStep, pathStatus } from "../lib/learningPathLogic";
 import { learningPathsApi } from "../lib/learningPathsApi";
 import "./LearningPathsPage.css";
 

@@ -29,8 +29,14 @@ src/pages/InstructorReviewPage.css
 src/pages/InstructorReviewPage.test.jsx
 src/pages/StudentDashboardPage.jsx
 src/pages/CoursesPage.jsx
+src/pages/LearningPathsPage.jsx
+src/pages/LearningPathDetailPage.jsx
+src/pages/LearningPathsPage.css
 src/lib/assignmentsApi.js
 src/lib/portfolioApi.js
 src/lib/globalSearchApi.js
 src/lib/roadmapMetrics.js
 src/lib/roadmapMetrics.test.js
+src/lib/learningPathsApi.js
+src/lib/learningPathLogic.js
+src/lib/learningPathLogic.test.js

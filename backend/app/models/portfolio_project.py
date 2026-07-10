@@ -14,8 +14,18 @@ class PortfolioProject(Base):
     __tablename__ = "portfolio_projects"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    submission_id = Column(Integer, ForeignKey("assignment_submissions.id", ondelete="SET NULL"), nullable=True, unique=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    submission_id = Column(
+        Integer,
+        ForeignKey("assignment_submissions.id", ondelete="SET NULL"),
+        nullable=True,
+        unique=True,
+    )
     title = Column(String(180), nullable=False)
     slug = Column(String(220), nullable=False, unique=True, index=True)
     summary = Column(Text, nullable=True)

@@ -37,7 +37,9 @@ def _unique_slug(
     base = f"{_slug(title)}-{user_id}"
     candidate, index = base, 1
     while True:
-        query = db.query(PortfolioProject).filter(PortfolioProject.slug == candidate)
+        query = db.query(PortfolioProject).filter(
+            PortfolioProject.slug == candidate
+        )
         if exclude:
             query = query.filter(PortfolioProject.id != exclude)
         if not query.first():
@@ -57,7 +59,6 @@ def _loads(value: str | None) -> list[str]:
 def _dict(project: PortfolioProject) -> dict:
     return {
         "id": project.id,
-        "user_id": project.user_id,
         "submission_id": project.submission_id,
         "title": project.title,
         "slug": project.slug,
@@ -78,7 +79,7 @@ class ProjectIn(BaseModel):
     submission_id: int | None = None
     title: str = Field(min_length=2, max_length=180)
     summary: str | None = Field(default=None, max_length=500)
-    story: str | None = Field(default=None, max_length=8000)
+    story: str | None = Field(default=None, max_length=5000)
     cover_url: str | None = Field(default=None, max_length=500)
     project_url: str | None = Field(default=None, max_length=500)
     skills: list[str] = Field(default_factory=list, max_length=12)
@@ -89,7 +90,7 @@ class ProjectIn(BaseModel):
 class ProjectPatch(BaseModel):
     title: str | None = Field(default=None, min_length=2, max_length=180)
     summary: str | None = Field(default=None, max_length=500)
-    story: str | None = Field(default=None, max_length=8000)
+    story: str | None = Field(default=None, max_length=5000)
     cover_url: str | None = Field(default=None, max_length=500)
     project_url: str | None = Field(default=None, max_length=500)
     skills: list[str] | None = Field(default=None, max_length=12)
@@ -98,16 +99,22 @@ class ProjectPatch(BaseModel):
     position: int | None = None
 
 
-def _graded_submission(db: Session, submission_id: int, user_id: int):
-    return (
+def _graded_submission(db: Session, user: User, submission_id: int):
+    submission = (
         db.query(AssignmentSubmission)
         .filter(
             AssignmentSubmission.id == submission_id,
-            AssignmentSubmission.user_id == user_id,
+            AssignmentSubmission.user_id == user.id,
             AssignmentSubmission.status == "graded",
         )
         .first()
     )
+    if not submission:
+        raise HTTPException(
+            status_code=409,
+            detail="Faqat baholangan o'z ishingizni portfolio'ga qo'sha olasiz",
+        )
+    return submission
 
 
 def _create_from_submission(
@@ -127,7 +134,7 @@ def _create_from_submission(
         .filter(Assignment.id == submission.assignment_id)
         .first()
     )
-    title = assignment.title if assignment and assignment.title else "Design loyihasi"
+    title = assignment.title if assignment else "Design loyihasi"
     project = PortfolioProject(
         user_id=user.id,
         submission_id=submission.id,
@@ -138,7 +145,6 @@ def _create_from_submission(
         project_url=submission.file_url,
         skills="[]",
         tools="[]",
-        is_public=False,
         position=(
             db.query(PortfolioProject)
             .filter(PortfolioProject.user_id == user.id)
@@ -194,6 +200,7 @@ def eligible(
 
 
 @router.get("/mine")
+@router.get("/me")
 def mine(
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -202,19 +209,13 @@ def mine(
     rows = (
         db.query(PortfolioProject)
         .filter(PortfolioProject.user_id == user.id)
-        .order_by(PortfolioProject.position.asc(), PortfolioProject.created_at.desc())
+        .order_by(
+            PortfolioProject.position.asc(),
+            PortfolioProject.created_at.desc(),
+        )
         .all()
     )
     return [_dict(row) for row in rows]
-
-
-@router.get("/me")
-def me(
-    email: str = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    user = _user(db, email)
-    return {"user_id": user.id, "name": user.name, "projects": mine(email, db)}
 
 
 @router.post("/from-submission/{submission_id}", status_code=201)
@@ -224,12 +225,7 @@ def from_submission(
     db: Session = Depends(get_db),
 ):
     user = _user(db, email)
-    submission = _graded_submission(db, submission_id, user.id)
-    if not submission:
-        raise HTTPException(
-            status_code=409,
-            detail="Faqat baholangan o'z ishingizni portfolio'ga qo'sha olasiz",
-        )
+    submission = _graded_submission(db, user, submission_id)
     return _dict(_create_from_submission(db, user, submission))
 
 
@@ -241,18 +237,17 @@ def create(
 ):
     user = _user(db, email)
     if data.submission_id:
-        submission = _graded_submission(db, data.submission_id, user.id)
-        if not submission:
-            raise HTTPException(
-                status_code=400,
-                detail="Faqat baholangan o'z ishingizni portfolio'ga qo'sha olasiz",
-            )
-        if (
+        submission = _graded_submission(db, user, data.submission_id)
+        existing = (
             db.query(PortfolioProject)
             .filter(PortfolioProject.submission_id == submission.id)
             .first()
-        ):
-            raise HTTPException(status_code=409, detail="Bu ish portfolio'ga qo'shilgan")
+        )
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail="Bu ish portfolio'ga qo'shilgan",
+            )
     project = PortfolioProject(
         user_id=user.id,
         submission_id=data.submission_id,
@@ -347,15 +342,20 @@ def public_portfolio(user_id: int, db: Session = Depends(get_db)):
             PortfolioProject.user_id == user.id,
             PortfolioProject.is_public == True,
         )
-        .order_by(PortfolioProject.position.asc(), PortfolioProject.created_at.desc())
+        .order_by(
+            PortfolioProject.position.asc(),
+            PortfolioProject.created_at.desc(),
+        )
         .all()
     )
-    owner = {
-        "id": user.id,
-        "name": user.name or "Designora student",
-        "bio": getattr(user, "bio", None),
-        "avatar_url": getattr(user, "avatar_url", None),
-        "location": getattr(user, "location", None),
-        "website": getattr(user, "website", None),
+    return {
+        "owner": {
+            "id": user.id,
+            "name": user.name or "Designora student",
+            "bio": getattr(user, "bio", None),
+            "avatar_url": getattr(user, "avatar_url", None),
+            "location": getattr(user, "location", None),
+            "website": getattr(user, "website", None),
+        },
+        "projects": [_dict(row) for row in rows],
     }
-    return {"owner": owner, "user": owner, "projects": [_dict(row) for row in rows]}

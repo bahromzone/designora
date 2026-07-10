@@ -35,7 +35,6 @@ from app.routers import (
     courses_api,
     discovery,
     forum,
-    gamification,
     google,
     instructor,
     learning,
@@ -52,7 +51,6 @@ from app.routers import (
     reviews,
     system,
     token,
-    uploads,
     users,
 )
 from app.routers.auth import public_router
@@ -72,7 +70,6 @@ app = FastAPI(
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
 )
-
 Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
@@ -97,7 +94,6 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)
-
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -105,39 +101,34 @@ BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 setup_admin(app)
 
-for api_router in (
-    profile.router,
-    admin_courses.router,
-    courses_api.router,
-    learning.router,
-    instructor.router,
-    assignments.router,
-    assignments_upload.router,
-    portfolio.router,
-    public_router,
-    auth.router,
-    google.router,
-    users.router,
-    discovery.router,
-    quiz.router,
-    reviews.router,
-    qa.router,
-    notes.router,
-    certificates.router,
-    media.router,
-    blog.router,
-    forum.router,
-    notifications.router,
-    referrals.router,
-    analytics.router,
-    gamification.router,
-    payments.router,
-    privacy.router,
-    system.router,
-    token.router,
-    uploads.router,
-):
-    app.include_router(api_router)
+app.include_router(profile.router)
+app.include_router(admin_courses.router)
+app.include_router(courses_api.router)
+app.include_router(learning.router)
+app.include_router(instructor.router)
+app.include_router(assignments.router)
+app.include_router(assignments_upload.router)
+app.include_router(portfolio.router)
+app.include_router(public_router)
+app.include_router(auth.router)
+app.include_router(google.router)
+app.include_router(users.router)
+app.include_router(discovery.router)
+app.include_router(quiz.router)
+app.include_router(reviews.router)
+app.include_router(qa.router)
+app.include_router(notes.router)
+app.include_router(certificates.router)
+app.include_router(media.router)
+app.include_router(blog.router)
+app.include_router(forum.router)
+app.include_router(notifications.router)
+app.include_router(referrals.router)
+app.include_router(analytics.router)
+app.include_router(payments.router)
+app.include_router(privacy.router)
+app.include_router(system.router)
+app.include_router(token.router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 

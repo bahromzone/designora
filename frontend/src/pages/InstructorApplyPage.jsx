@@ -13,19 +13,24 @@ export default function InstructorApplyPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const isInstructor = Boolean(user && INSTRUCTOR_ROLES.includes(user.role));
+
   // Auth holatiga qarab yo'naltirish:
   // - login qilmagan  -> login modal
   // - allaqachon instruktor/admin -> instruktor paneli
   useEffect(() => {
     if (loading) return;
     if (!isAuthenticated) {
-      navigate("/?modal=login", { replace: true, state: { from: "/instruktor-boshlash" } });
+      navigate("/?modal=login", {
+        replace: true,
+        state: { from: "/instruktor-boshlash" },
+      });
       return;
     }
-    if (user && INSTRUCTOR_ROLES.includes(user.role)) {
+    if (isInstructor) {
       navigate("/instruktor-panel", { replace: true });
     }
-  }, [loading, isAuthenticated, user, navigate]);
+  }, [loading, isAuthenticated, isInstructor, navigate]);
 
   // Foydalanuvchi ma'lumotlari kelganda formani oldindan to'ldiramiz.
   useEffect(() => {
@@ -60,7 +65,7 @@ export default function InstructorApplyPage() {
   }
 
   // Yo'naltirish sodir bo'lguncha (yoki profil yuklanayotganda) bo'sh holat.
-  if (loading || !isAuthenticated || (user && INSTRUCTOR_ROLES.includes(user.role))) {
+  if (loading || !isAuthenticated || isInstructor) {
     return (
       <section className="shell py-16 flex min-h-[50vh] items-center justify-center">
         <p className="text-sm" style={{ color: "var(--ink-60)" }}>

@@ -14,16 +14,16 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
       - name: Ruff (lint)
-        run: ruff check .
+        run: ruff check . --output-format github
       - name: Black (format check)
         run: black --check .
       - name: Pytest (+ coverage)
@@ -54,11 +54,11 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
@@ -66,25 +66,25 @@ jobs:
       - name: ESLint
         run: npm run lint
       - name: Prettier (format check)
-        shell: bash
-        run: |
-          files=$(npx prettier --list-different "src/**/*.{js,jsx,css}" || true)
-          if [ -n "$files" ]; then
-            while IFS= read -r file; do
-              echo "::error file=$file::Prettier formatting required"
-            done <<< "$files"
-            exit 1
-          fi
+        run: npm run format:check
       - name: Vitest
         run: npm run test:run
       - name: Build
-        run: npm run build
+        shell: bash
+        run: |
+          output=$(npm run build 2>&1) || status=$?
+          echo "$output"
+          if [ -n "${status:-}" ]; then
+            message=$(echo "$output" | tail -n 12 | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g; s/\n/%0A/g')
+            echo "::error::$message"
+          fi
+          exit ${status:-0}
 
   docker:
     name: Docker build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build backend image
         run: docker build -t designora-backend ./backend
       - name: Build frontend image

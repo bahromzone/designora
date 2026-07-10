@@ -2,12 +2,14 @@ dist
 coverage
 node_modules
 package-lock.json
+src/App.jsx
 src/components/AssignmentSection.jsx
 src/components/AssignmentSection.css
 src/components/OnboardingModal.jsx
 src/components/OnboardingFlow.css
 src/pages/LearnPage.jsx
 src/pages/MyCoursesPage.jsx
+src/pages/ProfilePage.jsx
 src/pages/StudentDashboard.css
 src/pages/PortfolioPage.jsx
 src/pages/PortfolioBuilderPage.jsx

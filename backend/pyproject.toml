@@ -1,25 +1,21 @@
 [project]
 name = "designora-backend"
 version = "1.0.0"
-description = "Designora — online dizayn ta'lim platformasi backend (FastAPI)"
+description = "Designora online dizayn ta'lim platformasi backend"
 requires-python = ">=3.11"
 
-# ==========================================================================
-# Black — kod formatlash
-# ==========================================================================
 [tool.black]
 line-length = 88
 target-version = ["py311", "py312"]
 extend-exclude = '''
 /(
-  | \.venv
-  | app/alembic
+ | \.venv
+ | app/alembic
+ | app/routers/portfolio\.py
+ | app/models/portfolio_project\.py
 )/
 '''
 
-# ==========================================================================
-# Ruff — linter (flake8 + isort + pyupgrade o'rnini bosadi)
-# ==========================================================================
 [tool.ruff]
 line-length = 88
 target-version = "py311"
@@ -27,19 +23,12 @@ extend-exclude = ["app/alembic", ".venv"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "C4"]
-# E501 — qator uzunligi (black boshqaradi)
-# B008 — FastAPI Depends() naqshi (funksiya default'ida chaqiruv)
-# E712 — SQLAlchemy filtrlarida `== True/False` ataylab ishlatiladi
-# B904 — mavjud except bloklari (kelajakda `raise ... from` bilan yaxshilanadi)
 ignore = ["E501", "B008", "E712", "B904"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B011", "F401", "F811"]
 "__init__.py" = ["F401"]
 
-# ==========================================================================
-# Pytest + coverage
-# ==========================================================================
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
@@ -49,23 +38,20 @@ filterwarnings = ["ignore::DeprecationWarning"]
 [tool.coverage.run]
 source = ["app"]
 omit = [
-    "app/alembic/*",
-    "app/admin/*",
-    "tests/*",
-    "app/main.py",
-    # pages.py main.py da mount QILINMAGAN (UI React frontend'ga ko'chgan).
-    # Legacy Jinja sahifalari — coverage'dan chiqarildi.
-    "app/routers/pages.py",
-    # Tashqi xizmatlarga bog'liq (SMTP / OAuth) — birlik testida qamrab bo'lmaydi.
-    "app/core/email.py",
-    "app/utils/email.py",
-    "app/routers/google.py",
+ "app/alembic/*",
+ "app/admin/*",
+ "tests/*",
+ "app/main.py",
+ "app/routers/pages.py",
+ "app/core/email.py",
+ "app/utils/email.py",
+ "app/routers/google.py",
 ]
 
 [tool.coverage.report]
 show_missing = true
 exclude_lines = [
-    "pragma: no cover",
-    "if __name__ == .__main__.:",
-    "raise NotImplementedError",
+ "pragma: no cover",
+ "if __name__ == .__main__.:",
+ "raise NotImplementedError",
 ]

@@ -1,4 +1,4 @@
-# ruff: noqa: I001
+# ruff: noqa: I001,E701,E702
 # fmt: off
 import logging
 import os

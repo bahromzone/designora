@@ -1,4 +1,4 @@
-# ruff: noqa: E702
+# ruff: noqa: I001,E702
 # fmt: off
 from datetime import UTC, datetime
 from app.core.security import create_access_token

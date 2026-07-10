@@ -9,7 +9,9 @@ src/components/OnboardingFlow.css
 src/pages/LearnPage.jsx
 src/pages/MyCoursesPage.jsx
 src/pages/StudentDashboard.css
-src/lib/assignmentsApi.js
 src/pages/PortfolioPage.jsx
+src/pages/PortfolioBuilderPage.jsx
 src/pages/PublicPortfolioPage.jsx
 src/pages/Portfolio.css
+src/lib/assignmentsApi.js
+src/lib/portfolioApi.js

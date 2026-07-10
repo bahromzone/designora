@@ -1,22 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap');
+
 :root {
   --designora-ink: #242326;
 }
 
-/* Transparent dark lockup: single-ink vector logo, no plaque, reads directly on the light header. */
+/*
+  The header home link already contains real DOM text ("Designora") plus an inline
+  decorative SVG. Instead of swapping in a background image (whose serif font never
+  loads inside a CSS-referenced SVG), we style that real text with the classical
+  serif so it renders identically to the reference, on a truly transparent field.
+*/
+
 header a[href="/"]:has(svg) {
-  display: inline-block !important;
-  width: 196px !important;
-  height: 52px !important;
-  min-width: 196px;
-  overflow: hidden;
-  background: url('/brand-logo-dark.svg') center / contain no-repeat !important;
-  color: transparent !important;
-  font-size: 0 !important;
-  line-height: 0 !important;
-  border-radius: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 12px;
+  background: none !important;
+  color: var(--designora-ink) !important;
+  text-decoration: none;
 }
 
-header a[href="/"]:has(svg) > * { display: none !important; }
+/* Hide the old inline gradient mark. */
+header a[href="/"]:has(svg) > svg {
+  display: none !important;
+}
+
+/* Rebuild the opposing-D monogram as a crisp, transparent inline mark. */
+header a[href="/"]:has(svg)::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 30px;
+  height: 27px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 82 73'%3E%3Cg fill='none' stroke='%23242326' stroke-width='4.4' stroke-linecap='square'%3E%3Cpath d='M6 4h22'/%3E%3Cpath d='M6 69h22'/%3E%3Cpath d='M6 4v65'/%3E%3Cpath d='M28 4c11 4 17 16 17 32s-6 28-17 32'/%3E%3Cpath d='M76 4H54'/%3E%3Cpath d='M76 69H54'/%3E%3Cpath d='M76 4v65'/%3E%3Cpath d='M54 4c-11 4-17 16-17 32s6 28 17 32'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Style the real "Designora" text into the reference serif wordmark. */
+header a[href="/"]:has(svg) {
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
+  font-weight: 500 !important;
+  font-size: 30px !important;
+  line-height: 1 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+}
 
 header a[href="/"]:has(svg):focus-visible {
   outline: 2px solid var(--designora-ink);
@@ -25,8 +51,12 @@ header a[href="/"]:has(svg):focus-visible {
 
 @media (max-width: 767px) {
   header a[href="/"]:has(svg) {
-    width: 156px !important;
-    height: 42px !important;
-    min-width: 156px;
+    font-size: 24px !important;
+    letter-spacing: 0.18em !important;
+    gap: 9px;
+  }
+  header a[href="/"]:has(svg)::before {
+    width: 24px;
+    height: 22px;
   }
 }

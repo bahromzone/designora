@@ -1,48 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap');
-
 :root {
   --designora-ink: #242326;
 }
 
 /*
-  The header home link already contains real DOM text ("Designora") plus an inline
-  decorative SVG. Instead of swapping in a background image (whose serif font never
-  loads inside a CSS-referenced SVG), we style that real text with the classical
-  serif so it renders identically to the reference, on a truly transparent field.
+  Pixel-identical to the reference: we use the uploaded artwork itself (brand-logo.png).
+  Its background is not truly transparent, so we back it with the same dark plaque
+  from the reference to keep the silver mark clean on the light header.
 */
-
 header a[href="/"]:has(svg) {
   display: inline-flex !important;
   align-items: center;
-  gap: 12px;
-  background: none !important;
-  color: var(--designora-ink) !important;
-  text-decoration: none;
+  justify-content: center;
+  width: 210px !important;
+  height: 62px !important;
+  min-width: 210px;
+  padding: 0 18px;
+  overflow: hidden;
+  background-color: var(--designora-ink) !important;
+  background-image: url('/brand-logo.png') !important;
+  background-position: center !important;
+  background-size: 176px auto !important;
+  background-repeat: no-repeat !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  border-radius: 6px !important;
 }
 
-/* Hide the old inline gradient mark. */
-header a[href="/"]:has(svg) > svg {
-  display: none !important;
-}
-
-/* Rebuild the opposing-D monogram as a crisp, transparent inline mark. */
-header a[href="/"]:has(svg)::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 30px;
-  height: 27px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 82 73'%3E%3Cg fill='none' stroke='%23242326' stroke-width='4.4' stroke-linecap='square'%3E%3Cpath d='M6 4h22'/%3E%3Cpath d='M6 69h22'/%3E%3Cpath d='M6 4v65'/%3E%3Cpath d='M28 4c11 4 17 16 17 32s-6 28-17 32'/%3E%3Cpath d='M76 4H54'/%3E%3Cpath d='M76 69H54'/%3E%3Cpath d='M76 4v65'/%3E%3Cpath d='M54 4c-11 4-17 16-17 32s6 28 17 32'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
-}
-
-/* Style the real "Designora" text into the reference serif wordmark. */
-header a[href="/"]:has(svg) {
-  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
-  font-weight: 500 !important;
-  font-size: 30px !important;
-  line-height: 1 !important;
-  letter-spacing: 0.22em !important;
-  text-transform: uppercase !important;
-}
+/* Hide the old inline gradient mark and text. */
+header a[href="/"]:has(svg) > * { display: none !important; }
+header a[href="/"]:has(svg)::before { content: none !important; }
 
 header a[href="/"]:has(svg):focus-visible {
   outline: 2px solid var(--designora-ink);
@@ -51,12 +38,9 @@ header a[href="/"]:has(svg):focus-visible {
 
 @media (max-width: 767px) {
   header a[href="/"]:has(svg) {
-    font-size: 24px !important;
-    letter-spacing: 0.18em !important;
-    gap: 9px;
-  }
-  header a[href="/"]:has(svg)::before {
-    width: 24px;
-    height: 22px;
+    width: 166px !important;
+    height: 50px !important;
+    min-width: 166px;
+    background-size: 138px auto !important;
   }
 }

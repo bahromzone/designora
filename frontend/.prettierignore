@@ -28,6 +28,7 @@ src/pages/InstructorReviewPage.jsx
 src/pages/InstructorReviewPage.css
 src/pages/InstructorReviewPage.test.jsx
 src/pages/StudentDashboardPage.jsx
+src/pages/CoursesPage.jsx
 src/lib/assignmentsApi.js
 src/lib/portfolioApi.js
 src/lib/globalSearchApi.js

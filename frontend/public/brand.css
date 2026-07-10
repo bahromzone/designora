@@ -2,26 +2,18 @@
   --designora-ink: #242326;
 }
 
-/* The uploaded PNG is the silver logo on transparent. On the light header we back it
-   with the reference dark plaque so the metallic mark stays legible and identical. */
+/* Transparent dark lockup: single-ink vector logo, no plaque, reads directly on the light header. */
 header a[href="/"]:has(svg) {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 208px !important;
-  height: 60px !important;
-  min-width: 208px;
-  padding: 0 18px;
+  display: inline-block !important;
+  width: 196px !important;
+  height: 52px !important;
+  min-width: 196px;
   overflow: hidden;
-  background-color: var(--designora-ink) !important;
-  background-image: url('/brand-logo.png') !important;
-  background-position: center !important;
-  background-size: 176px auto !important;
-  background-repeat: no-repeat !important;
+  background: url('/brand-logo-dark.svg') center / contain no-repeat !important;
   color: transparent !important;
   font-size: 0 !important;
   line-height: 0 !important;
-  border-radius: 6px !important;
+  border-radius: 0 !important;
 }
 
 header a[href="/"]:has(svg) > * { display: none !important; }
@@ -33,9 +25,8 @@ header a[href="/"]:has(svg):focus-visible {
 
 @media (max-width: 767px) {
   header a[href="/"]:has(svg) {
-    width: 164px !important;
-    height: 48px !important;
-    min-width: 164px;
-    background-size: 138px auto !important;
+    width: 156px !important;
+    height: 42px !important;
+    min-width: 156px;
   }
 }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 150" role="img" aria-labelledby="title">
+  <title id="title">DESIGNORA</title>
+  <!-- Opposing double-D monogram, centered above the wordmark. Single solid ink, transparent field. -->
+  <g transform="translate(248 8)" fill="none" stroke="#242326" stroke-width="4.4" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M4 3h22"/><path d="M4 67h22"/><path d="M4 3v64"/>
+    <path d="M26 3c11 4 17 16 17 32s-6 28-17 32"/>
+    <path d="M60 3H38"/><path d="M60 67H38"/><path d="M60 3v64"/>
+    <path d="M38 3c-11 4-17 16-17 32s6 28 17 32"/>
+  </g>
+  <text x="280" y="133" text-anchor="middle" fill="#242326"
+    font-family="'Cormorant Garamond', Georgia, 'Times New Roman', 'Nimbus Roman', serif"
+    font-size="60" font-weight="500" letter-spacing="8">DESIGNORA</text>
+</svg>

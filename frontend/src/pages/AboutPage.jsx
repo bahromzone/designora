@@ -20,7 +20,10 @@ export default function AboutPage() {
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-ink mb-6 leading-tight">
           Designora — dizayn ta'limining yangi bosqichi
         </h1>
-        <p className="text-lg leading-8 mb-6" style={{ color: "var(--ink-60)" }}>
+        <p
+          className="text-lg leading-8 mb-6"
+          style={{ color: "var(--ink-60)" }}
+        >
           {INTRO}
         </p>
         <p

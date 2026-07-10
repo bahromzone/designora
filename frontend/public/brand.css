@@ -2,13 +2,13 @@
   --designora-ink: #242326;
 }
 
-/* Pixel-identical: the uploaded dark logo (brand-logo.png) placed directly on the
-   light header. No plaque, since the artwork is dark on a light/transparent field. */
+/* The uploaded brand-logo.png is the exact reference artwork on a transparent
+   background, so we render it directly with no plaque, pixel-identical. */
 header a[href="/"]:has(svg) {
   display: inline-block !important;
-  width: 196px !important;
+  width: 200px !important;
   height: 56px !important;
-  min-width: 196px;
+  min-width: 200px;
   overflow: hidden;
   background: url('/brand-logo.png') center / contain no-repeat !important;
   color: transparent !important;
@@ -17,7 +17,6 @@ header a[href="/"]:has(svg) {
   border-radius: 0 !important;
 }
 
-/* Hide the old inline gradient mark and text. */
 header a[href="/"]:has(svg) > * { display: none !important; }
 header a[href="/"]:has(svg)::before { content: none !important; }
 
@@ -28,8 +27,8 @@ header a[href="/"]:has(svg):focus-visible {
 
 @media (max-width: 767px) {
   header a[href="/"]:has(svg) {
-    width: 156px !important;
+    width: 160px !important;
     height: 46px !important;
-    min-width: 156px;
+    min-width: 160px;
   }
 }

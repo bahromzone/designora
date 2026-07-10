@@ -7,8 +7,8 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.blog import BlogPost
 from app.models.Course import Course
+from app.models.blog import BlogPost
 from app.models.forum import ForumThread
 from app.models.lesson import Lesson
 from app.models.user import User
@@ -73,7 +73,11 @@ def _rank(needle: str, rows: list[dict], limit: int) -> list[dict]:
         )
         if relevance >= 0.56:
             scored.append({**row, "relevance": round(relevance, 3)})
-    return sorted(scored, key=lambda row: row["relevance"], reverse=True)[:limit]
+    return sorted(
+        scored,
+        key=lambda row: row["relevance"],
+        reverse=True,
+    )[:limit]
 
 
 @router.get("/global-search")
@@ -83,20 +87,22 @@ def global_search(
     limit: int = Query(8, ge=1, le=20),
     db: Session = Depends(get_db),
 ):
-    """Search courses, lessons, instructors, blog and forum in one request.
-
-    Exact substring matches rank first. Sequence matching provides lightweight typo
-    tolerance without adding an external search service during the MVP phase.
-    """
     requested = {
         value.strip()
-        for value in (types or "course,lesson,instructor,blog,forum").split(",")
+        for value in (
+            types or "course,lesson,instructor,blog,forum"
+        ).split(",")
         if value.strip()
     }
     groups: dict[str, list[dict]] = {}
 
     if "course" in requested:
-        rows = db.query(Course).filter(Course.is_active == True).limit(300).all()
+        rows = (
+            db.query(Course)
+            .filter(Course.is_active == True)
+            .limit(300)
+            .all()
+        )
         groups["course"] = _rank(
             q,
             [
@@ -106,7 +112,9 @@ def global_search(
                     "title": row.title,
                     "subtitle": row.subtitle,
                     "description": row.description,
-                    "meta": " · ".join(filter(None, [row.category, row.level, row.language])),
+                    "meta": " · ".join(
+                        filter(None, [row.category, row.level, row.language])
+                    ),
                     "image_url": row.thumbnail_url,
                     "url": f"/kurslar/{row.id}",
                 }
@@ -225,7 +233,9 @@ def global_search(
         "query": q,
         "total": total,
         "groups": groups,
-        "suggestion": None if total else "Kengroq yoki boshqa kalit so‘z kiriting",
+        "suggestion": (
+            None if total else "Kengroq yoki boshqa kalit so‘z kiriting"
+        ),
     }
 
 
@@ -266,9 +276,15 @@ def search(
     if min_rating is not None:
         query = query.filter(Course.rating_avg >= min_rating)
     column, descending = _SORTABLE.get(sort, _SORTABLE["newest"])
-    query = query.order_by(column.desc() if descending else column.asc())
+    query = query.order_by(
+        column.desc() if descending else column.asc()
+    )
     total = query.count()
-    items = query.offset((page - 1) * per_page).limit(per_page).all()
+    items = (
+        query.offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
     return {
         "total": total,
         "page": page,
@@ -280,7 +296,11 @@ def search(
 
 @router.get("/categories")
 def categories(db: Session = Depends(get_db)):
-    rows = db.query(Course.category).filter(Course.is_active == True).all()
+    rows = (
+        db.query(Course.category)
+        .filter(Course.is_active == True)
+        .all()
+    )
     counts: dict[str, int] = {}
     for (category,) in rows:
         if category:
@@ -288,7 +308,9 @@ def categories(db: Session = Depends(get_db)):
     return [
         {"category": category, "count": count}
         for category, count in sorted(
-            counts.items(), key=lambda item: item[1], reverse=True
+            counts.items(),
+            key=lambda item: item[1],
+            reverse=True,
         )
     ]
 
@@ -298,7 +320,10 @@ def bestselling(
     limit: int = Query(6, ge=1, le=24),
     db: Session = Depends(get_db),
 ):
-    return recommendation_service.bestselling(_active_cards(db), limit=limit)
+    return recommendation_service.bestselling(
+        _active_cards(db),
+        limit=limit,
+    )
 
 
 @router.get("/recommendations/similar/{course_id}")

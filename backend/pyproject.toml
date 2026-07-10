@@ -1,7 +1,7 @@
 [project]
 name = "designora-backend"
 version = "1.0.0"
-description = "Designora online dizayn ta'lim platformasi backend"
+description = "Designora — online dizayn ta'lim platformasi backend (FastAPI)"
 requires-python = ">=3.11"
 
 [tool.black]
@@ -11,8 +11,8 @@ extend-exclude = '''
 /(
  | \.venv
  | app/alembic
- | app/routers/portfolio\.py
- | app/models/portfolio_project\.py
+ | app/routers/discovery\.py
+ | tests/test_global_search_api\.py
 )/
 '''
 

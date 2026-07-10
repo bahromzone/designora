@@ -1,12 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <path d="M16 2L2 9L16 16L30 9L16 2Z" fill="url(#g1)"/>
-  <path d="M2 23L16 30L30 23V9L16 16L2 9V23Z" fill="url(#g2)" opacity="0.9"/>
-  <defs>
-    <linearGradient id="g1" x1="2" y1="9" x2="30" y2="9" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#EC4899"/><stop offset="1" stop-color="#6366F1"/>
-    </linearGradient>
-    <linearGradient id="g2" x1="16" y1="30" x2="16" y2="9" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#A855F7"/><stop offset="1" stop-color="#4F46E5"/>
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Designora</title>
+  <rect width="64" height="64" rx="13" fill="#242326"/>
+  <g fill="none" stroke="#e8e4df" stroke-width="2.8" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M12 14h17c14 0 23 7.8 23 18s-9 18-23 18H12V14Z"/>
+    <path d="M52 14H35c-14 0-23 7.8-23 18s9 18 23 18h17V14Z"/>
+    <path d="M25 32c0-7.7 5.4-14 12-17.5 6.6 3.5 12 9.8 12 17.5s-5.4 14-12 17.5C30.4 46 25 39.7 25 32Z"/>
+  </g>
 </svg>

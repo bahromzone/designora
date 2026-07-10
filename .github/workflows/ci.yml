@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feat/**"]
   pull_request:
     branches: [main]
 
@@ -61,17 +61,15 @@ jobs:
         run: npm run format:check
       - name: Vitest
         run: npm run test:run
+      - name: Critical coverage
+        run: >-
+          npm run coverage --
+          --coverage.include=src/pages/DashboardInsights.jsx
+          --coverage.include=src/pages/InstructorReviewPage.jsx
+          --coverage.thresholds.lines=70
+          --coverage.thresholds.functions=70
       - name: Vite build
-        shell: bash
-        run: |
-          set +e
-          npm run build 2>&1 | tee /tmp/vite.log
-          code=${PIPESTATUS[0]}
-          if [ "$code" -ne 0 ]; then
-            message=$(tail -n 35 /tmp/vite.log | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g')
-            echo "::error title=Vite build failed::$message"
-            exit "$code"
-          fi
+        run: npm run build
 
   docker:
     name: Docker build

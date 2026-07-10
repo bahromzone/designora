@@ -10,19 +10,32 @@ async function parse(response) {
   return payload;
 }
 
+function auth(token, extra = {}) {
+  return { ...extra, Authorization: `Bearer ${token}` };
+}
+
 export const assignmentsApi = {
   forCourse: (courseId, token) =>
     fetch(`${API_URL}/api/assignments/courses/${courseId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: auth(token),
+    }).then(parse),
+
+  submissions: (assignmentId, token) =>
+    fetch(`${API_URL}/api/assignments/${assignmentId}/submissions`, {
+      headers: auth(token),
+    }).then(parse),
+
+  grade: (submissionId, body, token) =>
+    fetch(`${API_URL}/api/assignments/submissions/${submissionId}/grade`, {
+      method: "POST",
+      headers: auth(token, { "Content-Type": "application/json" }),
+      body: JSON.stringify(body),
     }).then(parse),
 
   submit: (assignmentId, body, token) =>
     fetch(`${API_URL}/api/assignments/${assignmentId}/submit`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: auth(token, { "Content-Type": "application/json" }),
       body: JSON.stringify(body),
     }).then(parse),
 
@@ -34,11 +47,17 @@ export const assignmentsApi = {
       xhr.open("POST", `${API_URL}/api/assignments/upload`);
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);
       xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100));
+        if (event.lengthComputable) {
+          onProgress?.(Math.round((event.loaded / event.total) * 100));
+        }
       };
       xhr.onload = () => {
         let payload = null;
-        try { payload = JSON.parse(xhr.responseText); } catch { /* no-op */ }
+        try {
+          payload = JSON.parse(xhr.responseText);
+        } catch {
+          payload = null;
+        }
         if (xhr.status >= 200 && xhr.status < 300) resolve(payload);
         else reject(new Error(payload?.detail || "Faylni yuklab bo'lmadi"));
       };

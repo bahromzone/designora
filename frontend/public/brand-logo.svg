@@ -1,14 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 250" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 210" role="img" aria-labelledby="title desc">
   <title id="title">DESIGNORA</title>
-  <desc id="desc">Opposing D monogram above the Designora wordmark</desc>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300&amp;display=swap');
-    .wordmark { font-family: 'Cormorant Garamond', 'Bodoni MT', Didot, Georgia, serif; font-weight: 300; }
-  </style>
-  <g fill="none" stroke="#d8d5d2" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter">
-    <path d="M270 29h31c37 0 61 22 61 50s-24 50-61 50h-31V29Z"/>
-    <path d="M370 29h-31c-37 0-61 22-61 50s24 50 61 50h31V29Z"/>
-    <path d="M306 79c0-21 14-39 34-49 20 10 34 28 34 49s-14 39-34 49c-20-10-34-28-34-49Z"/>
+  <desc id="desc">Designora brand lockup matching the supplied reference</desc>
+  <!-- Mark is positioned and proportioned from the supplied artwork: 82 × 73, centered over the wordmark. -->
+  <g transform="translate(319 8)" fill="none" stroke="#d7d5d4" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter">
+    <path d="M2 2h27v68H2V2Z"/>
+    <path d="M79 2H52v68h27V2Z"/>
+    <path d="M28.5 2.5C50 4 64 18 64 36s-14 32-35.5 33.5"/>
+    <path d="M52.5 2.5C31 4 17 18 17 36s14 32 35.5 33.5"/>
   </g>
-  <text class="wordmark" x="320" y="213" fill="#d8d5d2" font-size="88" letter-spacing="14" text-anchor="middle">DESIGNORA</text>
+  <!-- The reference uses an ultra-light geometric sans wordmark, not a serif. -->
+  <text x="360" y="173" text-anchor="middle" fill="#d7d5d4"
+    font-family="Avenir Next, Avenir, Montserrat, Helvetica Neue, Arial, sans-serif"
+    font-size="72" font-weight="300" letter-spacing="11.2">DESIGNORA</text>
 </svg>

@@ -11,7 +11,7 @@ def test_global_search_groups_content_and_supports_typo(client, db_session):
         name="Dilnoza Karimova",
         role="instructor",
         is_active=True,
-        bio="Brand identity mentor",
+        bio="Brand identity mentori",
     )
     db_session.add(instructor)
     db_session.flush()
@@ -63,9 +63,7 @@ def test_global_search_groups_content_and_supports_typo(client, db_session):
 
     typo = client.get("/api/discovery/global-search?q=tipografka&types=lesson")
     assert typo.status_code == 200
-    assert typo.json()["groups"]["lesson"][0]["title"] == (
-        "Tipografika iyerarxiyasi"
-    )
+    assert typo.json()["groups"]["lesson"][0]["title"] == "Tipografika iyerarxiyasi"
 
 
 def test_global_search_requires_two_characters(client):

@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { authApi } from "../lib/api";
+
 import GamificationSection from "../components/GamificationSection";
 import ReferralSection from "../components/ReferralSection";
+import { useAuth } from "../context/AuthContext";
+import { authApi } from "../lib/api";
 
-const INSTRUCTOR_ROLES = ["instructor", "admin", "superadmin"];
-const ADMIN_ROLES = ["admin", "superadmin"];
-
-function formatDate(d) {
-  return new Date(d).toLocaleDateString("uz-UZ", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+function formatDate(date) {
+  return new Date(date).toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric" });
 }
 
 export default function ProfilePage() {
@@ -23,159 +17,54 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!token) return;
-    authApi
-      .dashboard(token)
-      .then(setDashboard)
-      .catch((e) => setError(e.message));
+    authApi.dashboard(token).then(setDashboard).catch((e) => setError(e.message));
   }, [token]);
 
-  const initials = user?.name?.charAt(0)?.toUpperCase() ?? "D";
-  const isInstructor = INSTRUCTOR_ROLES.includes(user?.role);
-  const isAdmin = ADMIN_ROLES.includes(user?.role);
+  const displayName = user?.name || user?.full_name || "Designora student";
+  const initials = displayName.charAt(0).toUpperCase();
 
   return (
     <section className="shell py-16 sm:py-20">
       <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
-        {/* Left — user card */}
-        <aside
-          className="space-y-6 rounded-2xl border p-6"
-          style={{ borderColor: "var(--border)" }}
-        >
-          {/* Avatar + name */}
+        <aside className="space-y-6 rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
           <div className="flex flex-col items-center text-center">
-            <div
-              className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white"
-              style={{ background: "var(--amber)" }}
-            >
-              {initials}
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full text-2xl font-bold text-white" style={{ background: "var(--amber)" }}>
+              {user?.avatar_url ? <img src={user.avatar_url} alt="" className="h-full w-full object-cover" /> : initials}
             </div>
             <p className="label mt-4">Profil</p>
-            <h1 className="font-serif text-xl font-semibold text-ink">
-              {user?.name}
-            </h1>
-            <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-              {user?.email}
-            </p>
+            <h1 className="font-serif text-xl font-semibold text-ink">{displayName}</h1>
+            <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>{user?.email}</p>
           </div>
 
           <div className="space-y-3">
-            {[
-              {
-                label: "Rol",
-                val: ADMIN_ROLES.includes(user?.role)
-                  ? "Administrator"
-                  : "Foydalanuvchi",
-              },
-              {
-                label: "Qo'shilgan",
-                val: user?.created_at ? formatDate(user.created_at) : "—",
-              },
-            ].map(({ label, val }) => (
-              <div key={label} className="flex justify-between text-sm">
-                <span style={{ color: "var(--muted)" }}>{label}</span>
-                <span className="font-semibold text-ink">{val}</span>
-              </div>
-            ))}
+            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Rol</span><span className="font-semibold text-ink">{user?.role === "admin" ? "Administrator" : "Foydalanuvchi"}</span></div>
+            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Qo‘shilgan</span><span className="font-semibold text-ink">{user?.created_at ? formatDate(user.created_at) : "—"}</span></div>
           </div>
 
-          {/* Instruktor/admin — dashboard'ga kirish */}
-          {isInstructor && (
-            <div className="space-y-3">
-              <Link
-                to="/instruktor-panel"
-                className="block w-full rounded-full px-6 py-3 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
-                style={{ background: "var(--amber)" }}
-              >
-                📊 Instruktor paneli
-              </Link>
-              <Link
-                to="/instruktor/boshqaruv"
-                className="block w-full rounded-full border px-6 py-3 text-center text-sm font-bold transition-transform hover:-translate-y-0.5"
-                style={{ borderColor: "var(--border)", color: "var(--ink)" }}
-              >
-                📚 Kurslarni boshqarish
-              </Link>
-            </div>
-          )}
+          <Link to="/portfolioim" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
+            Portfolio studio <span>→</span>
+          </Link>
 
-          {/* Admin — platforma dashboard */}
-          {isAdmin && (
-            <Link
-              to="/admin-panel"
-              className="block w-full rounded-full border px-6 py-3 text-center text-sm font-bold transition-transform hover:-translate-y-0.5"
-              style={{ borderColor: "var(--border)", color: "var(--ink)" }}
-            >
-              🛠️ Admin paneli
-            </Link>
-          )}
-
-          {error && (
-            <p
-              className="rounded-xl px-4 py-2.5 text-xs"
-              style={{ background: "#fff0ef", color: "#c0392b" }}
-            >
-              {error}
-            </p>
-          )}
+          {error && <p className="rounded-xl px-4 py-2.5 text-xs" style={{ background: "#fff0ef", color: "#c0392b" }}>{error}</p>}
         </aside>
 
-        {/* Right */}
         <div className="space-y-6">
-          {/* Status banner */}
-          <div
-            className="rounded-2xl border p-6"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <p className="label mb-2">Tavsiya</p>
-            <h2 className="font-serif text-lg font-semibold text-ink">
-              Profilingiz muvaffaqiyatli ishlayapti
-            </h2>
-            <p
-              className="mt-2 text-sm leading-7"
-              style={{ color: "var(--ink-60)" }}
-            >
-              JWT asosidagi himoyalangan so'rov orqali ma'lumotlaringiz xavfsiz
-              va barqaror tarzda yuklandi.
-            </p>
+          <div className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
+            <p className="label mb-2">Sizning vitriningiz</p>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div><h2 className="font-serif text-lg font-semibold text-ink">Eng yaxshi ishlaringizni ko‘rsating</h2><p className="mt-2 max-w-2xl text-sm leading-7" style={{ color: "var(--ink-60)" }}>Baholangan topshiriqlarni professional case study’ga aylantiring va bitta public havola bilan ulashing.</p></div>
+              <Link to="/portfolioim" className="btn-primary">Portfolio yaratish</Link>
+            </div>
           </div>
 
-          {/* Gamifikatsiya — ball, daraja, nishon, leaderboard */}
           <GamificationSection />
 
-          {/* Dashboard metrics */}
-          <div
-            className="rounded-2xl border p-6"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <p className="label mb-2">Boshqaruv ma'lumotlari</p>
-            <h2 className="font-serif text-lg font-semibold text-ink">
-              Shaxsiy ko'rinish
-            </h2>
-            {dashboard ? (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {dashboard.metrics.map((m) => (
-                  <div
-                    key={m.label}
-                    className="rounded-xl border p-4"
-                    style={{ borderColor: "var(--border)" }}
-                  >
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>
-                      {m.label}
-                    </p>
-                    <p className="mt-1 font-serif text-2xl font-semibold text-ink">
-                      {m.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>
-                Boshqaruv maydoni tayyorlanmoqda...
-              </p>
-            )}
+          <div className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
+            <p className="label mb-2">Boshqaruv ma’lumotlari</p>
+            <h2 className="font-serif text-lg font-semibold text-ink">Shaxsiy ko‘rinish</h2>
+            {dashboard ? <div className="mt-4 grid gap-4 sm:grid-cols-2">{dashboard.metrics.map((metric) => <div key={metric.label} className="rounded-xl border p-4" style={{ borderColor: "var(--border)" }}><p className="text-xs" style={{ color: "var(--muted)" }}>{metric.label}</p><p className="mt-1 font-serif text-2xl font-semibold text-ink">{metric.value}</p></div>)}</div> : <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>Boshqaruv maydoni tayyorlanmoqda...</p>}
           </div>
 
-          {/* Referral */}
           <ReferralSection />
         </div>
       </div>

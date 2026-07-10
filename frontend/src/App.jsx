@@ -39,7 +39,7 @@ function App() {
         <Route path="/portfolio/:userId" element={<PublicPortfolioPage />} />
         <Route path="/kurslarim" element={<ProtectedRoute><MyCoursesPage /></ProtectedRoute>} />
         <Route path="/organish/:courseId" element={<ProtectedRoute><LearnPage /></ProtectedRoute>} />
-        <Route path="/portfolio" element={<ProtectedRoute><PortfolioBuilderPage /></ProtectedRoute>} />
+        <Route path="/portfolioim" element={<ProtectedRoute><PortfolioBuilderPage /></ProtectedRoute>} />
         <Route path="/tolov/natija/:orderId" element={<ProtectedRoute><CheckoutResultPage /></ProtectedRoute>} />
         <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="*" element={<NotFoundPage />} />

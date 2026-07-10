@@ -21,19 +21,36 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.routers import (
     admin_courses, analytics, assignments, assignments_upload, auth, blog,
-    certificates, courses_api, discovery, forum, google, instructor, learning,
-    media, notes, notifications, payments, portfolio, privacy, profile, qa, quiz,
-    referrals, reviews, system, token, users,
+    certificates, courses_api, discovery, forum, gamification, google,
+    instructor, learning, media, notes, notifications, payments, portfolio,
+    privacy, profile, qa, quiz, referrals, reviews, system, token, users,
 )
 from app.routers.auth import public_router
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handlers=[RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5), logging.StreamHandler()])
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5), logging.StreamHandler()],
+)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Designora Platform", docs_url="/docs" if settings.ENVIRONMENT != "production" else None, redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None)
+app = FastAPI(
+    title="Designora Platform",
+    docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
+    redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+)
+
+# Router imports register every SQLAlchemy model before local/test create_all.
 Base.metadata.create_all(bind=engine)
+
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY, https_only=settings.ENVIRONMENT == "production")
-app.add_middleware(CORSMiddleware, allow_origins=settings.get_allowed_origins(), allow_credentials=True, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Access-Token", "X-Requested-With"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.get_allowed_origins(),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Access-Token", "X-Requested-With"],
+)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
@@ -45,16 +62,17 @@ BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 setup_admin(app)
 
-for api_router in (
+for product_router in (
     profile.router, admin_courses.router, courses_api.router, learning.router,
     instructor.router, public_router, auth.router, google.router, users.router,
     discovery.router, quiz.router, reviews.router, qa.router, notes.router,
-    certificates.router, media.router, assignments.router, assignments_upload.router,
-    portfolio.router, blog.router, forum.router, notifications.router,
-    referrals.router, analytics.router, payments.router, privacy.router,
-    system.router, token.router,
+    certificates.router, media.router, assignments.router,
+    assignments_upload.router, portfolio.router, blog.router, forum.router,
+    notifications.router, referrals.router, gamification.router,
+    analytics.router, payments.router, privacy.router, system.router,
+    token.router,
 ):
-    app.include_router(api_router)
+    app.include_router(product_router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -69,7 +87,10 @@ def _require_admin(email: str = Depends(get_current_user), db: Session = Depends
 
 @_admin_router.get("/users")
 def admin_list_users(db: Session = Depends(get_db), admin: User = Depends(_require_admin)):
-    return [{"id": u.id, "name": u.name, "email": u.email, "role": u.role, "is_active": u.is_active} for u in db.query(User).order_by(User.id.desc()).all()]
+    return [
+        {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "is_active": user.is_active}
+        for user in db.query(User).order_by(User.id.desc()).all()
+    ]
 
 
 app.include_router(_admin_router)

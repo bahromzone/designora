@@ -1,296 +1,168 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import CategoryChips from "../components/CategoryChips";
-import RecommendationSection from "../components/RecommendationSection";
 import SearchResultCard from "../components/SearchResultCard";
-import {
-  CourseCardSkeleton,
-  Input,
-  Pagination,
-  Select,
-} from "../components/ui";
+import { CourseCardSkeleton } from "../components/ui";
 import { discoveryApi } from "../lib/api";
 
-const LEVEL_OPTIONS = [
-  { value: "", label: "Barcha darajalar" },
-  { value: "beginner", label: "Boshlang'ich" },
-  { value: "intermediate", label: "O'rta" },
-  { value: "advanced", label: "Yuqori" },
+const LEVELS = [
+  ["", "Barcha darajalar"],
+  ["beginner", "Boshlang‘ich"],
+  ["intermediate", "O‘rta"],
+  ["advanced", "Yuqori"],
 ];
-
-const LANGUAGE_OPTIONS = [
-  { value: "", label: "Barcha tillar" },
-  { value: "uz", label: "O'zbekcha" },
-  { value: "ru", label: "Ruscha" },
-  { value: "en", label: "Inglizcha" },
+const LANGUAGES = [
+  ["", "Barcha tillar"],
+  ["uz", "O‘zbekcha"],
+  ["ru", "Ruscha"],
+  ["en", "Inglizcha"],
 ];
-
-const SORT_OPTIONS = [
-  { value: "newest", label: "Eng yangi" },
-  { value: "rating", label: "Reyting bo'yicha" },
-  { value: "popular", label: "Ommabop" },
-  { value: "price_asc", label: "Narx: arzondan" },
-  { value: "price_desc", label: "Narx: qimmatdan" },
+const SORTS = [
+  ["newest", "Eng yangi"],
+  ["popular", "Mashhur"],
+  ["rating", "Reyting"],
+  ["price_asc", "Narx: arzondan"],
+  ["price_desc", "Narx: qimmatdan"],
+  ["duration_asc", "Davomiylik: qisqadan"],
 ];
-
-const RATING_OPTIONS = [
-  { value: "", label: "Har qanday reyting" },
-  { value: "4", label: "4★ va yuqori" },
-  { value: "3", label: "3★ va yuqori" },
-  { value: "2", label: "2★ va yuqori" },
-];
-
 const PER_PAGE = 12;
 
-// searchParams'dan bo'sh bo'lmagan qiymatlarni ajratib olish yordamchisi.
-function paramValue(searchParams, key) {
-  const v = searchParams.get(key);
-  return v === null || v === "" ? "" : v;
+function value(params, key) {
+  return params.get(key) || "";
 }
 
 export default function CoursesPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // URL — yagona haqiqat manbai (shareable + back tugmasi ishlaydi).
-  const q = paramValue(searchParams, "q");
-  const category = paramValue(searchParams, "category");
-  const level = paramValue(searchParams, "level");
-  const language = paramValue(searchParams, "language");
-  const minRating = paramValue(searchParams, "min_rating");
-  const sort = paramValue(searchParams, "sort") || "newest";
-  const page = Number(paramValue(searchParams, "page")) || 1;
-
-  // Qidiruv maydoni uchun lokal (debounce qilinadigan) holat.
-  const [queryInput, setQueryInput] = useState(q);
-
+  const [params, setParams] = useSearchParams();
+  const [query, setQuery] = useState(value(params, "q"));
   const [data, setData] = useState(null);
-  const [categories, setCategories] = useState([]);
+  const [options, setOptions] = useState({ categories: [], instructors: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Bitta filtrni yangilash — sahifani 1 ga qaytaradi (page dan tashqari).
-  const setParam = useCallback(
-    (key, value) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          if (value === "" || value === null || value === undefined) {
-            next.delete(key);
-          } else {
-            next.set(key, value);
-          }
-          if (key !== "page") next.delete("page");
-          return next;
-        },
-        { replace: true }
-      );
-    },
-    [setSearchParams]
+  const filters = useMemo(
+    () => ({
+      q: value(params, "q"),
+      category: value(params, "category"),
+      level: value(params, "level"),
+      language: value(params, "language"),
+      instructor_id: value(params, "instructor_id"),
+      min_price: value(params, "min_price"),
+      max_price: value(params, "max_price"),
+      min_duration: value(params, "min_duration"),
+      max_duration: value(params, "max_duration"),
+      min_rating: value(params, "min_rating"),
+      certificate: value(params, "certificate"),
+      sort: value(params, "sort") || "newest",
+      page: Number(value(params, "page")) || 1,
+      per_page: PER_PAGE,
+    }),
+    [params],
   );
 
-  // Qidiruv matnini debounce qilib URL'ga yozamiz.
-  useEffect(() => {
-    const id = setTimeout(() => {
-      if (queryInput !== q) setParam("q", queryInput.trim());
-    }, 400);
-    return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queryInput]);
+  const setFilter = useCallback(
+    (key, nextValue) => {
+      setParams((previous) => {
+        const next = new URLSearchParams(previous);
+        if (nextValue === "" || nextValue == null) next.delete(key);
+        else next.set(key, nextValue);
+        if (key !== "page") next.delete("page");
+        return next;
+      });
+    },
+    [setParams],
+  );
 
-  // Kategoriyalarni bir marta yuklaymiz.
   useEffect(() => {
-    discoveryApi
-      .categories()
-      .then(setCategories)
-      .catch(() => setCategories([]));
+    const timer = setTimeout(() => setFilter("q", query.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [query, setFilter]);
+
+  useEffect(() => {
+    discoveryApi.filters().then(setOptions).catch(() => null);
   }, []);
 
-  // Filtrlar o'zgarganda qidiruvni ishga tushiramiz.
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError("");
     discoveryApi
-      .search({
-        q: q || undefined,
-        category: category || undefined,
-        level: level || undefined,
-        language: language || undefined,
-        min_rating: minRating || undefined,
-        sort,
-        page,
-        per_page: PER_PAGE,
-      })
-      .then((res) => active && setData(res))
-      .catch((e) => active && setError(e.message))
+      .search(filters)
+      .then((result) => active && setData(result))
+      .catch((reason) => active && setError(reason.message))
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
     };
-  }, [q, category, level, language, minRating, sort, page]);
+  }, [filters]);
 
-  const categoryOptions = [
-    { value: "", label: "Barcha kategoriyalar" },
-    ...categories.map((c) => ({
-      value: c.category,
-      label: `${c.category} (${c.count})`,
-    })),
-  ];
-
-  const results = data?.results ?? [];
-  const hasActiveFilters =
-    q || category || level || language || minRating || sort !== "newest";
-
-  function resetFilters() {
-    setQueryInput("");
-    setSearchParams({}, { replace: true });
-  }
+  const reset = () => {
+    setQuery("");
+    setParams({});
+  };
+  const results = data?.results || [];
+  const activeCount = [...params.keys()].filter((key) => key !== "page").length;
 
   return (
-    <div className="shell py-12">
-      {/* Header */}
-      <div className="mb-8 max-w-2xl">
+    <section className="shell py-16 sm:py-20">
+      <header className="max-w-3xl">
         <p className="label">Katalog</p>
-        <h1 className="mt-2 text-4xl font-extrabold text-ink">
+        <h1 className="font-serif text-3xl font-semibold text-ink sm:text-4xl">
           Kurslar katalogi
         </h1>
-        <p className="mt-3 text-muted">
-          Kalit so'z, kategoriya, daraja va narx bo'yicha o'zingizga mos kursni
-          toping.
+        <p className="mt-3 text-ink-60">
+          Kategoriya, daraja, davomiylik, narx, til, reyting va instruktor bo‘yicha
+          aniq kursni toping.
         </p>
-      </div>
+      </header>
 
-      {/* Kategoriya chiplari */}
-      <CategoryChips
-        categories={categories}
-        value={category}
-        onChange={(c) => setParam("category", c)}
-      />
-
-      {/* Qidiruv + filtrlar */}
-      <div className="card mb-8 rounded-2xl p-5">
-        <Input
-          name="q"
-          value={queryInput}
-          onChange={(e) => setQueryInput(e.target.value)}
-          placeholder="Kurs nomi yoki kalit so'z bo'yicha qidirish..."
-          aria-label="Qidirish"
-        />
-
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Select
-            name="category"
-            options={categoryOptions}
-            value={category}
-            onChange={(e) => setParam("category", e.target.value)}
-            aria-label="Kategoriya"
-          />
-          <Select
-            name="level"
-            options={LEVEL_OPTIONS}
-            value={level}
-            onChange={(e) => setParam("level", e.target.value)}
-            aria-label="Daraja"
-          />
-          <Select
-            name="language"
-            options={LANGUAGE_OPTIONS}
-            value={language}
-            onChange={(e) => setParam("language", e.target.value)}
-            aria-label="Til"
-          />
-          <Select
-            name="min_rating"
-            options={RATING_OPTIONS}
-            value={minRating}
-            onChange={(e) => setParam("min_rating", e.target.value)}
-            aria-label="Minimal reyting"
-          />
-          <Select
-            name="sort"
-            options={SORT_OPTIONS}
-            value={sort}
-            onChange={(e) => setParam("sort", e.target.value)}
-            aria-label="Saralash"
-          />
+      <div className="mt-8 rounded-2xl border p-5" style={{ borderColor: "var(--border)" }}>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <input className="input lg:col-span-2" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Kurs nomi yoki kalit so‘z" aria-label="Kurs qidirish" />
+          <select className="input" value={filters.category} onChange={(event) => setFilter("category", event.target.value)} aria-label="Kategoriya">
+            <option value="">Barcha kategoriyalar</option>
+            {options.categories.map((item) => <option key={item.category} value={item.category}>{item.category} ({item.count})</option>)}
+          </select>
+          <select className="input" value={filters.level} onChange={(event) => setFilter("level", event.target.value)} aria-label="Daraja">
+            {LEVELS.map(([itemValue, label]) => <option key={itemValue} value={itemValue}>{label}</option>)}
+          </select>
+          <select className="input" value={filters.language} onChange={(event) => setFilter("language", event.target.value)} aria-label="Til">
+            {LANGUAGES.map(([itemValue, label]) => <option key={itemValue} value={itemValue}>{label}</option>)}
+          </select>
+          <select className="input" value={filters.instructor_id} onChange={(event) => setFilter("instructor_id", event.target.value)} aria-label="Instruktor">
+            <option value="">Barcha instruktorlar</option>
+            {options.instructors.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </select>
+          <input className="input" type="number" min="0" value={filters.min_price} onChange={(event) => setFilter("min_price", event.target.value)} placeholder="Min narx" aria-label="Minimal narx" />
+          <input className="input" type="number" min="0" value={filters.max_price} onChange={(event) => setFilter("max_price", event.target.value)} placeholder="Max narx" aria-label="Maksimal narx" />
+          <input className="input" type="number" min="0" value={filters.min_duration} onChange={(event) => setFilter("min_duration", event.target.value)} placeholder="Min daqiqa" aria-label="Minimal davomiylik" />
+          <input className="input" type="number" min="0" value={filters.max_duration} onChange={(event) => setFilter("max_duration", event.target.value)} placeholder="Max daqiqa" aria-label="Maksimal davomiylik" />
+          <select className="input" value={filters.min_rating} onChange={(event) => setFilter("min_rating", event.target.value)} aria-label="Reyting">
+            <option value="">Har qanday reyting</option>
+            <option value="4">4★ va yuqori</option><option value="3">3★ va yuqori</option><option value="2">2★ va yuqori</option>
+          </select>
+          <label className="input flex items-center gap-2"><input type="checkbox" checked={filters.certificate === "true"} onChange={(event) => setFilter("certificate", event.target.checked ? "true" : "")} /> Sertifikat mavjud</label>
+          <select className="input" value={filters.sort} onChange={(event) => setFilter("sort", event.target.value)} aria-label="Saralash">
+            {SORTS.map(([itemValue, label]) => <option key={itemValue} value={itemValue}>{label}</option>)}
+          </select>
         </div>
-
-        {hasActiveFilters && (
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-sm text-muted">
-              {loading
-                ? "Qidirilmoqda..."
-                : `${data?.total ?? 0} ta kurs topildi`}
-            </span>
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="btn-outline px-4 py-2 text-sm"
-            >
-              Filtrlarni tozalash
-            </button>
-          </div>
-        )}
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <span className="text-sm text-ink-60">{loading ? "Qidirilmoqda..." : `${data?.total || 0} ta kurs`} {activeCount ? `· ${activeCount} filtr` : ""}</span>
+          {activeCount > 0 && <button className="btn-outline" onClick={reset}>Filtrlarni tozalash</button>}
+        </div>
       </div>
 
-      {/* Natijalar */}
       {loading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <CourseCardSkeleton key={i} />
-          ))}
-        </div>
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: 6 }).map((_, index) => <CourseCardSkeleton key={index} />)}</div>
       ) : error ? (
-        <div className="card rounded-2xl p-10 text-center">
-          <p className="text-rose-600">{error}</p>
-        </div>
-      ) : results.length === 0 ? (
-        <div className="card rounded-2xl p-12 text-center">
-          <div className="text-5xl">🔍</div>
-          <h3 className="mt-4 text-xl font-bold text-ink">
-            Hech narsa topilmadi
-          </h3>
-          <p className="mt-2 text-muted">
-            Boshqa kalit so'z yoki filtrlarni sinab ko'ring.
-          </p>
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="btn-primary mx-auto mt-6"
-            >
-              Filtrlarni tozalash
-            </button>
-          )}
-        </div>
-      ) : (
+        <div className="mt-8 rounded-2xl border p-8" role="alert">{error}<button className="btn-outline ml-3" onClick={() => setFilter("page", String(filters.page))}>Qayta urinish</button></div>
+      ) : results.length ? (
         <>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {results.map((course) => (
-              <SearchResultCard key={course.id} course={course} />
-            ))}
-          </div>
-
-          <div className="mt-10">
-            <Pagination
-              page={page}
-              pages={data?.pages ?? 1}
-              onChange={(p) => setParam("page", String(p))}
-            />
-          </div>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{results.map((course) => <SearchResultCard key={course.id} course={course} />)}</div>
+          {data.pages > 1 && <nav className="mt-8 flex justify-center gap-2" aria-label="Sahifalar">{Array.from({ length: data.pages }, (_, index) => index + 1).map((item) => <button className={item === filters.page ? "btn-dark" : "btn-outline"} key={item} onClick={() => setFilter("page", String(item))}>{item}</button>)}</nav>}
         </>
+      ) : (
+        <div className="mt-8 rounded-2xl border p-10 text-center"><h2 className="font-serif text-2xl">Hech narsa topilmadi</h2><p className="mt-2 text-ink-60">Filtrlarni yumshating yoki tozalang.</p><button className="btn-dark mt-5" onClick={reset}>Filtrlarni tozalash</button></div>
       )}
-
-      {/* Tavsiya: ko'p sotilgan kurslar (faqat filtr yo'q bo'lganda) */}
-      {!hasActiveFilters && (
-        <RecommendationSection
-          title="Ko'p sotilgan kurslar"
-          subtitle="O'quvchilar eng ko'p tanlagan dasturlar"
-          fetcher={() => discoveryApi.bestselling(6)}
-          limit={3}
-        />
-      )}
-    </div>
+    </section>
   );
 }

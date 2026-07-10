@@ -61,9 +61,14 @@ def test_global_search_groups_content_and_supports_typo(client, db_session):
     assert payload["groups"]["course"][0]["type"] == "course"
     assert payload["groups"]["lesson"][0]["type"] == "lesson"
 
-    typo = client.get("/api/discovery/global-search?q=tipografka&types=lesson")
+    typo = client.get(
+        "/api/discovery/global-search?q=tipografka&types=lesson"
+    )
     assert typo.status_code == 200
-    assert typo.json()["groups"]["lesson"][0]["title"] == "Tipografika iyerarxiyasi"
+    assert (
+        typo.json()["groups"]["lesson"][0]["title"]
+        == "Tipografika iyerarxiyasi"
+    )
 
 
 def test_global_search_requires_two_characters(client):

@@ -7,8 +7,8 @@ src/components/AssignmentSection.jsx
 src/components/AssignmentSection.css
 src/components/OnboardingModal.jsx
 src/components/OnboardingFlow.css
-src/components/SearchShortcut.jsx
-src/components/SearchShortcut.css
+src/components/GlobalSearchLauncher.jsx
+src/components/GlobalSearchLauncher.css
 src/pages/LearnPage.jsx
 src/pages/MyCoursesPage.jsx
 src/pages/ProfilePage.jsx

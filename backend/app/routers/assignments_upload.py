@@ -3,6 +3,7 @@
 Kept separate from the assignment CRUD router so upload policy stays small,
 auditable and easy to replace with object storage later.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -30,13 +31,22 @@ ALLOWED = {
 def _validate(filename: str, content: bytes) -> str:
     ext = Path(filename).suffix.lower().lstrip(".")
     if ext not in ALLOWED:
-        raise HTTPException(status_code=400, detail="PDF, PNG, JPG, WEBP yoki ZIP yuklang")
+        raise HTTPException(
+            status_code=400,
+            detail="PDF, PNG, JPG, WEBP yoki ZIP yuklang",
+        )
     if not content:
         raise HTTPException(status_code=400, detail="Bo'sh fayl yuklab bo'lmaydi")
     if len(content) > MAX_BYTES:
-        raise HTTPException(status_code=400, detail="Fayl hajmi 20 MB dan oshmasligi kerak")
+        raise HTTPException(
+            status_code=400,
+            detail="Fayl hajmi 20 MB dan oshmasligi kerak",
+        )
     if not any(content.startswith(signature) for signature in ALLOWED[ext]):
-        raise HTTPException(status_code=400, detail="Fayl turi kengaytmasiga mos emas")
+        raise HTTPException(
+            status_code=400,
+            detail="Fayl turi kengaytmasiga mos emas",
+        )
     if ext == "webp" and content[8:12] != b"WEBP":
         raise HTTPException(status_code=400, detail="WEBP fayli buzilgan")
     return "jpg" if ext == "jpeg" else ext

@@ -47,6 +47,7 @@ class ProfileResponse(BaseModel):
     location: str | None = None
     website: str | None = None
     avatar_url: str | None = None
+    instructor_status: str | None = "none"
 
     class Config:
         from_attributes = True
@@ -100,6 +101,7 @@ def get_profile(email: str = Depends(get_current_user), db: Session = Depends(ge
         location=getattr(user, "location", None),
         website=getattr(user, "website", None),
         avatar_url=getattr(user, "avatar_url", None),
+        instructor_status=getattr(user, "instructor_status", None) or "none",
     )
 
 
@@ -305,13 +307,6 @@ def update_progress(
     progress.last_activity = datetime.now(UTC)
 
     # ✅ BUG #6 FIX: Pointlar ikki marta qo'shilish muammosi hal qilindi.
-    # Avvalgi mantiq:
-    #   1) Kurs tugasa: +100 ball (sertifikat uchun)
-    #   2) DOIM: +minutes_spent ball  ← kurs tugaganda ham ishlardi → ikki marta!
-    #
-    # Yangi mantiq: faqat BIR MARTA qo'shiladi.
-    # Kurs yangi tugagan bo'lsa: +100 (sertifikat) + minutes_spent (bu sessiya)
-    # Kurs avval tugagan bo'lsa yoki hali tugamasa: faqat +minutes_spent
     if progress.percent >= 100:
         existing_cert = (
             db.query(Certificate)

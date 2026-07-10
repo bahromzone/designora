@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -21,7 +21,7 @@ class User(Base):
     provider = Column(String, default="local")
     password = Column(String, nullable=True)
     is_admin = Column(Boolean, default=False)
-    role = Column(String, default="user")  # user / admin / superadmin
+    role = Column(String, default="user")  # user / instructor / admin / superadmin
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=_now)
 
@@ -36,9 +36,14 @@ class User(Base):
     website = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
 
-    # ── BOSQICH 4: referral / affiliate ──
-    referral_code = Column(String, unique=True, index=True, nullable=True)
-    referred_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    # O'qituvchi bo'lish arizasi.
+    # instructor_status: none / pending / approved.
+    # MVP'da ariza avtomatik "approved" bo'ladi; admin tasdig'i uchun "pending"
+    # holati kelajakda ishlatiladi.
+    instructor_status = Column(String, default="none")
+    instructor_bio = Column(String, nullable=True)
+    instructor_expertise = Column(String, nullable=True)
+    instructor_portfolio = Column(String, nullable=True)
 
     # Relationships
     progress_records = relationship("Progress", back_populates="user", lazy="dynamic")

@@ -25,7 +25,15 @@ jobs:
       - name: Ruff (lint)
         run: ruff check . --output-format github
       - name: Black (format check)
-        run: black --check .
+        shell: bash
+        run: |
+          output=$(black --check . 2>&1) || status=$?
+          echo "$output"
+          echo "$output" | sed -n 's/^would reformat \(.*\)$/\1/p' | while IFS= read -r file; do
+            rel=${file#"$PWD"/}
+            echo "::error file=backend/$rel::Black formatting required"
+          done
+          exit ${status:-0}
       - name: Pytest (+ coverage)
         env:
           ENVIRONMENT: development
@@ -68,13 +76,13 @@ jobs:
       - name: Prettier (format check)
         shell: bash
         run: |
-          files=$(npx prettier --list-different "src/**/*.{js,jsx,css}")
+          files=$(npx prettier --list-different "src/**/*.{js,jsx,css}") || status=$?
           if [ -n "$files" ]; then
             while IFS= read -r file; do
-              echo "::error file=$file::Prettier formatting required"
+              echo "::error file=frontend/$file::Prettier formatting required"
             done <<< "$files"
-            exit 1
           fi
+          exit ${status:-0}
       - name: Vitest
         run: npm run test:run
       - name: Build

@@ -1,11 +1,14 @@
-"""Portfolio builder and public portfolio endpoints."""
+"""Portfolio builder and public portfolio API."""
+
+from __future__ import annotations
 
 import json
 import re
-from typing import Annotated
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -18,11 +21,36 @@ from app.models.user import User
 router = APIRouter(prefix="/api/portfolio", tags=["Portfolio"])
 
 
+def _now():
+    return datetime.now(UTC)
+
+
 def _user(db: Session, email: str) -> User:
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
     return user
+
+
+def _slugify(value: str) -> str:
+    value = value.lower().strip()
+    value = re.sub(r"[^a-z0-9\s-]", "", value)
+    value = re.sub(r"[\s_-]+", "-", value).strip("-") or "loyiha"
+    return value
+
+
+def _unique_slug(db: Session, title: str, exclude_id: int | None = None) -> str:
+    base = _slugify(title)
+    slug = base
+    suffix = 1
+    while True:
+        query = db.query(PortfolioProject).filter(PortfolioProject.slug == slug)
+        if exclude_id:
+            query = query.filter(PortfolioProject.id != exclude_id)
+        if not query.first():
+            return slug
+        suffix += 1
+        slug = f"{base}-{suffix}"
 
 
 def _list(value: str | None) -> list[str]:
@@ -33,26 +61,7 @@ def _list(value: str | None) -> list[str]:
         return []
 
 
-def _slug(text: str) -> str:
-    value = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-    return value or "loyiha"
-
-
-def _unique_slug(db: Session, title: str, project_id: int | None = None) -> str:
-    base = _slug(title)
-    candidate = base
-    number = 1
-    while True:
-        query = db.query(PortfolioProject).filter(PortfolioProject.slug == candidate)
-        if project_id:
-            query = query.filter(PortfolioProject.id != project_id)
-        if not query.first():
-            return candidate
-        number += 1
-        candidate = f"{base}-{number}"
-
-
-def _payload(project: PortfolioProject) -> dict:
+def _project(project: PortfolioProject) -> dict:
     return {
         "id": project.id,
         "user_id": project.user_id,
@@ -72,36 +81,88 @@ def _payload(project: PortfolioProject) -> dict:
     }
 
 
-class ProjectPatch(BaseModel):
-    title: Annotated[str, StringConstraints(min_length=2, max_length=180)] | None = None
-    summary: Annotated[str, StringConstraints(max_length=500)] | None = None
-    story: Annotated[str, StringConstraints(max_length=8000)] | None = None
-    cover_url: Annotated[str, StringConstraints(max_length=500)] | None = None
-    project_url: Annotated[str, StringConstraints(max_length=500)] | None = None
-    skills: list[Annotated[str, StringConstraints(max_length=40)]] | None = None
-    tools: list[Annotated[str, StringConstraints(max_length=40)]] | None = None
+class ProjectCreate(BaseModel):
+    submission_id: int
+    title: str | None = Field(default=None, max_length=180)
+
+
+class ProjectUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=2, max_length=180)
+    summary: str | None = Field(default=None, max_length=600)
+    story: str | None = Field(default=None, max_length=10000)
+    cover_url: str | None = Field(default=None, max_length=500)
+    project_url: str | None = Field(default=None, max_length=500)
+    skills: list[str] | None = None
+    tools: list[str] | None = None
     is_public: bool | None = None
-    position: int | None = None
 
 
-@router.get("/me")
-def my_projects(
+class ReorderRequest(BaseModel):
+    project_ids: list[int]
+
+
+@router.get("/eligible")
+def eligible_submissions(
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     user = _user(db, email)
     rows = (
-        db.query(PortfolioProject)
-        .filter(PortfolioProject.user_id == user.id)
-        .order_by(PortfolioProject.position.asc(), PortfolioProject.updated_at.desc())
+        db.query(AssignmentSubmission, Assignment)
+        .join(Assignment, AssignmentSubmission.assignment_id == Assignment.id)
+        .outerjoin(
+            PortfolioProject,
+            PortfolioProject.submission_id == AssignmentSubmission.id,
+        )
+        .filter(
+            AssignmentSubmission.user_id == user.id,
+            AssignmentSubmission.status == "graded",
+            PortfolioProject.id.is_(None),
+        )
+        .order_by(AssignmentSubmission.graded_at.desc())
         .all()
     )
-    return {"user_id": user.id, "name": user.name, "projects": [_payload(row) for row in rows]}
+    return [
+        {
+            "submission_id": submission.id,
+            "assignment_id": assignment.id,
+            "course_id": assignment.course_id,
+            "title": assignment.title or "Kurs loyihasi",
+            "description": assignment.description,
+            "file_url": submission.file_url,
+            "content": submission.content,
+            "grade": submission.grade,
+            "feedback": submission.feedback,
+            "graded_at": (
+                submission.graded_at.isoformat() if submission.graded_at else None
+            ),
+        }
+        for submission, assignment in rows
+    ]
 
 
-@router.post("/from-submission/{submission_id}", status_code=201)
-def from_submission(
-    submission_id: int,
+@router.get("/me")
+def my_portfolio(
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = _user(db, email)
+    projects = (
+        db.query(PortfolioProject)
+        .filter(PortfolioProject.user_id == user.id)
+        .order_by(PortfolioProject.position.asc(), PortfolioProject.id.desc())
+        .all()
+    )
+    return {
+        "owner": {"id": user.id, "name": user.name, "bio": user.bio, "avatar_url": user.avatar_url},
+        "public_url": f"/portfolio/u/{user.id}",
+        "projects": [_project(item) for item in projects],
+    }
+
+
+@router.post("", status_code=201)
+def create_project(
+    data: ProjectCreate,
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -109,72 +170,77 @@ def from_submission(
     submission = (
         db.query(AssignmentSubmission)
         .filter(
-            AssignmentSubmission.id == submission_id,
+            AssignmentSubmission.id == data.submission_id,
             AssignmentSubmission.user_id == user.id,
         )
         .first()
     )
-    if not submission:
-        raise HTTPException(status_code=404, detail="Topshiriq javobi topilmadi")
-    if submission.status != "graded":
-        raise HTTPException(status_code=409, detail="Faqat baholangan ish portfolio'ga qo'shiladi")
-
-    existing = (
-        db.query(PortfolioProject)
-        .filter(PortfolioProject.submission_id == submission.id)
-        .first()
-    )
-    if existing:
-        return _payload(existing)
-
+    if not submission or submission.status != "graded":
+        raise HTTPException(status_code=400, detail="Faqat baholangan ish portfolio'ga qo'shiladi")
+    if db.query(PortfolioProject).filter(PortfolioProject.submission_id == submission.id).first():
+        raise HTTPException(status_code=409, detail="Bu ish portfolio'da mavjud")
     assignment = db.query(Assignment).filter(Assignment.id == submission.assignment_id).first()
-    title = assignment.title if assignment else "Design loyihasi"
-    count = db.query(PortfolioProject).filter(PortfolioProject.user_id == user.id).count()
+    title = (data.title or (assignment.title if assignment else None) or "Kurs loyihasi").strip()
+    position = db.query(func.max(PortfolioProject.position)).filter(PortfolioProject.user_id == user.id).scalar()
     project = PortfolioProject(
         user_id=user.id,
         submission_id=submission.id,
         title=title,
-        slug=_unique_slug(db, f"{user.id}-{title}"),
-        summary=(submission.content or "")[:500] or None,
-        story=submission.content,
+        slug=_unique_slug(db, title),
+        summary=(submission.content or "")[:600] or None,
         project_url=submission.file_url,
         skills="[]",
         tools="[]",
+        position=(position or 0) + 1,
         is_public=False,
-        position=count,
     )
     db.add(project)
     db.commit()
     db.refresh(project)
-    return _payload(project)
+    return _project(project)
 
 
 @router.patch("/{project_id}")
 def update_project(
     project_id: int,
-    data: ProjectPatch,
+    data: ProjectUpdate,
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     user = _user(db, email)
-    project = (
-        db.query(PortfolioProject)
-        .filter(PortfolioProject.id == project_id, PortfolioProject.user_id == user.id)
-        .first()
-    )
+    project = db.query(PortfolioProject).filter(PortfolioProject.id == project_id, PortfolioProject.user_id == user.id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Loyiha topilmadi")
-
     fields = data.model_dump(exclude_unset=True)
     if "title" in fields:
-        project.slug = _unique_slug(db, f"{user.id}-{fields['title']}", project.id)
-    for field, value in fields.items():
-        if field in {"skills", "tools"}:
-            value = json.dumps(list(dict.fromkeys(value))[:12], ensure_ascii=False)
-        setattr(project, field, value)
+        project.title = fields.pop("title").strip()
+        project.slug = _unique_slug(db, project.title, project.id)
+    for key in ("skills", "tools"):
+        if key in fields:
+            fields[key] = json.dumps([str(item).strip() for item in fields[key] if str(item).strip()][:12], ensure_ascii=False)
+    for key, value in fields.items():
+        setattr(project, key, value)
+    project.updated_at = _now()
     db.commit()
     db.refresh(project)
-    return _payload(project)
+    return _project(project)
+
+
+@router.post("/reorder")
+def reorder_projects(
+    data: ReorderRequest,
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = _user(db, email)
+    projects = db.query(PortfolioProject).filter(PortfolioProject.user_id == user.id).all()
+    owned = {item.id: item for item in projects}
+    if set(data.project_ids) != set(owned):
+        raise HTTPException(status_code=400, detail="Loyiha tartibi noto'g'ri")
+    for position, project_id in enumerate(data.project_ids):
+        owned[project_id].position = position
+    db.commit()
+    return {"message": "Tartib saqlandi"}
 
 
 @router.delete("/{project_id}")
@@ -184,40 +250,35 @@ def delete_project(
     db: Session = Depends(get_db),
 ):
     user = _user(db, email)
-    project = (
-        db.query(PortfolioProject)
-        .filter(PortfolioProject.id == project_id, PortfolioProject.user_id == user.id)
-        .first()
-    )
+    project = db.query(PortfolioProject).filter(PortfolioProject.id == project_id, PortfolioProject.user_id == user.id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Loyiha topilmadi")
     db.delete(project)
     db.commit()
-    return {"message": "Loyiha o'chirildi", "id": project_id}
+    return {"message": "Loyiha o'chirildi"}
 
 
 @router.get("/public/{user_id}")
 def public_portfolio(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+    user = db.query(User).filter(User.id == user_id, User.is_active == True).first()  # noqa: E712
     if not user:
         raise HTTPException(status_code=404, detail="Portfolio topilmadi")
-    rows = (
+    projects = (
         db.query(PortfolioProject)
-        .filter(
-            PortfolioProject.user_id == user.id,
-            PortfolioProject.is_public == True,
-        )
-        .order_by(PortfolioProject.position.asc(), PortfolioProject.updated_at.desc())
+        .filter(PortfolioProject.user_id == user.id, PortfolioProject.is_public == True)  # noqa: E712
+        .order_by(PortfolioProject.position.asc(), PortfolioProject.id.desc())
         .all()
     )
     return {
-        "user": {
-            "id": user.id,
-            "name": user.name,
-            "bio": getattr(user, "bio", None),
-            "location": getattr(user, "location", None),
-            "website": getattr(user, "website", None),
-            "avatar_url": getattr(user, "avatar_url", None),
-        },
-        "projects": [_payload(row) for row in rows],
+        "owner": {"id": user.id, "name": user.name, "bio": user.bio, "avatar_url": user.avatar_url, "location": user.location, "website": user.website},
+        "projects": [_project(item) for item in projects],
     }
+
+
+@router.get("/project/{slug}")
+def public_project(slug: str, db: Session = Depends(get_db)):
+    project = db.query(PortfolioProject).filter(PortfolioProject.slug == slug, PortfolioProject.is_public == True).first()  # noqa: E712
+    if not project:
+        raise HTTPException(status_code=404, detail="Loyiha topilmadi")
+    owner = db.query(User).filter(User.id == project.user_id).first()
+    return {"owner": {"id": owner.id, "name": owner.name, "bio": owner.bio, "avatar_url": owner.avatar_url}, "project": _project(project)}

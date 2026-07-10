@@ -22,39 +22,22 @@ from app.models.user import User
 from app.routers import (
     admin_courses, analytics, assignments, assignments_upload, auth, blog,
     certificates, courses_api, discovery, forum, google, instructor, learning,
-    media, notes, notifications, payments, privacy, profile, qa, quiz,
+    media, notes, notifications, payments, portfolio, privacy, profile, qa, quiz,
     referrals, reviews, system, token, users,
 )
 from app.routers.auth import public_router
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5), logging.StreamHandler()],
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handlers=[RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5), logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="Designora Platform",
-    docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
-    redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
-)
-
+app = FastAPI(title="Designora Platform", docs_url="/docs" if settings.ENVIRONMENT != "production" else None, redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None)
 Base.metadata.create_all(bind=engine)
-
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY, https_only=settings.ENVIRONMENT == "production")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.get_allowed_origins(),
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Access-Token", "X-Requested-With"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=settings.get_allowed_origins(), allow_credentials=True, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Access-Token", "X-Requested-With"])
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)
-
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -62,36 +45,16 @@ BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 setup_admin(app)
 
-# Core API
-app.include_router(profile.router)
-app.include_router(admin_courses.router)
-app.include_router(courses_api.router)
-app.include_router(learning.router)
-app.include_router(instructor.router)
-app.include_router(public_router)
-app.include_router(auth.router)
-app.include_router(google.router)
-app.include_router(users.router)
-
-# Product modules
-app.include_router(discovery.router)
-app.include_router(quiz.router)
-app.include_router(reviews.router)
-app.include_router(qa.router)
-app.include_router(notes.router)
-app.include_router(certificates.router)
-app.include_router(media.router)
-app.include_router(assignments.router)
-app.include_router(assignments_upload.router)
-app.include_router(blog.router)
-app.include_router(forum.router)
-app.include_router(notifications.router)
-app.include_router(referrals.router)
-app.include_router(analytics.router)
-app.include_router(payments.router)
-app.include_router(privacy.router)
-app.include_router(system.router)
-app.include_router(token.router)
+for api_router in (
+    profile.router, admin_courses.router, courses_api.router, learning.router,
+    instructor.router, public_router, auth.router, google.router, users.router,
+    discovery.router, quiz.router, reviews.router, qa.router, notes.router,
+    certificates.router, media.router, assignments.router, assignments_upload.router,
+    portfolio.router, blog.router, forum.router, notifications.router,
+    referrals.router, analytics.router, payments.router, privacy.router,
+    system.router, token.router,
+):
+    app.include_router(api_router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -106,10 +69,7 @@ def _require_admin(email: str = Depends(get_current_user), db: Session = Depends
 
 @_admin_router.get("/users")
 def admin_list_users(db: Session = Depends(get_db), admin: User = Depends(_require_admin)):
-    return [
-        {"id": u.id, "name": u.name, "email": u.email, "role": u.role, "is_active": u.is_active}
-        for u in db.query(User).order_by(User.id.desc()).all()
-    ]
+    return [{"id": u.id, "name": u.name, "email": u.email, "role": u.role, "is_active": u.is_active} for u in db.query(User).order_by(User.id.desc()).all()]
 
 
 app.include_router(_admin_router)

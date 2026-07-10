@@ -2,8 +2,8 @@
   --designora-ink: #242326;
 }
 
-/* The supplied logo is silver on transparent. On the light header we back it with the
-   same dark plaque as the reference so the metallic mark stays legible and identical. */
+/* The uploaded PNG is the silver logo on transparent. On the light header we back it
+   with the reference dark plaque so the metallic mark stays legible and identical. */
 header a[href="/"]:has(svg) {
   display: inline-flex !important;
   align-items: center;
@@ -14,7 +14,7 @@ header a[href="/"]:has(svg) {
   padding: 0 18px;
   overflow: hidden;
   background-color: var(--designora-ink) !important;
-  background-image: url('/brand-logo.svg') !important;
+  background-image: url('/brand-logo.png') !important;
   background-position: center !important;
   background-size: 176px auto !important;
   background-repeat: no-repeat !important;

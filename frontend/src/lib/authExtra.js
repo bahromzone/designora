@@ -16,15 +16,15 @@ function extractErrorMessage(payload) {
   return "So'rovni bajarib bo'lmadi.";
 }
 
-async function post(path, body, token) {
+async function request(path, { method = "GET", body, token } = {}) {
   const res = await fetch(`${API_URL}${path}`, {
-    method: "POST",
+    method,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(body),
+    ...(body ? { body: JSON.stringify(body) } : {}),
   });
   const contentType = res.headers.get("content-type") ?? "";
   const payload = contentType.includes("application/json")
@@ -33,6 +33,10 @@ async function post(path, body, token) {
   if (!res.ok) throw new Error(extractErrorMessage(payload));
   return payload;
 }
+
+const post = (path, body, token) =>
+  request(path, { method: "POST", body, token });
+const get = (path, token) => request(path, { method: "GET", token });
 
 // Parolni tiklash havolasini emailga yuboradi. Backend timing-attackdan himoya
 // uchun har doim bir xil javob qaytaradi.
@@ -44,7 +48,17 @@ export const forgotPassword = (email) =>
 export const resetPassword = (token, password) =>
   post("/api/auth/reset-password", { token, password });
 
-// Oddiy foydalanuvchini instruktorga aylantiradi (auth talab qilinadi).
-// body: { name, bio, portfolio_url? }
+// Oddiy foydalanuvchini instruktor arizasiga qo'yadi (auth talab qilinadi).
+// body: { name, bio, portfolio_url? }. Rol "instructor_pending" bo'ladi.
 export const applyInstructor = (token, body) =>
   post("/api/instructor/apply", body, token);
+
+// ── Admin: instruktor arizalarini boshqarish ───────────────────
+export const adminListInstructorApplications = (token) =>
+  get("/api/admin/instructor-applications", token);
+
+export const adminApproveInstructor = (token, userId) =>
+  post(`/api/admin/instructor-applications/${userId}/approve`, {}, token);
+
+export const adminRejectInstructor = (token, userId) =>
+  post(`/api/admin/instructor-applications/${userId}/reject`, {}, token);

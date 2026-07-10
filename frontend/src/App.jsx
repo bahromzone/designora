@@ -28,6 +28,9 @@ const InstructorCourseEditPage = lazy(
   () => import("./pages/InstructorCourseEditPage")
 );
 const InstructorApplyPage = lazy(() => import("./pages/InstructorApplyPage"));
+const InstructorApplicationsPage = lazy(
+  () => import("./pages/InstructorApplicationsPage")
+);
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
@@ -142,6 +145,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <InstructorCourseEditPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Admin: instruktor arizalarini ko'rib chiqish */}
+          <Route
+            path="/admin/instruktor-arizalar"
+            element={
+              <ProtectedRoute>
+                <InstructorApplicationsPage />
               </ProtectedRoute>
             }
           />

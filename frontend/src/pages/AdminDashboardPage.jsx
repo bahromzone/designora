@@ -141,9 +141,14 @@ export default function AdminDashboardPage() {
             Platforma dashboard
           </h1>
         </div>
-        <Link to="/profil" className="btn-outline">
-          Profil
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/admin/instruktor-arizalar" className="btn-outline">
+            Instruktor arizalari
+          </Link>
+          <Link to="/profil" className="btn-outline">
+            Profil
+          </Link>
+        </div>
       </div>
 
       {/* KPI kartalar */}

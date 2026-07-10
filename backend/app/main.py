@@ -4,7 +4,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 import uvicorn
-from fastapi import APIRouter, Depends, FastAPI, Request, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -18,7 +18,6 @@ from app.core.config import limiter, settings
 from app.core.database import Base, engine, get_db
 from app.core.middleware import (
     IPBlockingMiddleware,
-    MetricsMiddleware,
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
 )
@@ -26,33 +25,17 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.routers import (
     admin_courses,
-    analytics,
     auth,
-    blog,
-    certificates,
     courses_api,
-    discovery,
-    forum,
     google,
     instructor,
     learning,
-    media,
-    notes,
-    notifications,
-    payments,
-    privacy,
     profile,
-    qa,
-    quiz,
-    referrals,
-    reviews,
-    system,
-    token,
     users,
 )
 from app.routers.auth import public_router
 
-# ── LOGGING ─────────────────────────────────────────────────
+# ── LOGGING ─────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -63,7 +46,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── APP ──────────────────────────────────────────────────
+# ── APP ────────────────────────────────────────────────
 app = FastAPI(
     title="Designora Platform",
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
@@ -93,7 +76,6 @@ app.add_middleware(
     ],
 )
 app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(MetricsMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)
 
@@ -101,14 +83,14 @@ app.add_middleware(IPBlockingMiddleware)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# ── STATIC ──────────────────────────────────────────
+# ── STATIC ───────────────────────────────────────────
 # Absolyut yo'l — server qaysi papkadan ishga tushirilishidan qat'i nazar ishlaydi
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 setup_admin(app)
 
-# ── ROUTERS ─────────────────────────────────────────
+# ── ROUTERS ───────────────────────────────────────────
 app.include_router(profile.router)
 app.include_router(admin_courses.router)
 app.include_router(courses_api.router)
@@ -119,27 +101,10 @@ app.include_router(auth.router)
 app.include_router(google.router)
 app.include_router(users.router)
 
-# ── BOSQICH 1-5 routerlari ──────────────────────────────────
-# Refaktor paytida tushib qolgan include'lar — React frontend va endpoint
-# testlari shularga bog'liq.
-app.include_router(discovery.router)
-app.include_router(quiz.router)
-app.include_router(reviews.router)
-app.include_router(qa.router)
-app.include_router(notes.router)
-app.include_router(certificates.router)
-app.include_router(media.router)
-app.include_router(blog.router)
-app.include_router(forum.router)
-app.include_router(notifications.router)
-app.include_router(referrals.router)
-app.include_router(analytics.router)
-app.include_router(payments.router)
-app.include_router(privacy.router)
-app.include_router(system.router)
-app.include_router(token.router)
-
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
+
+_ADMIN_ROLES = {"admin", "superadmin"}
+_PENDING_ROLE = "instructor_pending"
 
 
 def _require_admin(
@@ -147,9 +112,7 @@ def _require_admin(
     db: Session = Depends(get_db),
 ) -> User:
     user = db.query(User).filter(User.email == email).first()
-    if not user or user.role != "admin":
-        from fastapi import HTTPException
-
+    if not user or user.role not in _ADMIN_ROLES:
         raise HTTPException(status_code=403, detail="Faqat adminlar uchun")
     return user
 
@@ -171,10 +134,67 @@ def admin_list_users(
     ]
 
 
+# ── INSTRUKTOR ARIZALARI (admin tasdig'i) ─────────────────────
+def _application_dict(u: User) -> dict:
+    return {
+        "id": u.id,
+        "name": u.name,
+        "email": u.email,
+        "bio": getattr(u, "bio", None),
+        "portfolio_url": getattr(u, "website", None),
+        "created_at": (
+            u.created_at.isoformat() if getattr(u, "created_at", None) else None
+        ),
+    }
+
+
+@_admin_router.get("/instructor-applications")
+def list_instructor_applications(
+    db: Session = Depends(get_db),
+    admin: User = Depends(_require_admin),
+):
+    pending = (
+        db.query(User).filter(User.role == _PENDING_ROLE).order_by(User.id.desc()).all()
+    )
+    return [_application_dict(u) for u in pending]
+
+
+@_admin_router.post("/instructor-applications/{user_id}/approve")
+def approve_instructor_application(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(_require_admin),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+    if user.role != _PENDING_ROLE:
+        raise HTTPException(status_code=400, detail="Bu foydalanuvchi arizada emas")
+    user.role = "instructor"
+    db.commit()
+    return {"message": "Ariza tasdiqlandi", "id": user.id, "role": user.role}
+
+
+@_admin_router.post("/instructor-applications/{user_id}/reject")
+def reject_instructor_application(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(_require_admin),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+    if user.role != _PENDING_ROLE:
+        raise HTTPException(status_code=400, detail="Bu foydalanuvchi arizada emas")
+    user.role = "user"
+    db.commit()
+    return {"message": "Ariza rad etildi", "id": user.id, "role": user.role}
+
+
 app.include_router(_admin_router)
 
 
-# ── ASOSIY SAHIFA ──────────────────────────────────────
+# ── ASOSIY SAHIFA ─────────────────────────────────────
 # UI endi to'liq React frontend'da (frontend/ papkasi, Vite dev: 5173-port).
 # Backend faqat JSON API xizmatini bajaradi.
 @app.get("/")
@@ -187,13 +207,13 @@ def home():
     }
 
 
-# ── /api/me → /api/profile/me ─────────────────────────────────
+# ── /api/me → /api/profile/me ───────────────────────────────
 @app.get("/api/me")
 def me():
     return RedirectResponse(url="/api/profile/me", status_code=307)
 
 
-# ── XATO HANDLERI ───────────────────────────────────────
+# ── XATO HANDLERI ─────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     if settings.ENVIRONMENT == "production":
@@ -207,7 +227,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# ── RUN ──────────────────────────────────────────────
+# ── RUN ────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",

@@ -25,6 +25,8 @@ from app.models.user import User
 router = APIRouter(prefix="/api/instructor", tags=["Instructor"])
 
 _INSTRUCTOR_ROLES = {"instructor", "admin", "superadmin"}
+# Ariza berib, admin tasdig'ini kutayotgan foydalanuvchi roli.
+_PENDING_ROLE = "instructor_pending"
 
 
 # ── YORDAMCHILAR ────────────────────────────────────────────
@@ -169,10 +171,11 @@ def _course_admin_dict(c: Course, db: Session) -> dict:
 
 
 # ── INSTRUKTOR BO'LISH (apply) ────────────────────────────────
-# Oddiy foydalanuvchini instruktorga aylantiradi. require_instructor bu yerda
-# ISHLAMAYDI (u faqat mavjud instruktorlarni o'tkazadi), shuning uchun to'g'ridan-
-# to'g'ri get_current_user ishlatamiz. Yangi ustun qo'shmaymiz — bio/website
-# mavjud ustunlarga yoziladi (eski baza buzilmaydi).
+# Oddiy foydalanuvchi ariza beradi — rol "instructor_pending" bo'ladi va admin
+# tasdig'ini kutadi. require_instructor bu yerda ISHLAMAYDI (u faqat mavjud
+# instruktorlarni o'tkazadi), shuning uchun to'g'ridan-to'g'ri get_current_user.
+# Yangi ustun qo'shmaymiz — bio/website mavjud ustunlarga yoziladi, holat esa
+# role qiymatida saqlanadi (eski baza buzilmaydi).
 @router.post("/apply")
 def apply_instructor(
     data: InstructorApplyIn,
@@ -186,11 +189,17 @@ def apply_instructor(
     if user.role in _INSTRUCTOR_ROLES:
         return {"message": "Siz allaqachon instruktorsiz", "role": user.role}
 
+    if user.role == _PENDING_ROLE:
+        return {
+            "message": "Arizangiz allaqachon ko'rib chiqilmoqda",
+            "role": user.role,
+        }
+
     user.name = data.name or user.name
     user.bio = data.bio
     if data.portfolio_url:
         user.website = data.portfolio_url
-    user.role = "instructor"
+    user.role = _PENDING_ROLE
 
     try:
         db.commit()
@@ -200,7 +209,7 @@ def apply_instructor(
         raise HTTPException(status_code=500, detail=f"Saqlashda xatolik: {e}")
 
     return {
-        "message": "Tabriklaymiz! Endi siz instruktorsiz.",
+        "message": "Arizangiz qabul qilindi. Admin ko'rib chiqqach xabar beramiz.",
         "role": user.role,
     }
 
@@ -373,7 +382,7 @@ def delete_module(
     return {"message": "Modul o'chirildi", "id": module_id}
 
 
-# ── LESSONS ────────────────────────────────────────────────
+# ── LESSONS ───────────────────────────────────────────────
 @router.post("/courses/{course_id}/lessons", status_code=201)
 def create_lesson(
     course_id: int,

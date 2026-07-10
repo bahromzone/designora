@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import OnboardingModal from "./OnboardingModal";
 import { trackEvent } from "../lib/track";
@@ -19,31 +19,36 @@ const pageVariants = {
   },
 };
 
-// Skillshare uslubidagi 4 ustunli footer menyulari.
+// Footer menyulari — har biri haqiqiy route'ga bog'langan.
 const FOOTER_COLUMNS = [
   {
     title: "Kompaniya",
-    links: ["Biz haqimizda", "Karyera", "Matbuot", "Blog"],
+    links: [
+      { label: "Biz haqimizda", to: "/biz-haqimizda" },
+      { label: "Blog", to: "/blog" },
+      { label: "Kurslar", to: "/kurslar" },
+    ],
   },
   {
-    title: "Hamkorlik",
-    links: ["Affiliate dastur", "Hamkorликlar"],
+    title: "Yordam",
+    links: [
+      { label: "Forum", to: "/forum" },
+      { label: "O'qituvchi bo'lish", to: "/?modal=signup" },
+    ],
   },
   {
-    title: "O'qituvchilar uchun",
-    links: ["O'qituvchi bo'lish", "Yordam markazi", "Qoidalar va talablar"],
-  },
-  {
-    title: "Do'kon",
-    links: ["Sovg'a a'zoliklari", "Raqamli mahsulotlar", "1-on-1 sessiyalar"],
+    title: "Huquqiy",
+    links: [
+      { label: "Maxfiylik siyosati", to: "/maxfiylik" },
+      { label: "Foydalanish shartlari", to: "/shartlar" },
+    ],
   },
 ];
 
 const BOTTOM_LINKS = [
-  "Yordam",
-  "Maxfiylik",
-  "Shartlar",
-  "Maxfiylik tanlovlari",
+  { label: "Maxfiylik", to: "/maxfiylik" },
+  { label: "Shartlar", to: "/shartlar" },
+  { label: "Forum", to: "/forum" },
 ];
 
 // Ijtimoiy tarmoqlar — haqiqiy profillarga havolalar.
@@ -151,8 +156,8 @@ export default function AppShell({ children }) {
       {/* ── DARK FOOTER (Skillshare uslubi) ────────────────────────── */}
       <footer className="relative z-10 mt-24 bg-[#0e0e10] text-white">
         <div className="max-w-7xl mx-auto px-6 py-16">
-          {/* Ustunlar: 4 ta menyu */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-12">
+          {/* Ustunlar: 3 ta menyu */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-12">
             {FOOTER_COLUMNS.map((col) => (
               <div key={col.title}>
                 <h4 className="text-base font-bold text-white mb-5">
@@ -160,13 +165,13 @@ export default function AppShell({ children }) {
                 </h4>
                 <ul className="space-y-3">
                   {col.links.map((link) => (
-                    <li key={link}>
-                      <a
-                        href="#"
+                    <li key={link.label}>
+                      <Link
+                        to={link.to}
                         className="text-sm text-white/60 hover:text-white transition-colors duration-200"
                       >
-                        {link}
-                      </a>
+                        {link.label}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -181,13 +186,16 @@ export default function AppShell({ children }) {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/60">
             <span>© 2026 Designora</span>
             {BOTTOM_LINKS.map((link) => (
-              <span key={link} className="flex items-center gap-x-4">
+              <span key={link.label} className="flex items-center gap-x-4">
                 <span aria-hidden="true" className="text-white/25">
                   •
                 </span>
-                <a href="#" className="hover:text-white transition-colors">
-                  {link}
-                </a>
+                <Link
+                  to={link.to}
+                  className="hover:text-white transition-colors"
+                >
+                  {link.label}
+                </Link>
               </span>
             ))}
           </div>

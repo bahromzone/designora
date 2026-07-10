@@ -1,5 +1,5 @@
 # Barcha modellar shu yerda import qilinishi shart.
-# SQLAlchemy relationship va Base.metadata ularni to'g'ri resolve qiladi.
+# SQLAlchemy relationship larni to'g'ri resolve qilishi uchun.
 
 from .assignment import Assignment
 from .assignment_submission import AssignmentSubmission

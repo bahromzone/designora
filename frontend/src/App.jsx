@@ -33,15 +33,50 @@ function App() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/forum" element={<ForumListPage />} />
         <Route path="/forum/:threadId" element={<ForumThreadPage />} />
+        <Route path="/portfolio/:userId" element={<PublicPortfolioPage />} />
         <Route path="/kirish" element={<LoginPage />} />
         <Route path="/royxatdan-otish" element={<RegisterPage />} />
         <Route path="/verify/:code" element={<VerifyPage />} />
-        <Route path="/portfolio/:userId" element={<PublicPortfolioPage />} />
-        <Route path="/kurslarim" element={<ProtectedRoute><MyCoursesPage /></ProtectedRoute>} />
-        <Route path="/organish/:courseId" element={<ProtectedRoute><LearnPage /></ProtectedRoute>} />
-        <Route path="/portfolioim" element={<ProtectedRoute><PortfolioBuilderPage /></ProtectedRoute>} />
-        <Route path="/tolov/natija/:orderId" element={<ProtectedRoute><CheckoutResultPage /></ProtectedRoute>} />
-        <Route path="/profil" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route
+          path="/kurslarim"
+          element={
+            <ProtectedRoute>
+              <MyCoursesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/organish/:courseId"
+          element={
+            <ProtectedRoute>
+              <LearnPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/portfolio-studio"
+          element={
+            <ProtectedRoute>
+              <PortfolioBuilderPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tolov/natija/:orderId"
+          element={
+            <ProtectedRoute>
+              <CheckoutResultPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profil"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AppShell>

@@ -16,21 +16,52 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.admin.admin_panel import setup_admin
 from app.core.config import limiter, settings
 from app.core.database import Base, engine, get_db
-from app.core.middleware import IPBlockingMiddleware, MetricsMiddleware, RequestLoggingMiddleware, SecurityHeadersMiddleware
+from app.core.middleware import (
+    IPBlockingMiddleware,
+    MetricsMiddleware,
+    RequestLoggingMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.core.security import get_current_user
 from app.models.user import User
 from app.routers import (
-    admin_courses, analytics, assignments, assignments_upload, auth, blog,
-    certificates, courses_api, discovery, forum, gamification, google,
-    instructor, learning, media, notes, notifications, payments, portfolio,
-    privacy, profile, qa, quiz, referrals, reviews, system, token, users,
+    admin_courses,
+    analytics,
+    assignments,
+    assignments_upload,
+    auth,
+    blog,
+    certificates,
+    courses_api,
+    discovery,
+    forum,
+    google,
+    instructor,
+    learning,
+    media,
+    notes,
+    notifications,
+    payments,
+    portfolio,
+    privacy,
+    profile,
+    qa,
+    quiz,
+    referrals,
+    reviews,
+    system,
+    token,
+    users,
 )
 from app.routers.auth import public_router
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5), logging.StreamHandler()],
+    handlers=[
+        RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -40,21 +71,31 @@ app = FastAPI(
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
 )
 
-# Router imports register every SQLAlchemy model before local/test create_all.
 Base.metadata.create_all(bind=engine)
 
-app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY, https_only=settings.ENVIRONMENT == "production")
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SESSION_SECRET_KEY,
+    https_only=settings.ENVIRONMENT == "production",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Access-Token", "X-Requested-With"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "X-CSRF-Token",
+        "X-Access-Token",
+        "X-Requested-With",
+    ],
 )
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(MetricsMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -62,33 +103,63 @@ BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 setup_admin(app)
 
-for product_router in (
-    profile.router, admin_courses.router, courses_api.router, learning.router,
-    instructor.router, public_router, auth.router, google.router, users.router,
-    discovery.router, quiz.router, reviews.router, qa.router, notes.router,
-    certificates.router, media.router, assignments.router,
-    assignments_upload.router, portfolio.router, blog.router, forum.router,
-    notifications.router, referrals.router, gamification.router,
-    analytics.router, payments.router, privacy.router, system.router,
-    token.router,
-):
-    app.include_router(product_router)
+app.include_router(profile.router)
+app.include_router(admin_courses.router)
+app.include_router(courses_api.router)
+app.include_router(learning.router)
+app.include_router(instructor.router)
+app.include_router(public_router)
+app.include_router(auth.router)
+app.include_router(google.router)
+app.include_router(users.router)
+app.include_router(discovery.router)
+app.include_router(quiz.router)
+app.include_router(reviews.router)
+app.include_router(qa.router)
+app.include_router(notes.router)
+app.include_router(certificates.router)
+app.include_router(media.router)
+app.include_router(assignments.router)
+app.include_router(assignments_upload.router)
+app.include_router(portfolio.router)
+app.include_router(blog.router)
+app.include_router(forum.router)
+app.include_router(notifications.router)
+app.include_router(referrals.router)
+app.include_router(analytics.router)
+app.include_router(payments.router)
+app.include_router(privacy.router)
+app.include_router(system.router)
+app.include_router(token.router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 
-def _require_admin(email: str = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
+def _require_admin(
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
     user = db.query(User).filter(User.email == email).first()
     if not user or user.role != "admin":
         from fastapi import HTTPException
+
         raise HTTPException(status_code=403, detail="Faqat adminlar uchun")
     return user
 
 
 @_admin_router.get("/users")
-def admin_list_users(db: Session = Depends(get_db), admin: User = Depends(_require_admin)):
+def admin_list_users(
+    db: Session = Depends(get_db),
+    admin: User = Depends(_require_admin),
+):
     return [
-        {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "is_active": user.is_active}
+        {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role,
+            "is_active": user.is_active,
+        }
         for user in db.query(User).order_by(User.id.desc()).all()
     ]
 
@@ -98,7 +169,12 @@ app.include_router(_admin_router)
 
 @app.get("/")
 def home():
-    return {"app": "Designora API", "status": "ok", "version": os.getenv("APP_VERSION", "1.0"), "docs": "/docs"}
+    return {
+        "app": "Designora API",
+        "status": "ok",
+        "version": os.getenv("APP_VERSION", "1.0"),
+        "docs": "/docs",
+    }
 
 
 @app.get("/api/me")
@@ -109,9 +185,20 @@ def me():
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     if settings.ENVIRONMENT == "production":
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"detail": "Internal server error"})
-    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"detail": str(exc)})
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Internal server error"},
+        )
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": str(exc)},
+    )
 
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=settings.ENVIRONMENT != "production")
+    uvicorn.run(
+        "app.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=settings.ENVIRONMENT != "production",
+    )

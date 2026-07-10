@@ -1,43 +1,44 @@
-/* Designora identity system: keeps one canonical logo across the app shell. */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300&display=swap');
+
 :root {
   --designora-ink: oklch(0.25 0.008 310);
-  --designora-paper: oklch(0.97 0.006 65);
+  --designora-metal: oklch(0.87 0.006 65);
 }
 
-/* The existing home link contains the legacy inline mark. Replace the full lockup,
-   while leaving the separate navigation link to Bosh sahifa untouched. */
+/* Canonical lockup: the supplied opposing-D monogram above a widely tracked wordmark. */
 header a[href="/"]:has(svg) {
   display: inline-block !important;
-  width: 186px !important;
-  height: 42px !important;
-  min-width: 186px;
+  width: 174px !important;
+  height: 68px !important;
+  min-width: 174px;
   overflow: hidden;
-  background: url('/brand-logo.svg') left center / contain no-repeat !important;
+  background-color: var(--designora-ink) !important;
+  background-image: url('/brand-logo.svg') !important;
+  background-position: center !important;
+  background-size: 156px auto !important;
+  background-repeat: no-repeat !important;
   color: transparent !important;
   font-size: 0 !important;
   line-height: 0 !important;
+  border-radius: 2px;
 }
 
-header a[href="/"]:has(svg) > * {
-  display: none !important;
-}
+header a[href="/"]:has(svg) > * { display: none !important; }
 
 header a[href="/"]:has(svg):focus-visible {
   outline: 2px solid var(--designora-ink);
-  outline-offset: 6px;
-  border-radius: 2px;
+  outline-offset: 5px;
 }
 
 @media (max-width: 767px) {
   header a[href="/"]:has(svg) {
-    width: 148px !important;
-    height: 34px !important;
-    min-width: 148px;
+    width: 136px !important;
+    height: 54px !important;
+    min-width: 136px;
+    background-size: 122px auto !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  header a[href="/"]:has(svg) {
-    transition: none !important;
-  }
+  header a[href="/"]:has(svg) { transition: none !important; }
 }

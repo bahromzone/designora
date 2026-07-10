@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title id="title">Designora monogram</title>
+  <g fill="none" stroke="#242326" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M16 18h27c36 0 59 18 59 42s-23 42-59 42H16V18Z"/>
+    <path d="M104 18H77C41 18 18 36 18 60s23 42 59 42h27V18Z"/>
+    <path d="M45 60c0-18 11-33 27-41 16 8 27 23 27 41S88 93 72 101C56 93 45 78 45 60Z"/>
+  </g>
+</svg>

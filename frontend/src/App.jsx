@@ -35,6 +35,11 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
 
+// ── Statik sahifalar (footer havolalari) ─────────────────────
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+
 // Sahifa chunk'i yuklanayotganda ko'rsatiladigan fallback.
 function RouteFallback() {
   return (
@@ -64,6 +69,10 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          {/* Statik sahifalar (footer) */}
+          <Route path="/biz-haqimizda" element={<AboutPage />} />
+          <Route path="/maxfiylik" element={<PrivacyPage />} />
+          <Route path="/shartlar" element={<TermsPage />} />
           {/* Eski auth sahifalari olib tashlandi — endi modal ochadi.
               Har qanday eski havola/bookmark shu redirect orqali ishlaydi. */}
           <Route

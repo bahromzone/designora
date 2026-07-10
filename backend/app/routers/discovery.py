@@ -7,8 +7,8 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.Course import Course
 from app.models.blog import BlogPost
+from app.models.Course import Course
 from app.models.forum import ForumThread
 from app.models.lesson import Lesson
 from app.models.user import User

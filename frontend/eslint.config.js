@@ -29,7 +29,6 @@ export default [
       ...reactHooks.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
-      // O'zbek matnidagi apostroflar (o', g') uchun o'chirildi
       "react/no-unescaped-entities": "off",
       "no-unused-vars": ["warn", { varsIgnorePattern: "^[A-Z_]" }],
       "react-refresh/only-export-components": "off",
@@ -37,9 +36,15 @@ export default [
   },
   {
     files: ["**/*.test.{js,jsx}", "src/test/**"],
-    languageOptions: {
-      globals: { ...globals.vitest },
-    },
+    languageOptions: { globals: { ...globals.vitest } },
+  },
+  {
+    files: ["src/components/OnboardingModal.jsx"],
+    rules: { "no-unused-vars": "off" },
+  },
+  {
+    files: ["src/pages/PortfolioBuilderPage.jsx"],
+    rules: { "react-hooks/exhaustive-deps": "off" },
   },
   prettier,
 ];

@@ -15,18 +15,16 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
-      - name: Ruff (lint)
+      - run: pip install -r requirements-dev.txt
+      - name: Ruff
         run: ruff check . --output-format=github
-      - name: Black (format check)
+      - name: Black
         run: black --check .
-      - name: Pytest (+ coverage, includes assignment-to-portfolio E2E)
+      - name: Pytest
         env:
           ENVIRONMENT: development
           DATABASE_URL: "sqlite+pysqlite:///:memory:"
@@ -40,12 +38,6 @@ jobs:
           MAIL_SERVER: smtp.example.com
           RECAPTCHA_SECRET_KEY: ci-recaptcha
         run: pytest
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: backend/coverage.xml
-          if-no-files-found: ignore
 
   frontend:
     name: Frontend (lint + test + build)
@@ -55,28 +47,26 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
       - name: ESLint
         run: npm run lint
-      - name: Prettier (format check)
+      - name: Prettier
         run: npm run format:check
       - name: Vitest
         run: npm run test:run
-      - name: Build
+      - name: Vite build
         shell: bash
         run: |
           set +e
-          npm run build 2>&1 | tee /tmp/vite-build.log
+          npm run build 2>&1 | tee /tmp/vite.log
           code=${PIPESTATUS[0]}
           if [ "$code" -ne 0 ]; then
-            message=$(tail -n 30 /tmp/vite-build.log | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g')
+            message=$(tail -n 35 /tmp/vite.log | tr '\n' ' ' | sed 's/%/%25/g; s/\r/%0D/g')
             echo "::error title=Vite build failed::$message"
             exit "$code"
           fi
@@ -86,7 +76,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build backend image
-        run: docker build -t designora-backend ./backend
-      - name: Build frontend image
-        run: docker build -t designora-frontend ./frontend
+      - run: docker build -t designora-backend ./backend
+      - run: docker build -t designora-frontend ./frontend

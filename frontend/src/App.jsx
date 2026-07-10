@@ -28,6 +28,9 @@ const InstructorCourseEditPage = lazy(
   () => import("./pages/InstructorCourseEditPage")
 );
 const InstructorApplyPage = lazy(() => import("./pages/InstructorApplyPage"));
+const InstructorApplicationsPage = lazy(
+  () => import("./pages/InstructorApplicationsPage")
+);
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
@@ -75,10 +78,7 @@ function App() {
           <Route path="/maxfiylik" element={<PrivacyPage />} />
           <Route path="/shartlar" element={<TermsPage />} />
           {/* O'qituvchi bo'lish arizasi (sahifa o'zi auth holatini boshqaradi) */}
-          <Route
-            path="/instruktor-boshlash"
-            element={<InstructorApplyPage />}
-          />
+          <Route path="/instruktor-boshlash" element={<InstructorApplyPage />} />
           {/* Eski auth sahifalari olib tashlandi — endi modal ochadi.
               Har qanday eski havola/bookmark shu redirect orqali ishlaydi. */}
           <Route
@@ -142,6 +142,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <InstructorCourseEditPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Admin: instruktor arizalarini ko'rib chiqish */}
+          <Route
+            path="/admin/instruktor-arizalar"
+            element={
+              <ProtectedRoute>
+                <InstructorApplicationsPage />
               </ProtectedRoute>
             }
           />

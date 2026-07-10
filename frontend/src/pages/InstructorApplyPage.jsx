@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { applyInstructor } from "../lib/authExtra";
 
 const INSTRUCTOR_ROLES = ["instructor", "admin", "superadmin"];
+const PENDING_ROLE = "instructor_pending";
 
 export default function InstructorApplyPage() {
   const navigate = useNavigate();
@@ -12,8 +13,10 @@ export default function InstructorApplyPage() {
   const [form, setForm] = useState({ name: "", bio: "", portfolio_url: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [justApplied, setJustApplied] = useState(false);
 
   const isInstructor = Boolean(user && INSTRUCTOR_ROLES.includes(user.role));
+  const isPending = Boolean(user && user.role === PENDING_ROLE);
 
   // Auth holatiga qarab yo'naltirish:
   // - login qilmagan  -> login modal
@@ -54,9 +57,10 @@ export default function InstructorApplyPage() {
         bio: form.bio,
         portfolio_url: form.portfolio_url || undefined,
       });
-      // Rol o'zgardi — profilni yangilaymiz, so'ng panelga o'tamiz.
+      // Rol "instructor_pending" bo'ldi — profilni yangilaymiz va kutish
+      // holatini ko'rsatamiz (panelga o'tmaymiz, admin tasdig'i kerak).
+      setJustApplied(true);
       await refreshProfile();
-      navigate("/instruktor-panel", { replace: true });
     } catch (err) {
       setError(err.message || "Xatolik yuz berdi. Qayta urinib ko'ring.");
     } finally {
@@ -71,6 +75,48 @@ export default function InstructorApplyPage() {
         <p className="text-sm" style={{ color: "var(--ink-60)" }}>
           Yuklanmoqda...
         </p>
+      </section>
+    );
+  }
+
+  // Ariza berilgan / ko'rib chiqilmoqda holati.
+  if (isPending || justApplied) {
+    return (
+      <section className="shell py-12 sm:py-16">
+        <div className="mx-auto max-w-xl card rounded-2xl p-8 sm:p-10 text-center">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[#f3edff]">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-7 w-7"
+              fill="none"
+              stroke="#813BFF"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </div>
+          <h1 className="font-serif text-3xl font-semibold text-ink mb-3">
+            Arizangiz ko'rib chiqilmoqda
+          </h1>
+          <p
+            className="text-sm leading-7 mb-8"
+            style={{ color: "var(--ink-60)" }}
+          >
+            Rahmat! Instruktorlik arizangiz qabul qilindi. Administrator uni
+            ko'rib chiqadi va tasdiqlangach, instruktor paneli ochiladi.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link to="/" className="btn-dark py-3 px-6">
+              Bosh sahifa
+            </Link>
+            <Link to="/profil" className="btn-outline py-3 px-6">
+              Profilim
+            </Link>
+          </div>
+        </div>
       </section>
     );
   }
@@ -90,7 +136,8 @@ export default function InstructorApplyPage() {
           >
             Designora'da instruktor bo'ling: o'z kurslaringizni yarating,
             darslar va modullar qo'shing, o'quvchilar bilan bevosita ishlang.
-            Ariza to'ldirilgach, instruktor paneli darhol ochiladi.
+            Ariza administrator tomonidan tasdiqlangach, instruktor paneli
+            ochiladi.
           </p>
           <ul className="space-y-3 text-sm" style={{ color: "var(--ink-60)" }}>
             {[
@@ -115,7 +162,7 @@ export default function InstructorApplyPage() {
             className="text-sm leading-7 mb-8"
             style={{ color: "var(--ink-60)" }}
           >
-            Bir necha soniyada instruktorlik faollashadi.
+            Ma'lumotlaringizni qoldiring — administrator ko'rib chiqadi.
           </p>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -183,7 +230,7 @@ export default function InstructorApplyPage() {
               disabled={submitting}
               className="btn-dark w-full py-3.5 justify-center"
             >
-              {submitting ? "Yuborilmoqda..." : "Instruktor bo'lish"}
+              {submitting ? "Yuborilmoqda..." : "Arizani yuborish"}
             </button>
           </form>
         </div>

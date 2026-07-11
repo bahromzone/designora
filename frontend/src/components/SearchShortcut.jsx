@@ -9,12 +9,16 @@ export default function SearchShortcut() {
   const [slot, setSlot] = useState(null);
 
   useEffect(() => {
-    const forumLink = document.querySelector('header nav a[href="/forum"]');
-    if (!forumLink) return undefined;
+    const navigation = document.querySelector("header nav");
+    if (!navigation) return undefined;
+
+    const oldSlot = navigation.querySelector("[data-navbar-search]");
+    oldSlot?.remove();
 
     const target = document.createElement("span");
     target.className = "navbar-search-slot";
-    forumLink.insertAdjacentElement("afterend", target);
+    target.setAttribute("data-navbar-search", "true");
+    navigation.appendChild(target);
     setSlot(target);
 
     return () => {
@@ -25,14 +29,13 @@ export default function SearchShortcut() {
 
   useEffect(() => {
     function onKey(event) {
+      const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(
+        document.activeElement?.tagName,
+      );
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         navigate("/qidiruv");
-      }
-      if (
-        event.key === "/" &&
-        !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)
-      ) {
+      } else if (event.key === "/" && !typing) {
         event.preventDefault();
         navigate("/qidiruv");
       }
@@ -52,7 +55,12 @@ export default function SearchShortcut() {
     >
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-        <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path
+          d="m16.5 16.5 4 4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
       </svg>
       <span>Qidiruv</span>
       <kbd>⌘ K</kbd>

@@ -9,12 +9,13 @@ export default function SearchShortcut() {
   const [slot, setSlot] = useState(null);
 
   useEffect(() => {
-    const forumLink = document.querySelector('header nav a[href="/forum"]');
-    if (!forumLink) return undefined;
+    const navigation = document.querySelector("header nav");
+    if (!navigation) return undefined;
 
     const target = document.createElement("span");
     target.className = "navbar-search-slot";
-    forumLink.insertAdjacentElement("afterend", target);
+    target.setAttribute("data-navbar-search", "true");
+    navigation.appendChild(target);
     setSlot(target);
 
     return () => {

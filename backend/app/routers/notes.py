@@ -1,3 +1,4 @@
+# ruff: noqa: E702
 """Searchable timestamped notes, bookmarks and export."""
 
 from io import StringIO

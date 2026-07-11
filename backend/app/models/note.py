@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Text, UniqueConstraint
@@ -12,7 +13,6 @@ def _now():
 
 class LessonNote(Base):
     __tablename__ = "lesson_notes"
-
     id = Column(Integer, primary_key=True)
     lesson_id = Column(Integer, ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False)
     course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
@@ -21,17 +21,13 @@ class LessonNote(Base):
     timestamp_seconds = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), default=_now)
     updated_at = Column(DateTime(timezone=True), default=_now, onupdate=_now)
-
     user = relationship("User")
     lesson = relationship("Lesson")
 
 
 class LessonBookmark(Base):
     __tablename__ = "lesson_bookmarks"
-    __table_args__ = (
-        UniqueConstraint("user_id", "lesson_id", name="uq_lesson_bookmark_user_lesson"),
-    )
-
+    __table_args__ = (UniqueConstraint("user_id", "lesson_id", name="uq_lesson_bookmark_user_lesson"),)
     id = Column(Integer, primary_key=True)
     lesson_id = Column(Integer, ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False)
     course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)

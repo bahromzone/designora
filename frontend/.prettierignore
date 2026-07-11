@@ -18,6 +18,9 @@ src/components/VideoPlayer.jsx
 src/components/VideoPlayer.css
 src/components/LessonSidebar.jsx
 src/components/LessonSidebar.css
+src/components/NotesSection.jsx
+src/components/NotesSection.css
+src/components/RecentNoteCard.jsx
 src/pages/LearnPage.jsx
 src/pages/MyCoursesPage.jsx
 src/pages/ProfilePage.jsx
@@ -58,3 +61,4 @@ src/lib/videoPlayerLogic.js
 src/lib/videoPlayerLogic.test.js
 src/lib/lessonSidebarLogic.js
 src/lib/lessonSidebarLogic.test.js
+src/lib/notesWorkspaceApi.js

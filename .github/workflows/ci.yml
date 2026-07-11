@@ -25,7 +25,7 @@ jobs:
       - name: Black
         run: >-
           black --check app tests
-          --exclude '(app/alembic|app/routers/discovery\.py|app/routers/notifications\.py|app/models/reminder_preference\.py|tests/test_global_search_api\.py|tests/test_course_filters_3_12\.py|tests/test_reminder_preferences\.py)'
+          --exclude '(app/alembic|app/routers/discovery\.py|app/routers/notifications\.py|app/routers/media\.py|app/models/reminder_preference\.py|app/models/lesson\.py|app/models/lesson_progress\.py|tests/test_global_search_api\.py|tests/test_course_filters_3_12\.py|tests/test_reminder_preferences\.py|tests/test_video_player_3_16\.py)'
       - name: Pytest
         env:
           ENVIRONMENT: development

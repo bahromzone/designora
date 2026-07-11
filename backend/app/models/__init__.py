@@ -14,4 +14,5 @@ from .password_reset import PasswordReset
 from .payment import Payment
 from .portfolio_project import PortfolioProject
 from .progress import Progress
+from .reminder_preference import PushSubscription, ReminderPreference
 from .user import User

@@ -14,6 +14,8 @@ src/components/SearchShortcut.css
 src/components/NotificationBell.jsx
 src/components/ReminderSettings.jsx
 src/components/ReminderSettings.css
+src/components/VideoPlayer.jsx
+src/components/VideoPlayer.css
 src/pages/LearnPage.jsx
 src/pages/MyCoursesPage.jsx
 src/pages/ProfilePage.jsx
@@ -49,3 +51,6 @@ src/lib/calendarApi.js
 src/lib/calendarLogic.js
 src/lib/calendarLogic.test.js
 src/lib/reminderApi.js
+src/lib/videoPlayerApi.js
+src/lib/videoPlayerLogic.js
+src/lib/videoPlayerLogic.test.js

@@ -1,3 +1,4 @@
+# ruff: noqa: E701,E702,E712,I001
 # fmt: off
 """In-app notifications and roadmap 3.15 reminder preferences."""
 from datetime import UTC, datetime

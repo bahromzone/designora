@@ -12,6 +12,8 @@ class Lesson(Base):
     module_id = Column(Integer, ForeignKey("modules.id", ondelete="CASCADE"), nullable=True)
     title = Column(String)
     video_url = Column(String)
+    video_sources = Column(JSON, nullable=True)
+    subtitles = Column(JSON, nullable=True)
     order = Column(Integer, default=0)
     duration_seconds = Column(Integer, default=0)
     description = Column(Text, nullable=True)

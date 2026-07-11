@@ -63,9 +63,7 @@ export default function InstructorDashboardPage() {
     return cleanup;
   }, [load]);
 
-  if (loading) {
-    return <div className="instructor-state"><Spinner /></div>;
-  }
+  if (loading) return <div className="instructor-state"><Spinner /></div>;
 
   if (error || !data) {
     return (
@@ -91,8 +89,8 @@ export default function InstructorDashboardPage() {
           <p>Tekshiruvlar, savollar va kurs salomatligi bitta operatsion markazda.</p>
         </div>
         <div className="instructor-actions">
-          <Link className="instructor-button instructor-button--ghost" to="/instructor/manage">Kurslar</Link>
-          <Link className="instructor-button" to="/instructor/manage">+ Yangi kurs</Link>
+          <Link className="instructor-button instructor-button--ghost" to="/instruktor-boshqaruv">Kurslar</Link>
+          <Link className="instructor-button" to="/instruktor-boshqaruv">+ Yangi kurs</Link>
         </div>
       </header>
 
@@ -106,7 +104,7 @@ export default function InstructorDashboardPage() {
       {courses.length === 0 ? (
         <section className="instructor-panel">
           <EmptyState title="Hali kurs yo'q" description="Birinchi kursni yarating, dashboard shu yerda jonlanadi." />
-          <Link className="instructor-button" to="/instructor/manage">Kurs yaratish</Link>
+          <Link className="instructor-button" to="/instruktor-boshqaruv">Kurs yaratish</Link>
         </section>
       ) : (
         <>
@@ -119,7 +117,7 @@ export default function InstructorDashboardPage() {
                     <p>{item.student_name} · {item.course_title}</p>
                     <small>{formatDate(item.submitted_at)}</small>
                   </div>
-                  <Link to={item.review_url}>Tekshirish</Link>
+                  <Link to={`/instruktor/review/${item.assignment_id}`}>Tekshirish</Link>
                 </article>
               ))}
             </QueueSection>
@@ -132,7 +130,7 @@ export default function InstructorDashboardPage() {
                     <p>{item.student_name} · {item.lesson_title}</p>
                     <small>{formatDate(item.created_at)}</small>
                   </div>
-                  <Link to={item.answer_url}>Javob berish</Link>
+                  <Link to={`/organish/${item.course_id}?lesson=${item.lesson_id}&question=${item.question_id}`}>Javob berish</Link>
                 </article>
               ))}
             </QueueSection>
@@ -154,7 +152,7 @@ export default function InstructorDashboardPage() {
                       <span className={`instructor-status instructor-status--${course.status}`}>{course.status === "published" ? "Chop etilgan" : "Qoralama"}</span>
                       <h3>{course.title}</h3>
                     </div>
-                    <Link to={`/instructor/courses/${course.course_id}/edit`}>Boshqarish</Link>
+                    <Link to={`/instruktor/kurs/${course.course_id}`}>Boshqarish</Link>
                   </div>
                   <div className="instructor-course__stats">
                     <span><strong>{course.active_students}</strong> faol</span>
@@ -179,7 +177,7 @@ export default function InstructorDashboardPage() {
                   <strong>{alert.message}</strong>
                   <p>{alert.course_title}</p>
                 </div>
-                <Link to={alert.edit_url}>Tuzatish</Link>
+                <Link to={`/instruktor/kurs/${alert.course_id}`}>Tuzatish</Link>
               </article>
             ))}
           </QueueSection>

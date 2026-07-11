@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 from app.core.security import create_access_token
 from app.models.coupon import Coupon
 from app.models.Course import Course

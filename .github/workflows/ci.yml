@@ -43,15 +43,16 @@ jobs:
         run: |
           set +e
           pytest -q --tb=short 2>&1 | tee pytest-output.txt
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ]; then
-            echo '## Pytest failure details' >> "$GITHUB_STEP_SUMMARY"
-            echo '```text' >> "$GITHUB_STEP_SUMMARY"
-            tail -n 160 pytest-output.txt >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-          fi
-          exit "$status"
+          exit ${PIPESTATUS[0]}
+      - name: Upload pytest diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-diagnostics
+          path: backend/pytest-output.txt
+          if-no-files-found: error
       - name: Upload coverage artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage

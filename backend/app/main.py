@@ -20,13 +20,7 @@ from app.core.database import Base, engine, get_db
 from app.core.middleware import IPBlockingMiddleware, RequestLoggingMiddleware, SecurityHeadersMiddleware
 from app.core.security import get_current_user
 from app.models.user import User
-from app.routers import (
-    admin_courses, analytics, assignments, assignments_upload, auth, blog, calendar,
-    certificates, course_builder, courses_api, discovery, forum, gamification, google,
-    instructor, instructors, learning, learning_paths, media, notes, notifications,
-    pages, payments, portfolio, privacy, profile, qa, quiz, referrals, reviews,
-    system, token, uploads, users,
-)
+from app.routers import admin_courses, analytics, assignments, assignments_upload, auth, blog, calendar, certificates, course_builder, courses_api, discovery, forum, gamification, google, instructor, instructor_analytics, instructors, learning, learning_paths, media, notes, notifications, pages, payments, portfolio, privacy, profile, qa, quiz, referrals, reviews, system, token, uploads, users
 from app.routers.auth import public_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handlers=[RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5), logging.StreamHandler()])
@@ -44,15 +38,7 @@ BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 setup_admin(app)
 
-for api_router in (
-    profile.router, admin_courses.router, analytics.router, assignments.router, assignments_upload.router,
-    blog.router, calendar.router, certificates.router, course_builder.router, courses_api.router,
-    discovery.router, forum.router, gamification.router, google.router, instructor.router,
-    instructors.router, learning.router, learning_paths.router, media.router, notes.router,
-    notifications.router, pages.router, payments.router, portfolio.router, privacy.router,
-    qa.router, quiz.router, referrals.router, reviews.router, system.router, token.router,
-    uploads.router, users.router, public_router, auth.router,
-):
+for api_router in (profile.router, admin_courses.router, analytics.router, assignments.router, assignments_upload.router, blog.router, calendar.router, certificates.router, course_builder.router, courses_api.router, discovery.router, forum.router, gamification.router, google.router, instructor.router, instructor_analytics.router, instructors.router, learning.router, learning_paths.router, media.router, notes.router, notifications.router, pages.router, payments.router, portfolio.router, privacy.router, qa.router, quiz.router, referrals.router, reviews.router, system.router, token.router, uploads.router, users.router, public_router, auth.router):
     app.include_router(api_router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])

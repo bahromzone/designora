@@ -11,6 +11,9 @@ src/components/GlobalSearchLauncher.jsx
 src/components/GlobalSearchLauncher.css
 src/components/SearchShortcut.jsx
 src/components/SearchShortcut.css
+src/components/NotificationBell.jsx
+src/components/ReminderSettings.jsx
+src/components/ReminderSettings.css
 src/pages/LearnPage.jsx
 src/pages/MyCoursesPage.jsx
 src/pages/ProfilePage.jsx
@@ -45,3 +48,4 @@ src/lib/learningPathLogic.test.js
 src/lib/calendarApi.js
 src/lib/calendarLogic.js
 src/lib/calendarLogic.test.js
+src/lib/reminderApi.js

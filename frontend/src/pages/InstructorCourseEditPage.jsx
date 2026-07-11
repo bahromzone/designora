@@ -8,8 +8,6 @@ import { instructorApi } from "../lib/api";
 import { courseBuilderApi } from "../lib/courseBuilderApi";
 import "./InstructorCourseEditPage.css";
 
-const EMPTY_BULK = "";
-
 export default function InstructorCourseEditPage() {
   const { courseId } = useParams();
   const { token } = useAuth();
@@ -21,7 +19,7 @@ export default function InstructorCourseEditPage() {
   const [error, setError] = useState("");
   const [saveState, setSaveState] = useState("saved");
   const [preview, setPreview] = useState(false);
-  const [bulk, setBulk] = useState(EMPTY_BULK);
+  const [bulk, setBulk] = useState("");
   const [drag, setDrag] = useState(null);
   const hydrated = useRef(false);
 
@@ -51,8 +49,8 @@ export default function InstructorCourseEditPage() {
     setSaveState("saving");
     const timer = window.setTimeout(async () => {
       try {
-        const result = await courseBuilderApi.autosave(courseId, form, token);
-        setSaveState(result.saved_at ? "saved" : "error");
+        await courseBuilderApi.autosave(courseId, form, token);
+        setSaveState("saved");
       } catch {
         setSaveState("error");
       }
@@ -67,6 +65,26 @@ export default function InstructorCourseEditPage() {
 
   const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
+  async function createModule() {
+    const title = window.prompt("Yangi modul nomi");
+    if (!title?.trim()) return;
+    try {
+      await instructorApi.createModule(courseId, { title: title.trim(), order: data.modules.length }, token);
+      toast.success("Modul qo'shildi");
+      load();
+    } catch (err) { toast.error(err.message); }
+  }
+
+  async function createLesson(moduleId) {
+    const title = window.prompt("Yangi dars nomi");
+    if (!title?.trim()) return;
+    try {
+      await instructorApi.createLesson(courseId, { title: title.trim(), module_id: moduleId, type: "video" }, token);
+      toast.success("Dars qo'shildi");
+      load();
+    } catch (err) { toast.error(err.message); }
+  }
+
   async function moveModule(sourceId, targetId) {
     const modules = [...data.modules];
     const from = modules.findIndex((item) => item.id === sourceId);
@@ -75,7 +93,28 @@ export default function InstructorCourseEditPage() {
     const [item] = modules.splice(from, 1);
     modules.splice(to, 0, item);
     setData((current) => ({ ...current, modules }));
-    await courseBuilderApi.reorder(courseId, { modules: modules.map((row, order) => ({ id: row.id, order })), lessons: [] }, token);
+    await courseBuilderApi.reorder(courseId, {
+      modules: modules.map((row, order) => ({ id: row.id, order })),
+      lessons: [],
+    }, token);
+  }
+
+  async function moveLesson(sourceId, targetId, targetModuleId) {
+    if (sourceId === targetId) return;
+    const ordered = [...allLessons];
+    const from = ordered.findIndex((item) => item.id === sourceId);
+    const to = ordered.findIndex((item) => item.id === targetId);
+    if (from < 0 || to < 0) return;
+    const [item] = ordered.splice(from, 1);
+    ordered.splice(to, 0, { ...item, module_id: targetModuleId });
+    const lessons = ordered.map((row, order) => ({
+      id: row.id,
+      order,
+      module_id: row.id === sourceId ? targetModuleId : row.module_id,
+    }));
+    await courseBuilderApi.reorder(courseId, { modules: [], lessons }, token);
+    toast.success("Dars tartibi saqlandi");
+    load();
   }
 
   async function uploadBulk() {
@@ -83,12 +122,10 @@ export default function InstructorCourseEditPage() {
     if (!lessons.length) return;
     try {
       await courseBuilderApi.bulkLessons(courseId, lessons, token);
-      setBulk(EMPTY_BULK);
+      setBulk("");
       toast.success(`${lessons.length} ta dars qo'shildi`);
       load();
-    } catch (err) {
-      toast.error(err.message);
-    }
+    } catch (err) { toast.error(err.message); }
   }
 
   async function togglePublish() {
@@ -124,7 +161,7 @@ export default function InstructorCourseEditPage() {
       <main className="builder-preview">
         <div className="builder-preview__bar"><strong>Talaba preview</strong><button onClick={() => setPreview(false)}>Builderga qaytish</button></div>
         <section><span>{form.category || "Kurs"}</span><h1>{form.title}</h1><p>{form.description || "Tavsif hali yozilmagan."}</p></section>
-        {(data.modules ?? []).map((module) => <article key={module.id}><h2>{module.title}</h2>{module.lessons.map((lesson) => <p key={lesson.id}>▶ {lesson.title} <small>{lesson.processing_status}</small></p>)}</article>)}
+        {data.modules.map((module) => <article key={module.id}><h2>{module.title}</h2>{module.lessons.map((lesson) => <p key={lesson.id}>▶ {lesson.title} <small>{lesson.processing_status}</small></p>)}</article>)}
       </main>
     );
   }
@@ -139,14 +176,14 @@ export default function InstructorCourseEditPage() {
       <div className="builder-layout">
         <section className="builder-main">
           <article className="builder-card">
-            <div className="builder-card__head"><div><span>Curriculum</span><h2>Modullar va darslar</h2></div><strong>{allLessons.length} dars</strong></div>
-            {(data.modules ?? []).map((module) => (
-              <div className="builder-module" draggable key={module.id} onDragStart={() => setDrag(module.id)} onDragOver={(event) => event.preventDefault()} onDrop={() => { moveModule(drag, module.id); setDrag(null); }}>
-                <div className="builder-module__head"><span className="drag-handle">⠿</span><strong>{module.title}</strong><small>{module.lessons.length} dars</small></div>
-                <div className="builder-lessons">{module.lessons.map((lesson) => <div className="builder-lesson" key={lesson.id}><span>⋮⋮</span><div><strong>{lesson.title}</strong><small>{lesson.type} · {lesson.processing_status}</small></div><em className={`media-state media-state--${lesson.processing_status}`}>{lesson.processing_status}</em></div>)}</div>
+            <div className="builder-card__head"><div><span>Curriculum</span><h2>Modullar va darslar</h2></div><div className="builder-actions"><button onClick={createModule}>+ Modul</button><strong>{allLessons.length} dars</strong></div></div>
+            {data.modules.map((module) => (
+              <div className="builder-module" draggable key={module.id} onDragStart={() => setDrag({ type: "module", id: module.id })} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (drag?.type === "module") moveModule(drag.id, module.id); setDrag(null); }}>
+                <div className="builder-module__head"><span className="drag-handle">⠿</span><strong>{module.title}</strong><small>{module.lessons.length} dars</small><button onClick={() => createLesson(module.id)}>+ Dars</button></div>
+                <div className="builder-lessons">{module.lessons.map((lesson) => <div className="builder-lesson" draggable key={lesson.id} onDragStart={(event) => { event.stopPropagation(); setDrag({ type: "lesson", id: lesson.id }); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.stopPropagation(); if (drag?.type === "lesson") moveLesson(drag.id, lesson.id, module.id); setDrag(null); }}><span className="drag-handle">⋮⋮</span><div><strong>{lesson.title}</strong><small>{lesson.type} · {lesson.processing_status}</small></div><em className={`media-state media-state--${lesson.processing_status}`}>{lesson.processing_status}</em></div>)}</div>
               </div>
             ))}
-            {!data.modules.length && <p className="builder-empty">Modul yo'q. Avval kurs boshqaruvidan modul yarating.</p>}
+            {!data.modules.length && <p className="builder-empty">Modul yo'q. “+ Modul” bilan boshlang.</p>}
           </article>
 
           <article className="builder-card">

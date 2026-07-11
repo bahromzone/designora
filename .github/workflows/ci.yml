@@ -40,7 +40,17 @@ jobs:
           MAIL_PORT: "587"
           MAIL_SERVER: smtp.example.com
           RECAPTCHA_SECRET_KEY: ci-recaptcha
-        run: pytest
+        run: |
+          set +e
+          pytest -q --tb=short 2>&1 | tee pytest-output.txt
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            echo '## Pytest failure details' >> "$GITHUB_STEP_SUMMARY"
+            echo '```text' >> "$GITHUB_STEP_SUMMARY"
+            tail -n 160 pytest-output.txt >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$status"
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:

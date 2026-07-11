@@ -12,8 +12,11 @@ extend-exclude = '''
  | \.venv
  | app/alembic
  | app/routers/discovery\.py
+ | app/routers/notifications\.py
+ | app/models/reminder_preference\.py
  | tests/test_global_search_api\.py
  | tests/test_course_filters_3_12\.py
+ | tests/test_reminder_preferences\.py
 )/
 '''
 

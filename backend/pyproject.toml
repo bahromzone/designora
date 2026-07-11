@@ -27,6 +27,8 @@ ignore = ["E501", "B008", "E712", "B904"]
 "tests/*" = ["B011", "F401", "F811"]
 "__init__.py" = ["F401"]
 "app/routers/checkout_experience.py" = ["I001", "E702"]
+"app/routers/monetization.py" = ["I001", "E702"]
+"app/models/monetization.py" = ["I001"]
 "app/main.py" = ["I001", "E701", "E702"]
 
 [tool.pytest.ini_options]
@@ -37,21 +39,8 @@ filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.coverage.run]
 source = ["app"]
-omit = [
- "app/alembic/*",
- "app/admin/*",
- "tests/*",
- "app/main.py",
- "app/routers/pages.py",
- "app/core/email.py",
- "app/utils/email.py",
- "app/routers/google.py",
-]
+omit = ["app/alembic/*", "app/admin/*", "tests/*", "app/main.py", "app/routers/pages.py", "app/core/email.py", "app/utils/email.py", "app/routers/google.py"]
 
 [tool.coverage.report]
 show_missing = true
-exclude_lines = [
- "pragma: no cover",
- "if __name__ == .__main__.:",
- "raise NotImplementedError",
-]
+exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:", "raise NotImplementedError"]

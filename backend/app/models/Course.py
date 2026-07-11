@@ -1,6 +1,16 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -39,7 +49,21 @@ class Course(Base):
     updated_at = Column(DateTime(timezone=True), default=_now, onupdate=_now)
 
     lessons = relationship("Lesson", back_populates="course", lazy="dynamic")
-    modules = relationship("Module", back_populates="course", lazy="dynamic", cascade="all, delete-orphan")
-    enrollments = relationship("Enrollment", back_populates="course", lazy="dynamic", cascade="all, delete-orphan")
-    progress_records = relationship("Progress", back_populates="course", lazy="dynamic")
-    certificates = relationship("Certificate", back_populates="course", lazy="dynamic")
+    modules = relationship(
+        "Module",
+        back_populates="course",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
+    enrollments = relationship(
+        "Enrollment",
+        back_populates="course",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
+    progress_records = relationship(
+        "Progress", back_populates="course", lazy="dynamic"
+    )
+    certificates = relationship(
+        "Certificate", back_populates="course", lazy="dynamic"
+    )

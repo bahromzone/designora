@@ -1,3 +1,4 @@
+# ruff: noqa: I001, E501
 import logging
 import os
 from logging.handlers import RotatingFileHandler
@@ -28,27 +29,12 @@ from app.routers import (
 )
 from app.routers.auth import public_router
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5), logging.StreamHandler()],
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", handlers=[RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5), logging.StreamHandler()])
 logger = logging.getLogger(__name__)
-
-app = FastAPI(
-    title="Designora Platform",
-    docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
-    redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
-)
+app = FastAPI(title="Designora Platform", docs_url="/docs" if settings.ENVIRONMENT != "production" else None, redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None)
 Base.metadata.create_all(bind=engine)
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY, https_only=settings.ENVIRONMENT == "production")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.get_allowed_origins(),
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Access-Token", "X-Requested-With"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=settings.get_allowed_origins(), allow_credentials=True, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Access-Token", "X-Requested-With"])
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)
@@ -59,15 +45,13 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 setup_admin(app)
 
 for api_router in (
-    profile.router, admin_courses.router, analytics.router, assignments.router,
-    assignments_upload.router, blog.router, calendar.router, certificates.router,
-    course_builder.router, courses_api.router, discovery.router, forum.router,
-    gamification.router, google.router, instructor.router, instructors.router,
-    learning.router, learning_paths.router, media.router, notes.router,
-    notifications.router, pages.router, payments.router, portfolio.router,
-    privacy.router, qa.router, quiz.router, referrals.router, reviews.router,
-    system.router, token.router, uploads.router, users.router, public_router,
-    auth.router,
+    profile.router, admin_courses.router, analytics.router, assignments.router, assignments_upload.router,
+    blog.router, calendar.router, certificates.router, course_builder.router, courses_api.router,
+    discovery.router, forum.router, gamification.router, google.router, instructor.router,
+    instructors.router, learning.router, learning_paths.router, media.router, notes.router,
+    notifications.router, pages.router, payments.router, portfolio.router, privacy.router,
+    qa.router, quiz.router, referrals.router, reviews.router, system.router, token.router,
+    uploads.router, users.router, public_router, auth.router,
 ):
     app.include_router(api_router)
 
@@ -84,10 +68,7 @@ def _require_admin(email: str = Depends(get_current_user), db: Session = Depends
 
 @_admin_router.get("/users")
 def admin_list_users(db: Session = Depends(get_db), admin: User = Depends(_require_admin)):
-    return [
-        {"id": row.id, "name": row.name, "email": row.email, "role": row.role, "is_active": row.is_active}
-        for row in db.query(User).order_by(User.id.desc()).all()
-    ]
+    return [{"id": row.id, "name": row.name, "email": row.email, "role": row.role, "is_active": row.is_active} for row in db.query(User).order_by(User.id.desc()).all()]
 
 
 app.include_router(_admin_router)

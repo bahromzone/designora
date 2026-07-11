@@ -1,0 +1,4 @@
+const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+async function request(path, options={}){const response=await fetch(`${API_URL}${path}`,options);const data=await response.json().catch(()=>null);if(!response.ok)throw new Error(data?.detail||"Checkout xatosi");return data}
+const auth=(token)=>({"Content-Type":"application/json",Authorization:`Bearer ${token}`});
+export const checkoutApi={quote:(courseId,coupon="")=>request(`/api/payments/quote/${courseId}${coupon?`?coupon_code=${encodeURIComponent(coupon)}`:""}`),checkout:(body,token)=>request("/api/payments/checkout-safe",{method:"POST",headers:auth(token),body:JSON.stringify(body)}),retry:(orderId,token)=>request(`/api/payments/orders/${orderId}/retry`,{method:"POST",headers:auth(token)}),receipt:(orderId,token)=>request(`/api/payments/orders/${orderId}/receipt`,{headers:auth(token)}),status:(orderId,token)=>request(`/api/payments/orders/${orderId}`,{headers:auth(token)})};

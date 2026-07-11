@@ -6,10 +6,21 @@ import "./SearchShortcut.css";
 
 export default function SearchShortcut() {
   const navigate = useNavigate();
-  const [navbar, setNavbar] = useState(null);
+  const [slot, setSlot] = useState(null);
 
   useEffect(() => {
-    setNavbar(document.querySelector("header"));
+    const forumLink = document.querySelector('header nav a[href="/forum"]');
+    if (!forumLink) return undefined;
+
+    const target = document.createElement("span");
+    target.className = "navbar-search-slot";
+    forumLink.insertAdjacentElement("afterend", target);
+    setSlot(target);
+
+    return () => {
+      setSlot(null);
+      target.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -30,7 +41,7 @@ export default function SearchShortcut() {
     return () => window.removeEventListener("keydown", onKey);
   }, [navigate]);
 
-  if (!navbar) return null;
+  if (!slot) return null;
 
   return createPortal(
     <button
@@ -46,6 +57,6 @@ export default function SearchShortcut() {
       <span>Qidiruv</span>
       <kbd>⌘ K</kbd>
     </button>,
-    navbar,
+    slot,
   );
 }

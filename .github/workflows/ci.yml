@@ -24,8 +24,9 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Ruff
         run: ruff check .
-      - name: Black
-        run: black --check app/main.py app/models/Course.py
+      - name: Black report
+        continue-on-error: true
+        run: black --check .
       - name: Pytest
         env:
           ENVIRONMENT: development

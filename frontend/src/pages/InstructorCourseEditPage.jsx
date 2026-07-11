@@ -1,564 +1,182 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { coursesApi, instructorApi, formatSeconds } from "../lib/api";
+import { EmptyState, Spinner } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import {
-  Button,
-  EmptyState,
-  Input,
-  Modal,
-  Select,
-  Spinner,
-  Textarea,
-} from "../components/ui";
+import { instructorApi } from "../lib/api";
+import { courseBuilderApi } from "../lib/courseBuilderApi";
+import "./InstructorCourseEditPage.css";
 
-const LESSON_TYPES = [
-  { value: "video", label: "Video" },
-  { value: "text", label: "Matn" },
-  { value: "quiz", label: "Test" },
-];
-
-const EMPTY_LESSON = {
-  title: "",
-  module_id: "",
-  type: "video",
-  video_url: "",
-  duration_seconds: 0,
-  description: "",
-  is_free_preview: false,
-};
-
-function lessonIcon(lesson) {
-  if (lesson.type === "quiz") return "❓";
-  if (lesson.is_free_preview) return "▶";
-  return "🔒";
-}
+const EMPTY_BULK = "";
 
 export default function InstructorCourseEditPage() {
   const { courseId } = useParams();
   const { token } = useAuth();
   const toast = useToast();
-
-  const [course, setCourse] = useState(null);
-  const [tree, setTree] = useState([]);
+  const [data, setData] = useState(null);
+  const [form, setForm] = useState(null);
+  const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [saveState, setSaveState] = useState("saved");
+  const [preview, setPreview] = useState(false);
+  const [bulk, setBulk] = useState(EMPTY_BULK);
+  const [drag, setDrag] = useState(null);
+  const hydrated = useRef(false);
 
-  // Kurs sozlamalari formasi
-  const [settings, setSettings] = useState(null);
-  const [savingSettings, setSavingSettings] = useState(false);
-
-  // Modul modali
-  const [moduleModal, setModuleModal] = useState(false);
-  const [moduleForm, setModuleForm] = useState({ title: "", order: 0 });
-  const [savingModule, setSavingModule] = useState(false);
-
-  // Dars modali
-  const [lessonModal, setLessonModal] = useState(false);
-  const [lessonForm, setLessonForm] = useState(EMPTY_LESSON);
-  const [savingLesson, setSavingLesson] = useState(false);
-
-  const load = useCallback(() => {
-    let active = true;
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    instructorApi
-      .getCourse(courseId, token)
-      .then((res) => {
-        if (!active) return;
-        setCourse(res);
-        setSettings({
-          title: res.title || "",
-          subtitle: res.subtitle || "",
-          description: res.description || "",
-          category: res.category || "",
-          price: res.price || 0,
-        });
-      })
-      .catch((e) => active && setError(e.message))
-      .finally(() => active && setLoading(false));
-    // Mundarija daraxti — detail ommaviy (chop etilgan kurslar uchun).
-    // Qoralama bo'lsa 404 bo'ladi; jimgina bo'sh daraxt ko'rsatamiz.
-    coursesApi
-      .detail(courseId)
-      .then((d) => active && setTree(d.modules || []))
-      .catch(() => active && setTree([]));
-    return () => {
-      active = false;
-    };
+    try {
+      const [builder, history] = await Promise.all([
+        courseBuilderApi.get(courseId, token),
+        courseBuilderApi.versions(courseId, token),
+      ]);
+      setData(builder);
+      setForm(builder.course);
+      setVersions(history);
+      hydrated.current = true;
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }, [courseId, token]);
 
-  useEffect(() => {
-    const cleanup = load();
-    return cleanup;
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
-  async function saveSettings(e) {
-    e.preventDefault();
-    setSavingSettings(true);
+  useEffect(() => {
+    if (!hydrated.current || !form) return undefined;
+    setSaveState("saving");
+    const timer = window.setTimeout(async () => {
+      try {
+        const result = await courseBuilderApi.autosave(courseId, form, token);
+        setSaveState(result.saved_at ? "saved" : "error");
+      } catch {
+        setSaveState("error");
+      }
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [courseId, form, token]);
+
+  const allLessons = useMemo(() => [
+    ...(data?.unassigned_lessons ?? []),
+    ...(data?.modules ?? []).flatMap((module) => module.lessons ?? []),
+  ], [data]);
+
+  const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+
+  async function moveModule(sourceId, targetId) {
+    const modules = [...data.modules];
+    const from = modules.findIndex((item) => item.id === sourceId);
+    const to = modules.findIndex((item) => item.id === targetId);
+    if (from < 0 || to < 0 || from === to) return;
+    const [item] = modules.splice(from, 1);
+    modules.splice(to, 0, item);
+    setData((current) => ({ ...current, modules }));
+    await courseBuilderApi.reorder(courseId, { modules: modules.map((row, order) => ({ id: row.id, order })), lessons: [] }, token);
+  }
+
+  async function uploadBulk() {
+    const lessons = bulk.split("\n").map((title) => title.trim()).filter(Boolean).map((title) => ({ title, type: "video" }));
+    if (!lessons.length) return;
     try {
-      await instructorApi.updateCourse(
-        courseId,
-        {
-          title: settings.title.trim(),
-          subtitle: settings.subtitle.trim() || undefined,
-          description: settings.description.trim() || undefined,
-          category: settings.category.trim() || undefined,
-          price: Number(settings.price) || 0,
-        },
-        token
-      );
-      toast.success("Sozlamalar saqlandi");
+      await courseBuilderApi.bulkLessons(courseId, lessons, token);
+      setBulk(EMPTY_BULK);
+      toast.success(`${lessons.length} ta dars qo'shildi`);
       load();
     } catch (err) {
-      toast.error(err.message || "Saqlab bo'lmadi");
-    } finally {
-      setSavingSettings(false);
+      toast.error(err.message);
     }
   }
 
   async function togglePublish() {
-    try {
-      if (course.status === "published") {
-        await instructorApi.unpublishCourse(courseId, token);
-        toast.success("Qoralamaga o'tkazildi");
-      } else {
-        await instructorApi.publishCourse(courseId, token);
-        toast.success("Kurs chop etildi");
-      }
-      load();
-    } catch (err) {
-      toast.error(err.message || "Amalni bajarib bo'lmadi");
+    if (form.status !== "published" && !data.can_publish) {
+      toast.error("Publish checklist hali to'liq emas");
+      return;
     }
-  }
-
-  async function submitModule(e) {
-    e.preventDefault();
-    if (!moduleForm.title.trim()) return;
-    setSavingModule(true);
     try {
-      await instructorApi.createModule(
-        courseId,
-        {
-          title: moduleForm.title.trim(),
-          order: Number(moduleForm.order) || 0,
-        },
-        token
-      );
-      toast.success("Modul qo'shildi");
-      setModuleModal(false);
-      setModuleForm({ title: "", order: 0 });
+      if (form.status === "published") await instructorApi.unpublishCourse(courseId, token);
+      else await instructorApi.publishCourse(courseId, token);
+      toast.success(form.status === "published" ? "Qoralamaga o'tkazildi" : "Kurs chop etildi");
       load();
-    } catch (err) {
-      toast.error(err.message || "Qo'shib bo'lmadi");
-    } finally {
-      setSavingModule(false);
-    }
+    } catch (err) { toast.error(err.message); }
   }
 
-  async function removeModule(moduleId) {
-    try {
-      await instructorApi.deleteModule(moduleId, token);
-      toast.success("Modul o'chirildi");
-      load();
-    } catch (err) {
-      toast.error(err.message || "O'chirib bo'lmadi");
-    }
+  async function snapshot() {
+    await courseBuilderApi.createVersion(courseId, "Manual snapshot", token);
+    toast.success("Versiya saqlandi");
+    load();
   }
 
-  function openLessonModal(moduleId) {
-    setLessonForm({ ...EMPTY_LESSON, module_id: moduleId ?? "" });
-    setLessonModal(true);
+  async function restore(versionId) {
+    await courseBuilderApi.restore(courseId, versionId, token);
+    toast.success("Versiya tiklandi");
+    load();
   }
 
-  async function submitLesson(e) {
-    e.preventDefault();
-    if (!lessonForm.title.trim()) return;
-    setSavingLesson(true);
-    try {
-      await instructorApi.createLesson(
-        courseId,
-        {
-          title: lessonForm.title.trim(),
-          module_id: lessonForm.module_id
-            ? Number(lessonForm.module_id)
-            : undefined,
-          type: lessonForm.type,
-          video_url: lessonForm.video_url.trim() || undefined,
-          duration_seconds: Number(lessonForm.duration_seconds) || 0,
-          description: lessonForm.description.trim() || undefined,
-          is_free_preview: Boolean(lessonForm.is_free_preview),
-        },
-        token
-      );
-      toast.success("Dars qo'shildi");
-      setLessonModal(false);
-      setLessonForm(EMPTY_LESSON);
-      load();
-    } catch (err) {
-      toast.error(err.message || "Qo'shib bo'lmadi");
-    } finally {
-      setSavingLesson(false);
-    }
-  }
+  if (loading) return <div className="builder-state"><Spinner /></div>;
+  if (error || !data || !form) return <div className="builder-state"><EmptyState title="Builder ochilmadi" description={error} /><Link to="/instruktor-boshqaruv">Kurslarga qaytish</Link></div>;
 
-  async function removeLesson(lessonId) {
-    try {
-      await instructorApi.deleteLesson(lessonId, token);
-      toast.success("Dars o'chirildi");
-      load();
-    } catch (err) {
-      toast.error(err.message || "O'chirib bo'lmadi");
-    }
-  }
-
-  if (loading) {
+  if (preview) {
     return (
-      <section className="shell flex justify-center py-24">
-        <Spinner />
-      </section>
+      <main className="builder-preview">
+        <div className="builder-preview__bar"><strong>Talaba preview</strong><button onClick={() => setPreview(false)}>Builderga qaytish</button></div>
+        <section><span>{form.category || "Kurs"}</span><h1>{form.title}</h1><p>{form.description || "Tavsif hali yozilmagan."}</p></section>
+        {(data.modules ?? []).map((module) => <article key={module.id}><h2>{module.title}</h2>{module.lessons.map((lesson) => <p key={lesson.id}>▶ {lesson.title} <small>{lesson.processing_status}</small></p>)}</article>)}
+      </main>
     );
   }
-
-  if (error || !course || !settings) {
-    return (
-      <section className="shell py-24">
-        <EmptyState
-          title="Kurs ochilmadi"
-          description={error || "Bu kurs sizga tegishli emas yoki mavjud emas."}
-        />
-        <div className="mt-6 text-center">
-          <Link to="/instruktor/boshqaruv" className="btn-outline">
-            ← Kurslarga qaytish
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
-  const moduleOptions = tree
-    .filter((m) => m.id != null)
-    .map((m) => ({ value: String(m.id), label: m.title }));
 
   return (
-    <section className="shell py-16 sm:py-20">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Link
-            to="/instruktor/boshqaruv"
-            className="text-sm font-semibold"
-            style={{ color: "var(--muted)" }}
-          >
-            ← Kurslar
-          </Link>
-          <h1 className="mt-2 font-serif text-2xl font-semibold text-ink">
-            {course.title}
-          </h1>
-          <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-            Holat: {course.status === "published" ? "Chop etilgan" : "Qoralama"}
-          </p>
-        </div>
-        <Button variant="outline" onClick={togglePublish}>
-          {course.status === "published" ? "Qoralamaga" : "Chop etish"}
-        </Button>
-      </div>
+    <main className="course-builder">
+      <header className="builder-header">
+        <div><Link to="/instruktor-boshqaruv">← Kurslar</Link><h1>{form.title}</h1><p className={`save-state save-state--${saveState}`}>{saveState === "saving" ? "Saqlanmoqda..." : saveState === "error" ? "Saqlash xatosi" : "Barcha o'zgarishlar saqlandi"}</p></div>
+        <div className="builder-actions"><button onClick={() => setPreview(true)}>Talaba sifatida ko'rish</button><button onClick={snapshot}>Versiya saqlash</button><button className="builder-primary" onClick={togglePublish}>{form.status === "published" ? "Qoralamaga" : "Chop etish"}</button></div>
+      </header>
 
-      {/* Kurs sozlamalari */}
-      <form
-        onSubmit={saveSettings}
-        className="mt-8 space-y-4 rounded-2xl border p-6"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <h2 className="font-serif text-lg font-semibold text-ink">
-          Kurs sozlamalari
-        </h2>
-        <Input
-          label="Sarlavha"
-          value={settings.title}
-          onChange={(e) =>
-            setSettings((p) => ({ ...p, title: e.target.value }))
-          }
-          required
-        />
-        <Input
-          label="Qism sarlavha"
-          value={settings.subtitle}
-          onChange={(e) =>
-            setSettings((p) => ({ ...p, subtitle: e.target.value }))
-          }
-        />
-        <Textarea
-          label="Tavsif"
-          rows={4}
-          value={settings.description}
-          onChange={(e) =>
-            setSettings((p) => ({ ...p, description: e.target.value }))
-          }
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Kategoriya"
-            value={settings.category}
-            onChange={(e) =>
-              setSettings((p) => ({ ...p, category: e.target.value }))
-            }
-          />
-          <Input
-            label="Narx (so'm)"
-            type="number"
-            min={0}
-            value={settings.price}
-            onChange={(e) =>
-              setSettings((p) => ({ ...p, price: e.target.value }))
-            }
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button type="submit" loading={savingSettings}>
-            Saqlash
-          </Button>
-        </div>
-      </form>
-
-      {/* Mundarija: modullar + darslar */}
-      <div
-        className="mt-8 rounded-2xl border p-6"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="font-serif text-lg font-semibold text-ink">
-            Mundarija
-          </h2>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setModuleModal(true)}>
-              + Modul
-            </Button>
-            <Button onClick={() => openLessonModal(null)}>+ Dars</Button>
-          </div>
-        </div>
-
-        {tree.length === 0 ? (
-          <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>
-            Mundarija bo'sh yoki kurs qoralama. Modul va dars qo'shing; qoralama
-            kursda mundarija chop etilgandan keyin to'liq ko'rinadi.
-          </p>
-        ) : (
-          <div className="mt-5 space-y-4">
-            {tree.map((m) => (
-              <div
-                key={m.id ?? "orphan"}
-                className="rounded-xl border"
-                style={{ borderColor: "var(--border)" }}
-              >
-                <div
-                  className="flex items-center justify-between px-4 py-3"
-                  style={{ background: "var(--surface)" }}
-                >
-                  <span className="font-semibold text-ink">{m.title}</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openLessonModal(m.id)}
-                      className="text-xs font-semibold"
-                      style={{ color: "var(--brand)" }}
-                    >
-                      + Dars
-                    </button>
-                    {m.id != null && (
-                      <button
-                        type="button"
-                        onClick={() => removeModule(m.id)}
-                        className="text-xs font-semibold"
-                        style={{ color: "#c0392b" }}
-                      >
-                        O'chirish
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <ul
-                  className="divide-y"
-                  style={{ borderColor: "var(--border)" }}
-                >
-                  {(m.lessons || []).length === 0 ? (
-                    <li
-                      className="px-4 py-3 text-sm"
-                      style={{ color: "var(--muted)" }}
-                    >
-                      Dars yo'q
-                    </li>
-                  ) : (
-                    (m.lessons || []).map((l) => (
-                      <li
-                        key={l.id}
-                        className="flex items-center justify-between px-4 py-3 text-sm"
-                      >
-                        <span className="flex items-center gap-2 text-ink">
-                          <span aria-hidden>{lessonIcon(l)}</span>
-                          {l.title}
-                        </span>
-                        <span className="flex items-center gap-3">
-                          <span style={{ color: "var(--muted)" }}>
-                            {l.duration_seconds
-                              ? formatSeconds(l.duration_seconds)
-                              : ""}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => removeLesson(l.id)}
-                            className="text-xs font-semibold"
-                            style={{ color: "#c0392b" }}
-                          >
-                            O'chirish
-                          </button>
-                        </span>
-                      </li>
-                    ))
-                  )}
-                </ul>
+      <div className="builder-layout">
+        <section className="builder-main">
+          <article className="builder-card">
+            <div className="builder-card__head"><div><span>Curriculum</span><h2>Modullar va darslar</h2></div><strong>{allLessons.length} dars</strong></div>
+            {(data.modules ?? []).map((module) => (
+              <div className="builder-module" draggable key={module.id} onDragStart={() => setDrag(module.id)} onDragOver={(event) => event.preventDefault()} onDrop={() => { moveModule(drag, module.id); setDrag(null); }}>
+                <div className="builder-module__head"><span className="drag-handle">⠿</span><strong>{module.title}</strong><small>{module.lessons.length} dars</small></div>
+                <div className="builder-lessons">{module.lessons.map((lesson) => <div className="builder-lesson" key={lesson.id}><span>⋮⋮</span><div><strong>{lesson.title}</strong><small>{lesson.type} · {lesson.processing_status}</small></div><em className={`media-state media-state--${lesson.processing_status}`}>{lesson.processing_status}</em></div>)}</div>
               </div>
             ))}
-          </div>
-        )}
+            {!data.modules.length && <p className="builder-empty">Modul yo'q. Avval kurs boshqaruvidan modul yarating.</p>}
+          </article>
+
+          <article className="builder-card">
+            <div className="builder-card__head"><div><span>Bulk upload</span><h2>Bir urinishda darslar</h2></div></div>
+            <textarea value={bulk} onChange={(event) => setBulk(event.target.value)} placeholder={"Har qatorda bitta dars nomi\nFigma asoslari\nAuto layout"} />
+            <button className="builder-primary" onClick={uploadBulk}>Darslarni yaratish</button>
+          </article>
+        </section>
+
+        <aside className="builder-sidebar">
+          <article className="builder-card builder-settings">
+            <span>Course details</span><h2>Sozlamalar</h2>
+            <label>Nomi<input value={form.title || ""} onChange={(event) => setField("title", event.target.value)} /></label>
+            <label>Subtitle<input value={form.subtitle || ""} onChange={(event) => setField("subtitle", event.target.value)} /></label>
+            <label>Tavsif<textarea value={form.description || ""} onChange={(event) => setField("description", event.target.value)} /></label>
+            <label>Muqova URL<input value={form.thumbnail_url || ""} onChange={(event) => setField("thumbnail_url", event.target.value)} /></label>
+            <label>Prerequisite course IDlar<input value={(form.prerequisite_course_ids || []).join(", ")} onChange={(event) => setField("prerequisite_course_ids", event.target.value.split(",").map(Number).filter(Boolean))} /></label>
+          </article>
+
+          <article className="builder-card">
+            <div className="builder-card__head"><div><span>Publish</span><h2>Checklist</h2></div><strong>{data.checklist.filter((item) => item.complete).length}/{data.checklist.length}</strong></div>
+            <div className="builder-checklist">{data.checklist.map((item) => <p className={item.complete ? "complete" : ""} key={item.key}><span>{item.complete ? "✓" : "○"}</span>{item.label}</p>)}</div>
+          </article>
+
+          <article className="builder-card">
+            <div className="builder-card__head"><div><span>History</span><h2>Versiyalar</h2></div></div>
+            <div className="builder-versions">{versions.slice(0, 8).map((version) => <button key={version.id} onClick={() => restore(version.id)}><strong>{version.label}</strong><small>{new Date(version.created_at).toLocaleString("uz-UZ")}</small></button>)}{!versions.length && <p>Versiya hali yo'q.</p>}</div>
+          </article>
+        </aside>
       </div>
-
-      {/* Modul modali */}
-      <Modal
-        open={moduleModal}
-        onClose={() => setModuleModal(false)}
-        title="Yangi modul"
-      >
-        <form className="space-y-4" onSubmit={submitModule}>
-          <Input
-            label="Modul sarlavhasi"
-            value={moduleForm.title}
-            onChange={(e) =>
-              setModuleForm((p) => ({ ...p, title: e.target.value }))
-            }
-            required
-          />
-          <Input
-            label="Tartib"
-            type="number"
-            min={0}
-            value={moduleForm.order}
-            onChange={(e) =>
-              setModuleForm((p) => ({ ...p, order: e.target.value }))
-            }
-          />
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => setModuleModal(false)}
-            >
-              Bekor
-            </Button>
-            <Button type="submit" loading={savingModule}>
-              Qo'shish
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Dars modali */}
-      <Modal
-        open={lessonModal}
-        onClose={() => setLessonModal(false)}
-        title="Yangi dars"
-      >
-        <form className="space-y-4" onSubmit={submitLesson}>
-          <Input
-            label="Dars sarlavhasi"
-            value={lessonForm.title}
-            onChange={(e) =>
-              setLessonForm((p) => ({ ...p, title: e.target.value }))
-            }
-            required
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Select
-              label="Modul"
-              value={lessonForm.module_id}
-              onChange={(e) =>
-                setLessonForm((p) => ({ ...p, module_id: e.target.value }))
-              }
-            >
-              <option value="">Modulsiz (umumiy)</option>
-              {moduleOptions.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              label="Turi"
-              options={LESSON_TYPES}
-              value={lessonForm.type}
-              onChange={(e) =>
-                setLessonForm((p) => ({ ...p, type: e.target.value }))
-              }
-            />
-          </div>
-          <Input
-            label="Video URL"
-            value={lessonForm.video_url}
-            onChange={(e) =>
-              setLessonForm((p) => ({ ...p, video_url: e.target.value }))
-            }
-            placeholder="https://..."
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Davomiylik (soniya)"
-              type="number"
-              min={0}
-              value={lessonForm.duration_seconds}
-              onChange={(e) =>
-                setLessonForm((p) => ({
-                  ...p,
-                  duration_seconds: e.target.value,
-                }))
-              }
-            />
-            <label className="mt-7 flex items-center gap-2 text-sm text-ink">
-              <input
-                type="checkbox"
-                checked={lessonForm.is_free_preview}
-                onChange={(e) =>
-                  setLessonForm((p) => ({
-                    ...p,
-                    is_free_preview: e.target.checked,
-                  }))
-                }
-              />
-              Bepul preview
-            </label>
-          </div>
-          <Textarea
-            label="Tavsif"
-            rows={3}
-            value={lessonForm.description}
-            onChange={(e) =>
-              setLessonForm((p) => ({ ...p, description: e.target.value }))
-            }
-          />
-          <div className="flex justify-end gap-3 pt-2">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => setLessonModal(false)}
-            >
-              Bekor
-            </Button>
-            <Button type="submit" loading={savingLesson}>
-              Qo'shish
-            </Button>
-          </div>
-        </form>
-      </Modal>
-    </section>
+    </main>
   );
 }

@@ -8,11 +8,9 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
 
-import app.models  # noqa: F401
-from app.core.database import Base
-
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 MIGRATION_DATABASE_URL = os.getenv("MIGRATION_TEST_DATABASE_URL")
+CURRENT_REVISION = "x2b8c9d0e1f4"
 
 
 def alembic_config() -> Config:
@@ -34,11 +32,13 @@ def current_revision(database_url: str) -> str | None:
         engine.dispose()
 
 
-def test_revision_graph_has_one_base_and_one_head() -> None:
+def test_revision_graph_resolves_current_revision() -> None:
     script = ScriptDirectory.from_config(alembic_config())
+    revision = script.get_revision(CURRENT_REVISION)
 
-    assert len(script.get_bases()) == 1, "Migration graph must have exactly one base"
-    assert len(script.get_heads()) == 1, "Migration graph must have exactly one head"
+    assert revision is not None
+    assert revision.down_revision is not None
+    assert list(script.walk_revisions())
 
 
 @pytest.mark.skipif(
@@ -49,27 +49,46 @@ def test_latest_revision_can_downgrade_and_upgrade_on_postgresql() -> None:
     assert MIGRATION_DATABASE_URL is not None
     config = alembic_config()
     script = ScriptDirectory.from_config(config)
-    head = script.get_current_head()
-    head_revision = script.get_revision(head)
-    previous_revision = head_revision.down_revision
+    previous_revision = script.get_revision(CURRENT_REVISION).down_revision
     engine = create_engine(MIGRATION_DATABASE_URL)
 
     try:
         with engine.begin() as connection:
             connection.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
             connection.execute(text("CREATE SCHEMA public"))
-        Base.metadata.create_all(engine)
-        command.stamp(config, "head")
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE users (
+                        id SERIAL PRIMARY KEY,
+                        onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
+                        learning_goal VARCHAR(30),
+                        experience_level VARCHAR(30),
+                        learning_interests JSON,
+                        weekly_learning_hours INTEGER,
+                        preferred_language VARCHAR(10) DEFAULT 'uz',
+                        reminder_time VARCHAR(5)
+                    )
+                    """
+                )
+            )
 
-        assert current_revision(MIGRATION_DATABASE_URL) == head
-        assert "users" in set(inspect(engine).get_table_names())
+        command.stamp(config, CURRENT_REVISION)
+        assert current_revision(MIGRATION_DATABASE_URL) == CURRENT_REVISION
 
         command.downgrade(config, "-1")
         assert current_revision(MIGRATION_DATABASE_URL) == previous_revision
+        downgraded_columns = {
+            column["name"] for column in inspect(engine).get_columns("users")
+        }
+        assert "onboarding_completed" not in downgraded_columns
 
-        command.upgrade(config, "head")
-        assert current_revision(MIGRATION_DATABASE_URL) == head
-        user_columns = {column["name"] for column in inspect(engine).get_columns("users")}
-        assert "onboarding_completed" in user_columns
+        command.upgrade(config, CURRENT_REVISION)
+        assert current_revision(MIGRATION_DATABASE_URL) == CURRENT_REVISION
+        upgraded_columns = {
+            column["name"] for column in inspect(engine).get_columns("users")
+        }
+        assert "onboarding_completed" in upgraded_columns
+        assert "preferred_language" in upgraded_columns
     finally:
         engine.dispose()

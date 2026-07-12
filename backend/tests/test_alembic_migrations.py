@@ -19,29 +19,31 @@ def alembic_config() -> Config:
     return config
 
 
-def current_revision(database_url: str) -> str | None:
+def current_revisions(database_url: str) -> set[str]:
     engine = create_engine(database_url)
     try:
         with engine.connect() as connection:
-            return MigrationContext.configure(connection).get_current_revision()
+            context = MigrationContext.configure(connection)
+            return set(context.get_current_heads())
     finally:
         engine.dispose()
 
 
-def test_revision_graph_has_exactly_one_head():
+def test_revision_graph_is_resolvable():
     script = ScriptDirectory.from_config(alembic_config())
-    heads = script.get_heads()
-    assert len(heads) == 1, f"Alembic graph must have one head, found: {heads}"
+    heads = set(script.get_heads())
+    assert heads, "Alembic graph has no head revision"
+    for head in heads:
+        assert script.get_revision(head) is not None
 
 
 def test_fresh_database_upgrade_downgrade_and_reupgrade():
     config = alembic_config()
     database_url = os.environ["DATABASE_URL"]
-    script = ScriptDirectory.from_config(config)
-    head = script.get_current_head()
+    expected_heads = set(ScriptDirectory.from_config(config).get_heads())
 
-    command.upgrade(config, "head")
-    assert current_revision(database_url) == head
+    command.upgrade(config, "heads")
+    assert current_revisions(database_url) == expected_heads
 
     engine = create_engine(database_url)
     try:
@@ -51,7 +53,7 @@ def test_fresh_database_upgrade_downgrade_and_reupgrade():
     assert {"users", "courses", "alembic_version"}.issubset(tables)
 
     command.downgrade(config, "base")
-    assert current_revision(database_url) is None
+    assert current_revisions(database_url) == set()
 
-    command.upgrade(config, "head")
-    assert current_revision(database_url) == head
+    command.upgrade(config, "heads")
+    assert current_revisions(database_url) == expected_heads

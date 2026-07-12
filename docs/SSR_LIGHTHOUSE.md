@@ -4,4 +4,4 @@ Public acquisition routes are emitted as route-specific HTML during `npm run bui
 
 Prerendered routes: `/`, `/kurslar`, `/learning-paths`, `/blog`, `/narxlar`.
 
-CI has separate lint/format, coverage, prerender, and Lighthouse gates. Lighthouse budgets: performance 80, accessibility 90, best practices 85, SEO 90, LCP 2.5s, CLS 0.1, total blocking time 300ms.
+CI enforces ESLint, Prettier, 70% coverage, prerender output, and Lighthouse independently. Lighthouse budgets: performance 80, accessibility 90, best practices 85, SEO 90, LCP 2.5s, CLS 0.1, total blocking time 300ms.

@@ -1,1 +1,23 @@
-const VERSION="designora-v327";const SHELL=["/","/manifest.webmanifest","/favicon.svg"];self.addEventListener("install",e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(SHELL)));self.skipWaiting()});self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener("fetch",e=>{const r=e.request,u=new URL(r.url);if(r.method!=="GET"||u.origin!==location.origin||u.pathname.startsWith("/api/"))return;if(r.mode==="navigate"){e.respondWith(fetch(r).then(x=>{const c=x.clone();caches.open(VERSION).then(cache=>cache.put(r,c));return x}).catch(()=>caches.match(r).then(x=>x||caches.match("/"))));return}e.respondWith(caches.match(r).then(cached=>cached||fetch(r).then(x=>{if(x.ok)caches.open(VERSION).then(cache=>cache.put(r,x.clone()));return x}))) });self.addEventListener("message",e=>{if(e.data?.type==="CACHE_LESSON"){const urls=(e.data.urls||[]).filter(url=>!url.includes("/api/")&&!/\.(mp4|m3u8|webm)(\?|$)/.test(url));e.waitUntil(caches.open(VERSION).then(c=>c.addAll(urls)))}});
+const VERSION = "designora-v330";
+const SHELL = ["/", "/manifest.webmanifest", "/favicon.svg", "/brand.css"];
+self.addEventListener("install", (event) => { event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(SHELL))); self.skipWaiting(); });
+self.addEventListener("activate", (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== VERSION).map((key) => caches.delete(key)))).then(() => self.clients.claim())));
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if (request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith("/api/")) return;
+  if (request.mode === "navigate") {
+    event.respondWith(fetch(request).then((response) => { caches.open(VERSION).then((cache) => cache.put(request, response.clone())); return response; }).catch(() => caches.match(request).then((cached) => cached || caches.match("/"))));
+    return;
+  }
+  event.respondWith(caches.open(VERSION).then(async (cache) => {
+    const cached = await cache.match(request);
+    const refresh = fetch(request).then((response) => { if (response.ok) cache.put(request, response.clone()); return response; });
+    return cached || refresh;
+  }));
+});
+self.addEventListener("message", (event) => {
+  if (event.data?.type !== "CACHE_LESSON") return;
+  const urls = (event.data.urls || []).filter((url) => !url.includes("/api/") && !/\.(mp4|m3u8|mpd|webm)(\?|$)/.test(url));
+  event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(urls)));
+});

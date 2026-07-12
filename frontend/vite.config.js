@@ -29,9 +29,22 @@ export default defineConfig({
     css: false,
     coverage: {
       provider: "v8",
-      reporter: ["text", "html"],
-      include: ["src/**/*.{js,jsx}"],
-      exclude: ["src/main.jsx", "src/test/**", "src/data/**"],
+      reporter: ["text", "html", "json-summary"],
+      // Enforce the baseline on critical production domain logic. Component,
+      // accessibility and browser behavior still run in the same CI workflow.
+      include: [
+        "src/lib/calendarLogic.js",
+        "src/lib/learningPathLogic.js",
+        "src/lib/lessonSidebarLogic.js",
+        "src/lib/roadmapMetrics.js",
+        "src/lib/videoPlayerLogic.js",
+      ],
+      thresholds: {
+        lines: 70,
+        functions: 70,
+        branches: 70,
+        statements: 70,
+      },
     },
   },
 });

@@ -16,8 +16,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    Base.metadata.create_all(bind=op.get_bind(), checkfirst=True)
+    bind = op.get_bind()
+    for table in Base.metadata.sorted_tables:
+        table.create(bind=bind, checkfirst=True)
 
 
 def downgrade() -> None:
-    Base.metadata.drop_all(bind=op.get_bind(), checkfirst=True)
+    bind = op.get_bind()
+    for table in reversed(Base.metadata.sorted_tables):
+        table.drop(bind=bind, checkfirst=True)

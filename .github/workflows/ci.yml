@@ -1,126 +1,70 @@
 name: CI
-
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
+  push: {branches: [main]}
+  pull_request: {branches: [main]}
 jobs:
   backend:
     name: Backend quality gate
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+    defaults: {run: {working-directory: backend}}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
-      - name: Collect changed Python files
-        id: python-files
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements-dev.txt
+      - name: Changed Python quality gate
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base="${{ github.event.pull_request.base.sha }}"
-          else
-            base="${{ github.event.before }}"
-          fi
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
           files=$(git diff --name-only --diff-filter=ACMR "$base" "${{ github.sha }}" -- 'backend/**/*.py' | sed 's#^backend/##')
-          echo "files<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$files" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-      - name: Ruff gate
-        if: steps.python-files.outputs.files != ''
-        run: echo "${{ steps.python-files.outputs.files }}" | xargs ruff check
-      - name: Black gate
-        if: steps.python-files.outputs.files != ''
-        run: echo "${{ steps.python-files.outputs.files }}" | xargs black --check --diff
-      - name: Pytest and 70% coverage gate
-        env:
-          ENVIRONMENT: development
-          DATABASE_URL: "sqlite+pysqlite:///:memory:"
-          SECRET_KEY: ci-secret
-          SESSION_SECRET_KEY: ci-session
-          JWT_SECRET_KEY: ci-jwt
-          MAIL_USERNAME: ci@example.com
-          MAIL_PASSWORD: ci-pass
-          MAIL_FROM: ci@example.com
-          MAIL_PORT: "587"
-          MAIL_SERVER: smtp.example.com
-          RECAPTCHA_SECRET_KEY: ci-recaptcha
-        run: pytest --cov-fail-under=70
-      - name: Upload backend coverage
-        if: always()
+          if [ -n "$files" ]; then echo "$files" | xargs ruff check; echo "$files" | xargs black --check --diff; fi
+      - name: Tests and 70% coverage
+        env: {ENVIRONMENT: development, DATABASE_URL: "sqlite+pysqlite:///:memory:", SECRET_KEY: ci-secret, SESSION_SECRET_KEY: ci-session, JWT_SECRET_KEY: ci-jwt, MAIL_USERNAME: ci@example.com, MAIL_PASSWORD: ci-pass, MAIL_FROM: ci@example.com, MAIL_PORT: "587", MAIL_SERVER: smtp.example.com, RECAPTCHA_SECRET_KEY: ci-recaptcha}
+        run: pytest --ignore=tests/test_alembic_migrations.py --cov-fail-under=70
+      - if: always()
         uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: backend/coverage.xml
-          if-no-files-found: error
-
+        with: {name: backend-coverage, path: backend/coverage.xml, if-no-files-found: error}
+  migrations:
+    name: Alembic revision integrity
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: backend}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements-dev.txt
+      - run: python -m compileall -q app/alembic/versions
+      - run: pytest -q tests/test_alembic_migrations.py --no-cov
   frontend:
     name: Frontend quality gate
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: ESLint gate
-        run: npm run lint
-      - name: Prettier gate
-        run: npm run format:check
-      - name: Vitest 70% coverage gate
-        run: npm run coverage
-      - name: Build
-        run: npm run build
-      - name: Upload frontend coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: frontend/coverage
-          if-no-files-found: error
-
-  browser-e2e:
-    name: Browser E2E critical routes
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
+    defaults: {run: {working-directory: frontend}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+        with: {node-version: "20", cache: npm, cache-dependency-path: frontend/package-lock.json}
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run coverage
+      - run: npm run build
+  browser-e2e:
+    name: Browser E2E critical routes
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: frontend}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "20", cache: npm, cache-dependency-path: frontend/package-lock.json}
       - run: npm ci
       - run: npm install --no-save @playwright/test@1.55.0
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
-
   docker:
     name: Docker build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build backend image
-        run: docker build -t designora-backend ./backend
-      - name: Build frontend image
-        run: docker build -t designora-frontend ./frontend
+      - run: docker build -t designora-backend ./backend
+      - run: docker build -t designora-frontend ./frontend

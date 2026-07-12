@@ -5,7 +5,6 @@ Revises: None
 """
 
 from alembic import op
-from sqlalchemy import text
 
 import app.models  # noqa: F401
 from app.core.database import Base
@@ -21,10 +20,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    bind = op.get_bind()
-    if bind.dialect.name == "postgresql":
-        bind.execute(text("DROP SCHEMA public CASCADE"))
-        bind.execute(text("CREATE SCHEMA public"))
-        bind.execute(text("GRANT ALL ON SCHEMA public TO public"))
-    else:
-        Base.metadata.drop_all(bind=bind, checkfirst=True)
+    # Reverse dependency order is handled by SQLAlchemy's sorted_tables.
+    Base.metadata.drop_all(bind=op.get_bind(), checkfirst=True)

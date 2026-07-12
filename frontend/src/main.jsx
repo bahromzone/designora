@@ -9,12 +9,22 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
 import { analyticsApi } from "./lib/api";
 import { observeWebVitals } from "./lib/performance";
+import { installProductAnalytics } from "./lib/productAnalytics";
 import "./index.css";
 
-if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
+installProductAnalytics();
+
+if ("serviceWorker" in navigator)
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
 
 observeWebVitals((metric) => {
-  analyticsApi.track({ name: "web_vital", path: metric.path, props: { metric: metric.name, value: metric.value, rating: metric.rating } }).catch(() => {});
+  analyticsApi
+    .track({
+      name: "web_vital",
+      path: metric.path,
+      props: { metric: metric.name, value: metric.value, rating: metric.rating },
+    })
+    .catch(() => {});
 });
 
 ReactDOM.createRoot(document.getElementById("root")).render(

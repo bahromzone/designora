@@ -42,6 +42,7 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const PublicPortfolioPage = lazy(() => import("./pages/PublicPortfolioPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const StudentDashboardPage = lazy(() => import("./pages/StudentDashboardPage"));
+const SupportConsolePage = lazy(() => import("./pages/SupportConsolePage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const VerifyPage = lazy(() => import("./pages/VerifyPage"));
 
@@ -93,6 +94,7 @@ export default function App() {
           <Route path="/instruktor/review/:assignmentId" element={protectedPage(<InstructorReviewPage />)} />
           <Route path="/admin" element={protectedPage(<AdminDashboardPage />)} />
           <Route path="/admin/moderation" element={protectedPage(<ModerationPage />)} />
+          <Route path="/admin/support" element={protectedPage(<SupportConsolePage />)} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

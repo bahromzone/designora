@@ -5,10 +5,8 @@ from sqlalchemy.orm import relationship
 
 from app.core.database import Base
 
-
 def _now():
  return datetime.now(UTC)
-
 
 class User(Base):
  __tablename__ = "users"

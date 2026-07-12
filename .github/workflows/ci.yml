@@ -17,13 +17,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
       - name: Collect changed Python files
         id: python-files
         shell: bash
@@ -44,7 +42,7 @@ jobs:
         if: steps.python-files.outputs.files != ''
         run: echo "${{ steps.python-files.outputs.files }}" | xargs black --check --diff
       - name: Pytest and 70% coverage gate
-        env: &test-env
+        env:
           ENVIRONMENT: development
           DATABASE_URL: "sqlite+pysqlite:///:memory:"
           SECRET_KEY: ci-secret
@@ -94,8 +92,17 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - name: Revision graph and upgrade/downgrade/upgrade gate
         env:
-          <<: *test-env
+          ENVIRONMENT: development
           DATABASE_URL: postgresql+psycopg2://designora:designora@127.0.0.1:5432/designora_migrations
+          SECRET_KEY: ci-secret
+          SESSION_SECRET_KEY: ci-session
+          JWT_SECRET_KEY: ci-jwt
+          MAIL_USERNAME: ci@example.com
+          MAIL_PASSWORD: ci-pass
+          MAIL_FROM: ci@example.com
+          MAIL_PORT: "587"
+          MAIL_SERVER: smtp.example.com
+          RECAPTCHA_SECRET_KEY: ci-recaptcha
         run: pytest -q tests/test_alembic_migrations.py --no-cov
 
   frontend:

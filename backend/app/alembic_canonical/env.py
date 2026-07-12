@@ -1,11 +1,18 @@
+import importlib
 import os
+import pkgutil
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-import app.models  # noqa: F401
+import app.models
 from app.core.database import Base
+
+# models/__init__.py intentionally exposes only common models. Alembic needs every
+# mapped table so foreign keys and the canonical baseline are complete.
+for module in pkgutil.iter_modules(app.models.__path__, f"{app.models.__name__}."):
+    importlib.import_module(module.name)
 
 config = context.config
 if os.getenv("DATABASE_URL"):

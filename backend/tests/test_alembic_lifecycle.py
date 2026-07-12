@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from alembic import command
@@ -9,7 +10,9 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
 def config() -> Config:
-    return Config(str(BACKEND_DIR / "alembic-canonical.ini"))
+    cfg = Config(str(BACKEND_DIR / "alembic-canonical.ini"))
+    cfg.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"].replace("%", "%%"))
+    return cfg
 
 
 def revision(engine) -> str | None:
@@ -19,7 +22,7 @@ def revision(engine) -> str | None:
 
 def test_fresh_postgres_upgrade_downgrade_reupgrade():
     cfg = config()
-    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    engine = create_engine(os.environ["DATABASE_URL"])
     try:
         command.upgrade(cfg, "head")
         assert revision(engine) == "20260712_01"

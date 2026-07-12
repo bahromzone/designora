@@ -39,9 +39,7 @@ const learning = (enrolled = true, complete = false) => ({
 async function mockBackend(page) {
   let enrolled = false;
   let complete = false;
-  await page.addInitScript(() => {
-    localStorage.setItem("designora-auth-token", "e2e-token");
-  });
+  await page.addInitScript(() => localStorage.setItem("designora-auth-token", "e2e-token"));
   await page.route("**/api/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
@@ -72,9 +70,9 @@ async function mockBackend(page) {
 
 test("signup to certificate business flow is tracked end to end", async ({ page }) => {
   await mockBackend(page);
-
   await page.goto("/kurslar/1");
   await expect(page.getByRole("heading", { name: "UI/UX asoslari" })).toBeVisible();
+  await expect(page.getByText("E2E Student", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Kursga yozilish" }).click();
   await expect(page).toHaveURL(/\/organish\/1$/);
   await expect(page.getByText("Kirish", { exact: true }).first()).toBeVisible();

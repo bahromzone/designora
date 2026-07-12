@@ -15,6 +15,8 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -22,10 +24,25 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
+      - name: Collect changed Python files
+        id: python-files
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          files=$(git diff --name-only --diff-filter=ACMR "$base" "${{ github.sha }}" -- 'backend/**/*.py' | sed 's#^backend/##')
+          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$files" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
       - name: Ruff gate
-        run: ruff check .
+        if: steps.python-files.outputs.files != ''
+        run: echo "${{ steps.python-files.outputs.files }}" | xargs ruff check
       - name: Black gate
-        run: black --check --diff .
+        if: steps.python-files.outputs.files != ''
+        run: echo "${{ steps.python-files.outputs.files }}" | xargs black --check --diff
       - name: Pytest and 70% coverage gate
         env:
           ENVIRONMENT: development

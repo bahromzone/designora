@@ -7,6 +7,9 @@ pytest==8.4.2
 pytest-cov==6.2.1
 pytest-asyncio==1.2.0
 
+# ===== Migration lifecycle =====
+alembic==1.16.5
+
 # ===== Lint / format =====
 ruff==0.9.6
 # black requirements.txt da mavjud (25.12.0)

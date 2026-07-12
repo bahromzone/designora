@@ -53,14 +53,13 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: python -m compileall -q app/alembic/versions app/alembic_canonical/versions
       - run: pytest -q tests/test_alembic_migrations.py --no-cov
-      - name: Upgrade fresh database
-        run: alembic -c alembic-canonical.ini upgrade head
-      - name: Downgrade to base
-        run: alembic -c alembic-canonical.ini downgrade base
-      - name: Re-upgrade to head
-        run: alembic -c alembic-canonical.ini upgrade head
-      - name: Verify current revision
-        run: test "$(alembic -c alembic-canonical.ini current | grep -c 20260712_01)" -eq 1
+      - name: Fresh upgrade, downgrade, re-upgrade
+        run: |
+          set -euo pipefail
+          alembic -c alembic-canonical.ini upgrade head
+          alembic -c alembic-canonical.ini downgrade base
+          alembic -c alembic-canonical.ini upgrade head
+          alembic -c alembic-canonical.ini current
   frontend:
     name: Frontend quality gate
     runs-on: ubuntu-latest

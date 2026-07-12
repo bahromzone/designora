@@ -23,20 +23,22 @@ def upgrade() -> None:
 def downgrade() -> None:
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":
+        # A baseline owns the whole canonical schema. Recreate public cleanly,
+        # then recreate Alembic's bookkeeping table so the command can remove
+        # the current revision row after downgrade() returns.
+        bind.execute(text("DROP SCHEMA public CASCADE"))
+        bind.execute(text("CREATE SCHEMA public AUTHORIZATION CURRENT_USER"))
+        bind.execute(text("GRANT ALL ON SCHEMA public TO public"))
         bind.execute(
             text(
-                """
-                DO $$
-                DECLARE item record;
-                BEGIN
-                  FOR item IN
-                    SELECT tablename FROM pg_tables
-                    WHERE schemaname = 'public' AND tablename <> 'alembic_version'
-                  LOOP
-                    EXECUTE format('DROP TABLE IF EXISTS %I CASCADE', item.tablename);
-                  END LOOP;
-                END $$;
-                """
+                "CREATE TABLE alembic_version ("
+                "version_num VARCHAR(32) NOT NULL PRIMARY KEY)"
+            )
+        )
+        bind.execute(
+            text(
+                "INSERT INTO alembic_version (version_num) "
+                "VALUES ('20260712_01')"
             )
         )
         return

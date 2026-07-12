@@ -45,6 +45,8 @@ jobs:
       - run: npm run test:run
       - run: npm run coverage
       - run: npm run build
+      - name: Bundle and asset budget gate
+        run: npm run performance:check
   viewport-audit:
     name: Viewport ${{ matrix.width }}px
     runs-on: ubuntu-latest

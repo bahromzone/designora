@@ -7,6 +7,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
@@ -18,6 +19,7 @@ from app.admin.admin_panel import setup_admin
 from app.core.config import limiter, settings
 from app.core.database import Base, engine, get_db
 from app.core.middleware import IPBlockingMiddleware, RequestLoggingMiddleware, SecurityHeadersMiddleware
+from app.core.performance import PerformanceHeadersMiddleware
 from app.core.security import get_current_user
 from app.models.user import User
 from app.routers import admin_courses, analytics, assignments, assignments_upload, auth, blog, calendar, certificates, checkout_experience, course_builder, course_forum, courses_api, discovery, forum, gamification, gamification_v2, google, instructor, instructor_analytics, instructors, learning, learning_paths, media, monetization, notes, notifications, offline_sync, pages, payments, portfolio, privacy, profile, qa, quiz, referrals, reviews, seo, system, token, uploads, users
@@ -28,6 +30,8 @@ app = FastAPI(title="Designora Platform", docs_url="/docs" if settings.ENVIRONME
 Base.metadata.create_all(bind=engine)
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY, https_only=settings.ENVIRONMENT == "production")
 app.add_middleware(CORSMiddleware, allow_origins=settings.get_allowed_origins(), allow_credentials=True, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Access-Token", "X-Requested-With"])
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
+app.add_middleware(PerformanceHeadersMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)

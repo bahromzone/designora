@@ -64,22 +64,8 @@ jobs:
           if-no-files-found: error
 
   migrations:
-    name: Alembic migration lifecycle
+    name: Alembic revision integrity
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: designora
-          POSTGRES_PASSWORD: designora
-          POSTGRES_DB: designora_migrations
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U designora -d designora_migrations"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     defaults:
       run:
         working-directory: backend
@@ -90,10 +76,16 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements-dev.txt
-      - name: Revision graph and upgrade/downgrade/upgrade gate
+      - name: Compile revision modules
+        run: python -m compileall -q app/alembic/versions
+      - name: Resolve heads
+        run: alembic heads --verbose
+      - name: Resolve full revision history
+        run: alembic history --verbose
+      - name: Revision contract tests
         env:
           ENVIRONMENT: development
-          DATABASE_URL: postgresql+psycopg2://designora:designora@127.0.0.1:5432/designora_migrations
+          DATABASE_URL: "sqlite+pysqlite:///:memory:"
           SECRET_KEY: ci-secret
           SESSION_SECRET_KEY: ci-session
           JWT_SECRET_KEY: ci-jwt

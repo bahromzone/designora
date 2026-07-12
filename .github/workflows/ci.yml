@@ -34,6 +34,18 @@ jobs:
           --health-cmd "pg_isready -U designora -d designora_migrations"
           --health-interval 5s --health-timeout 5s --health-retries 10
     defaults: {run: {working-directory: backend}}
+    env:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+psycopg2://designora:designora@127.0.0.1:5432/designora_migrations
+      SECRET_KEY: ci-secret
+      SESSION_SECRET_KEY: ci-session
+      JWT_SECRET_KEY: ci-jwt
+      MAIL_USERNAME: ci@example.com
+      MAIL_PASSWORD: ci-pass
+      MAIL_FROM: ci@example.com
+      MAIL_PORT: "587"
+      MAIL_SERVER: smtp.example.com
+      RECAPTCHA_SECRET_KEY: ci-recaptcha
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -41,9 +53,14 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: python -m compileall -q app/alembic/versions app/alembic_canonical/versions
       - run: pytest -q tests/test_alembic_migrations.py --no-cov
-      - name: Fresh upgrade, downgrade, re-upgrade
-        env: {ENVIRONMENT: development, DATABASE_URL: "postgresql+psycopg2://designora:designora@127.0.0.1:5432/designora_migrations", SECRET_KEY: ci-secret, SESSION_SECRET_KEY: ci-session, JWT_SECRET_KEY: ci-jwt, MAIL_USERNAME: ci@example.com, MAIL_PASSWORD: ci-pass, MAIL_FROM: ci@example.com, MAIL_PORT: "587", MAIL_SERVER: smtp.example.com, RECAPTCHA_SECRET_KEY: ci-recaptcha}
-        run: pytest -q tests/test_alembic_lifecycle.py --no-cov
+      - name: Upgrade fresh database
+        run: alembic -c alembic-canonical.ini upgrade head
+      - name: Downgrade to base
+        run: alembic -c alembic-canonical.ini downgrade base
+      - name: Re-upgrade to head
+        run: alembic -c alembic-canonical.ini upgrade head
+      - name: Verify current revision
+        run: test "$(alembic -c alembic-canonical.ini current | grep -c 20260712_01)" -eq 1
   frontend:
     name: Frontend quality gate
     runs-on: ubuntu-latest

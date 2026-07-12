@@ -1,3 +1,4 @@
+import process from "node:process";
 import { gzipSync } from "node:zlib";
 import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -26,6 +27,6 @@ if (totalJsGzip > limits.totalJsGzip) failures.push(`Total JS ${totalJsGzip} > $
 files.filter((item) => !item.file.startsWith("assets/") && item.bytes > limits.publicAsset).forEach((item) => failures.push(`${item.file} ${item.bytes} > ${limits.publicAsset}`));
 const report = { generatedAt: new Date().toISOString(), limits, initialJsGzip: entry?.gzip || 0, totalJsGzip, chunks: js.map(({ file, bytes, gzip }) => ({ file, bytes, gzip })), failures };
 await writeFile(path.join(dist, "performance-report.json"), JSON.stringify(report, null, 2));
-console.table(report.chunks);
-if (failures.length) { console.error(failures.join("\n")); process.exit(1); }
-console.log("Performance budgets passed");
+globalThis.console.table(report.chunks);
+if (failures.length) { globalThis.console.error(failures.join("\n")); process.exit(1); }
+globalThis.console.log("Performance budgets passed");

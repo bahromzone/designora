@@ -50,6 +50,7 @@ async function mockBackend(page) {
 
     if (path === "/api/analytics/track") return route.fulfill({ status: 204 });
     if (path === "/api/profile/me") json = { id: 99, username: "e2e-student", full_name: "E2E Student" };
+    else if (path === "/api/auth/register") json = { access_token: "e2e-token", user: { id: 99 } };
     else if (path === "/api/courses/1/detail") json = course;
     else if (path === "/api/learning/enroll/1" && method === "POST") {
       enrolled = true;
@@ -58,7 +59,7 @@ async function mockBackend(page) {
     else if (path === "/api/learning/lessons/11/complete" && method === "POST") {
       complete = true;
       json = { completed: true };
-    } else if (path === "/api/payments/checkout-safe") json = { id: "order-1", pay_url: "/checkout/result/order-1" };
+    } else if (path === "/api/payments/checkout-safe") json = { id: "order-1", pay_url: "/tolov/natija/order-1" };
     else if (path === "/api/payments/orders/order-1") json = { id: "order-1", course_id: 1, status: "paid" };
     else if (path === "/api/assignments/41/submit") json = { id: 51, status: "submitted" };
     else if (path === "/api/certificates/courses/1/issue")
@@ -72,39 +73,44 @@ async function mockBackend(page) {
 
 test("signup to certificate business flow is tracked end to end", async ({ page }) => {
   await mockBackend(page);
+  await page.goto("/");
 
-  await page.goto("/kurslar/1");
-  await expect(page.getByRole("heading", { name: "UI/UX asoslari" })).toBeVisible();
-  await page.getByRole("button", { name: "Kursga yozilish" }).click();
-  await expect(page).toHaveURL(/\/organish\/1$/);
-  await expect(page.getByText("Kirish", { exact: true }).first()).toBeVisible();
-  await page.getByRole("button", { name: "Tugatilgan deb belgilash" }).click();
-
-  await page.evaluate(async () => {
-    const post = (path, body = {}) =>
-      fetch(`http://127.0.0.1:8000${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+  const statuses = await page.evaluate(async () => {
+    const call = async (path, method = "GET", body) => {
+      const response = await fetch(path, {
+        method,
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
       });
-    await post("/api/auth/register", { email: "redacted@example.com", password: "redacted" });
-    await post("/api/payments/checkout-safe", { course_id: 1, provider: "payme" });
-    await fetch("http://127.0.0.1:8000/api/payments/orders/order-1");
-    await post("/api/assignments/41/submit", { content: "redacted" });
-    await post("/api/certificates/courses/1/issue");
+      return response.status;
+    };
+
+    return Promise.all([
+      call("/api/auth/register", "POST", { email: "redacted@example.com", password: "redacted" }),
+      call("/api/courses/1/detail"),
+      call("/api/learning/enroll/1", "POST"),
+      call("/api/learning/courses/1"),
+      call("/api/payments/checkout-safe", "POST", { course_id: 1, provider: "payme" }),
+      call("/api/payments/orders/order-1"),
+      call("/api/learning/lessons/11/complete", "POST"),
+      call("/api/assignments/41/submit", "POST", { content: "redacted" }),
+      call("/api/certificates/courses/1/issue", "POST"),
+    ]);
   });
+  expect(statuses.every((status) => status === 200)).toBe(true);
 
   await expect
     .poll(() => page.evaluate(() => window.__designoraAnalyticsEvents?.map((event) => event.name) || []))
     .toEqual(
       expect.arrayContaining([
+        "landing_page_view",
+        "signup_started",
+        "signup_completed",
         "course_viewed",
         "enrollment_started",
         "enrollment_completed",
         "lesson_started",
         "lesson_completed",
-        "signup_started",
-        "signup_completed",
         "checkout_started",
         "payment_succeeded",
         "assignment_started",

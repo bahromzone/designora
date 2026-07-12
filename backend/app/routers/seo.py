@@ -29,33 +29,16 @@ def sitemap_entries(db: Session, base_url: str) -> list[dict]:
     ]
     courses = db.query(Course).filter(Course.is_active == True).all()  # noqa: E712
     for course in courses:
-        entries.append(
-            {
-                "loc": canonical_url(base_url, f"/kurslar/{course.id}"),
-                "lastmod": _date(course.updated_at),
-                "changefreq": "weekly",
-                "priority": "0.8",
-            }
-        )
+        course_data = {"lastmod": _date(course.updated_at), "changefreq": "weekly", "priority": "0.8"}
+        entries.append({"loc": canonical_url(base_url, f"/kurslar/{course.id}"), **course_data})
+        if course.slug:
+            entries.append({"loc": canonical_url(base_url, f"/courses/{course.slug}"), **course_data})
     posts = db.query(BlogPost).filter(BlogPost.is_published == True).all()  # noqa: E712
     for post in posts:
-        entries.append(
-            {
-                "loc": canonical_url(base_url, f"/blog/{post.slug}"),
-                "lastmod": _date(post.updated_at or post.published_at),
-                "changefreq": "monthly",
-                "priority": "0.7",
-            }
-        )
+        entries.append({"loc": canonical_url(base_url, f"/blog/{post.slug}"), "lastmod": _date(post.updated_at or post.published_at), "changefreq": "monthly", "priority": "0.7"})
     instructors = db.query(User).filter(User.role.in_(_INSTRUCTOR_ROLES), User.is_active == True).all()  # noqa: E712
     for instructor in instructors:
-        entries.append(
-            {
-                "loc": canonical_url(base_url, f"/instruktor/{instructor.id}"),
-                "changefreq": "monthly",
-                "priority": "0.6",
-            }
-        )
+        entries.append({"loc": canonical_url(base_url, f"/instruktor/{instructor.id}"), "changefreq": "monthly", "priority": "0.6"})
     return entries
 
 
@@ -67,5 +50,4 @@ def robots_txt():
 
 @router.get("/sitemap.xml", include_in_schema=False)
 def sitemap_xml(db: Session = Depends(get_db)):
-    xml = build_sitemap(sitemap_entries(db, settings.FRONTEND_URL))
-    return Response(content=xml, media_type="application/xml")
+    return Response(content=build_sitemap(sitemap_entries(db, settings.FRONTEND_URL)), media_type="application/xml")

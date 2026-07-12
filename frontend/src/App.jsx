@@ -33,6 +33,7 @@ const InstructorReviewPage = lazy(() => import("./pages/InstructorReviewPage"));
 const LearnPage = lazy(() => import("./pages/LearnPage"));
 const LearningPathDetailPage = lazy(() => import("./pages/LearningPathDetailPage"));
 const LearningPathsPage = lazy(() => import("./pages/LearningPathsPage"));
+const ModerationPage = lazy(() => import("./pages/ModerationPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const PortfolioBuilderPage = lazy(() => import("./pages/PortfolioBuilderPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="/instruktor/kurs/:courseId" element={protectedPage(<InstructorCourseEditPage />)} />
           <Route path="/instruktor/review/:assignmentId" element={protectedPage(<InstructorReviewPage />)} />
           <Route path="/admin" element={protectedPage(<AdminDashboardPage />)} />
+          <Route path="/admin/moderation" element={protectedPage(<ModerationPage />)} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>

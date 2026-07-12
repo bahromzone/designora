@@ -5,7 +5,7 @@ Revises: None
 """
 
 from alembic import op
-from sqlalchemy import text
+from sqlalchemy import inspect
 
 import app.models  # noqa: F401
 from app.core.database import Base
@@ -23,9 +23,9 @@ def upgrade() -> None:
 def downgrade() -> None:
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":
-        # Keep alembic_version alive so Alembic can finish deleting the row.
-        for table in reversed(Base.metadata.sorted_tables):
-            quoted = bind.dialect.identifier_preparer.quote(table.name)
-            bind.execute(text(f"DROP TABLE IF EXISTS {quoted} CASCADE"))
-        return
-    Base.metadata.drop_all(bind=bind, checkfirst=True)
+        preparer = bind.dialect.identifier_preparer
+        for table in inspect(bind).get_table_names():
+            if table != "alembic_version":
+                op.execute(f"DROP TABLE IF EXISTS {preparer.quote(table)} CASCADE")
+    else:
+        Base.metadata.drop_all(bind=bind, checkfirst=True)

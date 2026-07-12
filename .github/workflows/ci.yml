@@ -18,8 +18,17 @@ jobs:
         run: ruff check .
       - continue-on-error: true
         run: black --check .
-      - env: {ENVIRONMENT: development, DATABASE_URL: "sqlite+pysqlite:///:memory:", SECRET_KEY: ci-secret, SESSION_SECRET_KEY: ci-session, JWT_SECRET_KEY: ci-jwt, MAIL_USERNAME: ci@example.com, MAIL_PASSWORD: ci-pass, MAIL_FROM: ci@example.com, MAIL_PORT: "587", MAIL_SERVER: smtp.example.com, RECAPTCHA_SECRET_KEY: ci-recaptcha}
-        run: pytest -q --tb=short
+      - name: Pytest with visible diagnostics
+        env: {ENVIRONMENT: development, DATABASE_URL: "sqlite+pysqlite:///:memory:", SECRET_KEY: ci-secret, SESSION_SECRET_KEY: ci-session, JWT_SECRET_KEY: ci-jwt, MAIL_USERNAME: ci@example.com, MAIL_PASSWORD: ci-pass, MAIL_FROM: ci@example.com, MAIL_PORT: "587", MAIL_SERVER: smtp.example.com, RECAPTCHA_SECRET_KEY: ci-recaptcha}
+        shell: bash
+        run: |
+          set +e
+          pytest -q --tb=short 2>&1 | tee pytest.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            tail -n 120 pytest.log | while IFS= read -r line; do echo "::error::$line"; done
+          fi
+          exit "$code"
   frontend:
     name: Frontend accessibility + build
     runs-on: ubuntu-latest

@@ -2,6 +2,14 @@ const delay = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const memoryStore = new Map();
 
+const safeJsonParse = (value, fallback) => {
+  try {
+    return value ? JSON.parse(value) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 const storage = {
   read(key, fallback) {
     if (typeof window === 'undefined') {
@@ -10,9 +18,9 @@ const storage = {
 
     try {
       const rawValue = window.localStorage.getItem(key);
-      return rawValue ? JSON.parse(rawValue) : fallback;
+      return safeJsonParse(rawValue, fallback);
     } catch {
-      return fallback;
+      return memoryStore.has(key) ? memoryStore.get(key) : fallback;
     }
   },
   write(key, value) {
@@ -21,7 +29,12 @@ const storage = {
       return value;
     }
 
-    window.localStorage.setItem(key, JSON.stringify(value));
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      memoryStore.set(key, value);
+    }
+
     return value;
   },
 };

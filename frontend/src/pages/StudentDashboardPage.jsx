@@ -15,6 +15,14 @@ const summaryItems = [
   { key: 'studyHours', label: 'Study hours', suffix: 'h', icon: Timer },
 ];
 
+const formatSummaryValue = (value, suffix = '') => {
+  if (value === undefined || value === null) {
+    return '—';
+  }
+
+  return `${value}${suffix}`;
+};
+
 export default function StudentDashboardPage() {
   const { data, isLoading } = useStudentDashboard();
 
@@ -33,8 +41,7 @@ export default function StudentDashboardPage() {
               <Icon className="h-4 w-4 text-indigo-500" />
             </div>
             <p className="mt-4 text-2xl font-semibold text-slate-900">
-              {data?.summary?.[key] ?? '—'}
-              {suffix}
+              {formatSummaryValue(data?.summary?.[key], suffix)}
             </p>
           </div>
         ))}

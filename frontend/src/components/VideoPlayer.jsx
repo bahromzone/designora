@@ -9,9 +9,13 @@ const buildSignedSource = (source) => {
     return source;
   }
 
-  const url = new URL(source.src, window.location.origin);
-  url.searchParams.set('token', source.token);
-  return { ...source, src: url.toString() };
+  try {
+    const url = new URL(source.src, window.location.origin);
+    url.searchParams.set('token', source.token);
+    return { ...source, src: url.toString() };
+  } catch {
+    return source;
+  }
 };
 
 export default function VideoPlayer({
@@ -95,10 +99,18 @@ export default function VideoPlayer({
   }, []);
 
   useEffect(() => {
-    if (normalizedSources[0]) {
+    if (!normalizedSources.length) {
+      return;
+    }
+
+    const hasSelectedSource = normalizedSources.some(
+      (sourceItem) => sourceItem.label === selectedQuality,
+    );
+
+    if (!hasSelectedSource) {
       setSelectedQuality(normalizedSources[0].label);
     }
-  }, [normalizedSources]);
+  }, [normalizedSources, selectedQuality]);
 
   return (
     <div className="video-player-shell rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white shadow-xl">

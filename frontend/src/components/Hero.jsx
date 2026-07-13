@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
-/* \u2500\u2500 CSS Keyframes (replaces framer-motion infinite loops) \u2500\u2500 */
+/* CSS Keyframes (replaces framer-motion infinite loops) */
 const heroStyles = `
 @keyframes hero-float {
   0%, 100% { transform: translateY(0); }
@@ -41,13 +41,11 @@ const heroStyles = `
 }
 `;
 
-/* \u2500\u2500 Dashboard Mockup (right side) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+/* Dashboard Mockup (right side) */
 function DashboardMockup() {
   return (
     <div className="relative w-full max-w-md mx-auto lg:mx-0">
-      {/* Main card */}
       <div className="card-white rounded-2xl p-5 overflow-hidden hero-card-float">
-        {/* Top row */}
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
@@ -55,7 +53,6 @@ function DashboardMockup() {
             </h3>
             <p className="text-xs text-gray-500">Har darajaga mos</p>
           </div>
-          {/* Toggle pill */}
           <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
             <span className="px-3 py-1 text-xs rounded-full bg-white shadow-sm font-medium">
               Barchasi
@@ -66,7 +63,6 @@ function DashboardMockup() {
           </div>
         </div>
 
-        {/* Avatar row */}
         <div className="flex items-center gap-2 mb-4">
           <div className="flex -space-x-2">
             {["#c4703a", "#2c4a3e", "#8b6f5e", "#4a7c6e", "#d4956e"].map(
@@ -85,7 +81,6 @@ function DashboardMockup() {
           </span>
         </div>
 
-        {/* Budget bar */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
             <span className="text-xs text-gray-500">Haftalik progress</span>
@@ -98,7 +93,6 @@ function DashboardMockup() {
           </div>
         </div>
 
-        {/* Alert pill */}
         <div className="flex items-center gap-2 mb-4 bg-green-50 rounded-lg px-3 py-2">
           <span className="w-2 h-2 rounded-full bg-green-500" />
           <span className="text-xs text-green-700 font-medium">
@@ -106,7 +100,6 @@ function DashboardMockup() {
           </span>
         </div>
 
-        {/* Weekly recommendations */}
         <div className="bg-gray-50 rounded-xl p-3">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-gray-700">
@@ -141,24 +134,10 @@ function DashboardMockup() {
         </div>
       </div>
 
-      {/* Floating pill */}
       <div className="absolute -bottom-5 left-6 flex items-center gap-2.5 card-white rounded-full px-4 py-2.5 shadow-card hero-pill-float">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <circle cx="10" cy="10" r="10" fill="#2c4a3e" />
-          <path
-            d="M7 10l2 2 4-4"
-            stroke="#fff"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d="M7 10l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         <span className="text-sm font-medium text-gray-700">
           Mentor bilan bog\u2019laning
@@ -274,20 +253,13 @@ export default function Hero({ isAuthenticated }) {
     >
       <style dangerouslySetInnerHTML={{ __html: heroStyles }} />
 
-      {/* \u2500\u2500 Left \u2500\u2500 */}
+      {/* Left */}
       <div className="flex-1 max-w-2xl">
-        {/* Badge */}
         <div
           ref={badgeRef}
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-pink-100 bg-white/80 shadow-sm mb-6 opacity-0"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
-          >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <circle cx="8" cy="8" r="8" fill="#ec4899" opacity="0.15" />
             <circle cx="8" cy="8" r="4" fill="#ec4899" />
           </svg>
@@ -296,7 +268,6 @@ export default function Hero({ isAuthenticated }) {
           </span>
         </div>
 
-        {/* Headline */}
         <h1
           ref={h1Ref}
           className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
@@ -319,7 +290,6 @@ export default function Hero({ isAuthenticated }) {
           ))}
         </h1>
 
-        {/* Sub */}
         <p
           ref={subRef}
           className="text-lg text-gray-600 mb-8 max-w-lg opacity-0"
@@ -329,7 +299,6 @@ export default function Hero({ isAuthenticated }) {
           tayyor.
         </p>
 
-        {/* Buttons */}
         <div ref={btnsRef} className="flex flex-wrap gap-4 mb-10 opacity-0">
           <Link
             to={isAuthenticated ? "/kurslar" : "/register"}
@@ -345,7 +314,6 @@ export default function Hero({ isAuthenticated }) {
           </Link>
         </div>
 
-        {/* Stats */}
         <div
           ref={statsRef}
           className="flex gap-8 border-t border-gray-100 pt-6"
@@ -367,7 +335,7 @@ export default function Hero({ isAuthenticated }) {
         </div>
       </div>
 
-      {/* \u2500\u2500 Right: mockup \u2500\u2500 */}
+      {/* Right: mockup */}
       <div ref={rightRef} className="flex-1 w-full max-w-lg opacity-0">
         <DashboardMockup />
       </div>

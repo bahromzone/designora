@@ -206,6 +206,7 @@ const STORAGE_KEYS = {
   checkout: 'designora.integration.checkout',
   notifications: 'designora.integration.notifications',
   gamification: 'designora.integration.gamification',
+  authSession: 'designora.integration.authSession',
 };
 
 export async function fetchInstructorAnalytics() {
@@ -226,6 +227,40 @@ export async function fetchDashboardInsights() {
 export async function fetchStudentDashboard() {
   await delay();
   return defaults.studentDashboard;
+}
+
+export async function loginUser(credentials) {
+  await delay(400);
+
+  const session = {
+    id: createId('session'),
+    email: credentials.email,
+    user: {
+      name: credentials.email.split('@')[0],
+      email: credentials.email,
+    },
+    loggedInAt: new Date().toISOString(),
+  };
+
+  storage.write(STORAGE_KEYS.authSession, session);
+  return session;
+}
+
+export async function registerUser(payload) {
+  await delay(450);
+
+  const session = {
+    id: createId('session'),
+    email: payload.email,
+    user: {
+      name: payload.fullName,
+      email: payload.email,
+    },
+    registeredAt: new Date().toISOString(),
+  };
+
+  storage.write(STORAGE_KEYS.authSession, session);
+  return session;
 }
 
 export async function fetchProfile() {

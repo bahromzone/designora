@@ -1,5 +1,22 @@
 import { z } from 'zod';
 
+export const loginSchema = z.object({
+  email: z.string().email('Email manzil noto‘g‘ri.'),
+  password: z.string().min(8, 'Parol kamida 8 ta belgidan iborat bo‘lsin.'),
+});
+
+export const registerSchema = z
+  .object({
+    fullName: z.string().min(3, 'To‘liq ism kiriting.'),
+    email: z.string().email('Email manzil noto‘g‘ri.'),
+    password: z.string().min(8, 'Parol kamida 8 ta belgidan iborat bo‘lsin.'),
+    confirmPassword: z.string().min(8, 'Parol tasdig‘ini kiriting.'),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: 'Parollar mos emas.',
+    path: ['confirmPassword'],
+  });
+
 export const instructorApplicationSchema = z.object({
   fullName: z.string().min(3, 'Ism kamida 3 ta belgidan iborat bo‘lsin.'),
   email: z.string().email('Email manzil noto‘g‘ri.'),

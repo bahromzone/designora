@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import gsap from "gsap";
 
-/* ── CSS Keyframes (replaces framer-motion infinite loops) ── */
+/* \u2500\u2500 CSS Keyframes (replaces framer-motion infinite loops) \u2500\u2500 */
 const heroStyles = `
 @keyframes hero-float {
   0%, 100% { transform: translateY(0); }
@@ -42,7 +41,7 @@ const heroStyles = `
 }
 `;
 
-/* ── Dashboard Mockup (right side) ────────────────────────── */
+/* \u2500\u2500 Dashboard Mockup (right side) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 function DashboardMockup() {
   return (
     <div className="relative w-full max-w-md mx-auto lg:mx-0">
@@ -186,76 +185,79 @@ export default function Hero({ isAuthenticated }) {
   const countersRef = useRef([]);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+    let ctx;
+    import("gsap").then(({ default: gsap }) => {
+      ctx = gsap.context(() => {
+        const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
 
-      tl.fromTo(
-        badgeRef.current,
-        { opacity: 0, y: 14, scale: 0.92 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.5 }
-      );
-
-      const chars = h1Ref.current?.querySelectorAll(".char");
-      if (chars?.length) {
         tl.fromTo(
-          chars,
-          { opacity: 0, y: "110%", rotateX: -45 },
-          { opacity: 1, y: "0%", rotateX: 0, duration: 0.65, stagger: 0.014 },
+          badgeRef.current,
+          { opacity: 0, y: 14, scale: 0.92 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.5 }
+        );
+
+        const chars = h1Ref.current?.querySelectorAll(".char");
+        if (chars?.length) {
+          tl.fromTo(
+            chars,
+            { opacity: 0, y: "110%", rotateX: -45 },
+            { opacity: 1, y: "0%", rotateX: 0, duration: 0.65, stagger: 0.014 },
+            "-=0.25"
+          );
+        }
+
+        tl.fromTo(
+          subRef.current,
+          { opacity: 0, y: 18 },
+          { opacity: 1, y: 0, duration: 0.5 },
+          "-=0.35"
+        );
+        tl.fromTo(
+          btnsRef.current,
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.45 },
+          "-=0.3"
+        );
+        tl.fromTo(
+          statsRef.current?.children ?? [],
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.45, stagger: 0.08 },
           "-=0.25"
         );
-      }
-
-      tl.fromTo(
-        subRef.current,
-        { opacity: 0, y: 18 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        "-=0.35"
-      );
-      tl.fromTo(
-        btnsRef.current,
-        { opacity: 0, y: 14 },
-        { opacity: 1, y: 0, duration: 0.45 },
-        "-=0.3"
-      );
-      tl.fromTo(
-        statsRef.current?.children ?? [],
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.45, stagger: 0.08 },
-        "-=0.25"
-      );
-      tl.fromTo(
-        rightRef.current,
-        { opacity: 0, x: 50, scale: 0.94 },
-        { opacity: 1, x: 0, scale: 1, duration: 0.85, ease: "power3.out" },
-        0.2
-      );
-
-      // Counters
-      countersRef.current.forEach((el, i) => {
-        if (!el) return;
-        const s = STATS[i];
-        if (!s) return;
-        const isFloat = !Number.isInteger(s.num);
-        gsap.fromTo(
-          el,
-          { innerText: 0 },
-          {
-            innerText: s.num,
-            duration: 1.8,
-            delay: 0.7 + i * 0.1,
-            ease: "power2.out",
-            snap: isFloat ? { innerText: 0.1 } : { innerText: 1 },
-            onUpdate() {
-              const v = parseFloat(el.innerText);
-              el.innerText =
-                (isFloat ? v.toFixed(1) : Math.round(v)) + s.suffix;
-            },
-          }
+        tl.fromTo(
+          rightRef.current,
+          { opacity: 0, x: 50, scale: 0.94 },
+          { opacity: 1, x: 0, scale: 1, duration: 0.85, ease: "power3.out" },
+          0.2
         );
-      });
-    }, rootRef);
 
-    return () => ctx.revert();
+        // Counters
+        countersRef.current.forEach((el, i) => {
+          if (!el) return;
+          const s = STATS[i];
+          if (!s) return;
+          const isFloat = !Number.isInteger(s.num);
+          gsap.fromTo(
+            el,
+            { innerText: 0 },
+            {
+              innerText: s.num,
+              duration: 1.8,
+              delay: 0.7 + i * 0.1,
+              ease: "power2.out",
+              snap: isFloat ? { innerText: 0.1 } : { innerText: 1 },
+              onUpdate() {
+                const v = parseFloat(el.innerText);
+                el.innerText =
+                  (isFloat ? v.toFixed(1) : Math.round(v)) + s.suffix;
+              },
+            }
+          );
+        });
+      }, rootRef);
+    });
+
+    return () => ctx?.revert();
   }, []);
 
   const words = [

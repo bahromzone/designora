@@ -15,10 +15,10 @@ function DeferredWaveAnimation() {
       });
     };
     if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(load, { timeout: 2000 });
+      const id = window.requestIdleCallback(load, { timeout: 3000 });
       return () => { cancelled = true; window.cancelIdleCallback(id); };
     } else {
-      const t = setTimeout(load, 1500);
+      const t = setTimeout(load, 2000);
       return () => { cancelled = true; clearTimeout(t); };
     }
   }, []);
@@ -26,7 +26,6 @@ function DeferredWaveAnimation() {
   return <Wave />;
 }
 
-// Backend ishlamay qolsa ko'rsatiladigan zaxira kurslar
 const FALLBACK_COURSES = [
   {
     id: "f1",
@@ -62,29 +61,15 @@ const pageStyles = `
   0%, 100% { transform: translate(0px, 0px) rotate(35deg); }
   50% { transform: translate(45px, 40px) rotate(50deg); }
 }
-@keyframes blob-drift {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(30px, -30px); }
-  50% { transform: translate(-20px, 20px); }
-  75% { transform: translate(10px, -10px); }
-}
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
-@keyframes cta-blob-drift {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-40px, 40px); }
-  50% { transform: translate(40px, -40px); }
-  75% { transform: translate(-20px, 20px); }
-}
 .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }
-.animate-blob-drift { animation: blob-drift 18s linear infinite; }
 .animate-gradient-shift {
   animation: gradient-shift 8s linear infinite;
   background-size: 200% auto;
 }
-.animate-cta-blob { animation: cta-blob-drift 25s linear infinite; }
 .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
 .reveal-small { opacity: 0; transform: translateY(20px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
 .reveal.visible, .reveal-small.visible { opacity: 1; transform: translateY(0); }
@@ -109,10 +94,8 @@ const pageStyles = `
 }
 `;
 
-/* IntersectionObserver hook for scroll reveal */
 function useReveal() {
   const ref = useRef(null);
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -134,7 +117,6 @@ function useReveal() {
     }
     return () => observer.disconnect();
   }, []);
-
   return ref;
 }
 
@@ -157,13 +139,13 @@ export default function HomePage() {
 
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-white via-slate-50/50 to-white">
-        {/* Stripe-style Floating Gradient Wave Animation - deferred until idle */}
+        {/* Wave Animation - deferred until idle */}
         <div className="absolute top-[-20%] right-[-15%] w-[70rem] h-[70rem] opacity-40 pointer-events-none z-0 animate-stripe">
           <DeferredWaveAnimation />
         </div>
 
-        {/* Subtle background blob */}
-        <div className="absolute top-[10%] left-[-10%] w-[40rem] h-[40rem] bg-pink-400/10 blur-[120px] rounded-full pointer-events-none z-0 animate-blob-drift" />
+        {/* Static background blob (no animation, reduced blur) */}
+        <div className="absolute top-[10%] left-[-10%] w-[40rem] h-[40rem] bg-pink-400/10 blur-[60px] rounded-full pointer-events-none z-0" />
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <div className="reveal">
@@ -289,7 +271,6 @@ export default function HomePage() {
 
       <EngagementSection />
 
-      {/* Tavsiya: ko'p sotilgan kurslar */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         <RecommendationSection
           title="Eng mashhur kurslar"
@@ -298,10 +279,10 @@ export default function HomePage() {
         />
       </section>
 
-      {/* Cinematic Call to Action */}
+      {/* CTA */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="reveal cta-glass rounded-[32px] p-12 md:p-20 text-center relative overflow-hidden">
-          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-indigo-200/20 blur-[100px] rounded-full animate-cta-blob" />
+          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-indigo-200/20 blur-[60px] rounded-full" />
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6 relative z-10">
             Raqamli ta'limingizni yangi bosqichga olib chiqing.
           </h2>

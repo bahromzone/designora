@@ -5,8 +5,8 @@ import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RouteFallback from "./components/RouteFallback";
 import SearchShortcut from "./components/SearchShortcut";
-import HomePage from "./pages/HomePage";
 
+const HomePage = lazy(() => import("./pages/HomePage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const AchievementsPage = lazy(() => import("./pages/AchievementsPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
@@ -50,54 +50,55 @@ const protectedPage = (element) => <ProtectedRoute>{element}</ProtectedRoute>;
 
 export default function App() {
   return (
-    <AppShell>
+    <>
       <SearchShortcut />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/achievements" element={protectedPage(<AchievementsPage />)} />
-          <Route path="/qidiruv" element={<GlobalSearchPage />} />
-          <Route path="/kurslar" element={<CoursesPage />} />
-          <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
-          <Route path="/community/:courseId" element={protectedPage(<CourseCommunityPage />)} />
-          <Route path="/community/:courseId/thread/:threadId" element={protectedPage(<CourseCommunityPage />)} />
-          <Route path="/checkout/:courseId" element={protectedPage(<CheckoutPage />)} />
-          <Route path="/learning-paths" element={<LearningPathsPage />} />
-          <Route path="/learning-paths/:slug" element={<LearningPathDetailPage />} />
-          <Route path="/calendar" element={protectedPage(<CalendarPage />)} />
-          <Route path="/blog" element={<BlogListPage />} />
-          <Route path="/blog/:slug" element={<BlogPostPage />} />
-          <Route path="/forum" element={<ForumListPage />} />
-          <Route path="/forum/:threadId" element={<ForumThreadPage />} />
-          <Route path="/instruktor/:instructorId" element={<InstructorPage />} />
-          <Route path="/biz-haqimizda" element={<AboutPage />} />
-          <Route path="/maxfiylik" element={<PrivacyPage />} />
-          <Route path="/shartlar" element={<TermsPage />} />
-          <Route path="/kirish" element={<Navigate to="/?modal=login" replace />} />
-          <Route path="/royxatdan-otish" element={<Navigate to="/?modal=signup" replace />} />
-          <Route path="/verify/:code" element={<VerifyPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/auth/callback" element={<AuthCallbackPage />} />
-          <Route path="/portfolio/u/:userId" element={<PublicPortfolioPage />} />
-          <Route path="/kurslarim" element={protectedPage(<StudentDashboardPage />)} />
-          <Route path="/organish/:courseId" element={protectedPage(<LearnPage />)} />
-          <Route path="/tolov/natija/:orderId" element={protectedPage(<CheckoutResultPage />)} />
-          <Route path="/profil" element={protectedPage(<ProfilePage />)} />
-          <Route path="/portfolio" element={protectedPage(<PortfolioBuilderPage />)} />
-          <Route path="/instruktor-boshlash" element={protectedPage(<InstructorApplyPage />)} />
-          <Route path="/instruktor-panel" element={protectedPage(<InstructorDashboardPage />)} />
-          <Route path="/instruktor-analytics" element={protectedPage(<InstructorAnalyticsPage />)} />
-          <Route path="/instruktor-boshqaruv" element={protectedPage(<InstructorManagePage />)} />
-          <Route path="/instruktor/kurs/:courseId" element={protectedPage(<InstructorCourseEditPage />)} />
-          <Route path="/instruktor/review/:assignmentId" element={protectedPage(<InstructorReviewPage />)} />
-          <Route path="/admin" element={protectedPage(<AdminDashboardPage />)} />
-          <Route path="/admin/moderation" element={protectedPage(<ModerationPage />)} />
-          <Route path="/admin/support" element={protectedPage(<SupportConsolePage />)} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route element={<AppShell />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/register" element={protectedPage(<StudentDashboardPage />)} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/blog" element={<BlogListPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
+            <Route path="/kurslar" element={<CoursesPage />} />
+            <Route path="/kurslar/:slug" element={protectedPage(<CourseDetailPage />)} />
+            <Route path="/checkout/:courseId" element={protectedPage(<CheckoutPage />)} />
+            <Route path="/checkout/result" element={protectedPage(<CheckoutResultPage />)} />
+            <Route path="/learn/:courseId" element={protectedPage(<LearnPage />)} />
+            <Route path="/my-courses" element={protectedPage(<StudentDashboardPage />)} />
+            <Route path="/profile" element={protectedPage(<ProfilePage />)} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify" element={<VerifyPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/search" element={<GlobalSearchPage />} />
+            <Route path="/achievements" element={protectedPage(<AchievementsPage />)} />
+            <Route path="/calendar" element={protectedPage(<CalendarPage />)} />
+            <Route path="/community/:courseId" element={protectedPage(<CourseCommunityPage />)} />
+            <Route path="/forum" element={protectedPage(<ForumListPage />)} />
+            <Route path="/forum/:threadId" element={protectedPage(<ForumThreadPage />)} />
+            <Route path="/learning-paths" element={<LearningPathsPage />} />
+            <Route path="/learning-paths/:id" element={<LearningPathDetailPage />} />
+            <Route path="/portfolio" element={protectedPage(<PortfolioBuilderPage />)} />
+            <Route path="/portfolio/:userId" element={<PublicPortfolioPage />} />
+            <Route path="/instructor/apply" element={protectedPage(<InstructorApplyPage />)} />
+            <Route path="/instructor/:id" element={<InstructorPage />} />
+            <Route path="/instructor/dashboard" element={protectedPage(<InstructorDashboardPage />)} />
+            <Route path="/instructor/analytics" element={protectedPage(<InstructorAnalyticsPage />)} />
+            <Route path="/instructor/courses/:id/edit" element={protectedPage(<InstructorCourseEditPage />)} />
+            <Route path="/instructor/manage" element={protectedPage(<InstructorManagePage />)} />
+            <Route path="/instructor/review" element={protectedPage(<InstructorReviewPage />)} />
+            <Route path="/admin" element={protectedPage(<AdminDashboardPage />)} />
+            <Route path="/admin/moderation" element={protectedPage(<ModerationPage />)} />
+            <Route path="/admin/support" element={protectedPage(<SupportConsolePage />)} />
+            <Route path="/dashboard" element={<Navigate to="/my-courses" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
         </Routes>
       </Suspense>
-    </AppShell>
+    </>
   );
 }

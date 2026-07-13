@@ -1,76 +1,81 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-
-import GamificationSection from "../components/GamificationSection";
-import ReferralSection from "../components/ReferralSection";
-import { useAuth } from "../context/AuthContext";
-import { authApi } from "../lib/api";
-
-function formatDate(value) {
-  return new Date(value).toLocaleDateString("uz-UZ", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Save } from 'lucide-react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { FormField } from '../components/form/FormField';
+import { useToast } from '../context/ToastContext';
+import { useProfile, useUpdateProfile } from '../hooks/useAuth';
+import { profileSchema } from '../lib/schemas/forms';
 
 export default function ProfilePage() {
-  const { token, user } = useAuth();
-  const [dashboard, setDashboard] = useState(null);
-  const [error, setError] = useState("");
+  const { success } = useToast();
+  const profileQuery = useProfile();
+  const updateProfile = useUpdateProfile();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      headline: '',
+      bio: '',
+    },
+  });
 
   useEffect(() => {
-    if (!token) return;
-    authApi.dashboard(token).then(setDashboard).catch((e) => setError(e.message));
-  }, [token]);
+    if (profileQuery.data) {
+      reset(profileQuery.data);
+    }
+  }, [profileQuery.data, reset]);
 
-  const displayName = user?.name || user?.full_name || "Designora student";
-  const initials = displayName.charAt(0).toUpperCase();
+  const onSubmit = handleSubmit(async (values) => {
+    await updateProfile.mutateAsync(values);
+    success('Profil ma’lumotlari yangilandi.');
+  });
 
   return (
-    <section className="shell py-16 sm:py-20">
-      <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
-        <aside className="space-y-6 rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
-          <div className="flex flex-col items-center text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white" style={{ background: "var(--amber)" }}>{initials}</div>
-            <p className="label mt-4">Profil</p>
-            <h1 className="font-serif text-xl font-semibold text-ink">{displayName}</h1>
-            <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>{user?.email}</p>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Rol</span><span className="font-semibold text-ink">{user?.role === "admin" ? "Administrator" : user?.role === "instructor" ? "Instruktor" : "Talaba"}</span></div>
-            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Qo‘shilgan</span><span className="font-semibold text-ink">{user?.created_at ? formatDate(user.created_at) : "—"}</span></div>
-          </div>
-
-          <Link to="/portfolio-studio" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
-            Portfolio Studio <span aria-hidden>→</span>
-          </Link>
-
-          {user?.id && <Link to={`/portfolio/${user.id}`} target="_blank" className="block text-center text-sm font-semibold" style={{ color: "var(--muted)" }}>Public portfolio ↗</Link>}
-          {error && <p className="rounded-xl px-4 py-2.5 text-xs" style={{ background: "#fff0ef", color: "#c0392b" }}>{error}</p>}
-        </aside>
-
-        <div className="space-y-6">
-          <div className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
-            <p className="label mb-2">Keyingi qadam</p>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div><h2 className="font-serif text-lg font-semibold text-ink">Eng yaxshi ishlaringizni ko‘rsating</h2><p className="mt-2 max-w-2xl text-sm leading-7" style={{ color: "var(--ink-60)" }}>Baholangan topshiriqlarni professional case study’ga aylantiring va bitta public havola bilan ulashing.</p></div>
-              <Link to="/portfolio-studio" className="btn-primary">Portfolio yaratish</Link>
-            </div>
-          </div>
-
-          <GamificationSection />
-
-          <div className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
-            <p className="label mb-2">Boshqaruv ma’lumotlari</p>
-            <h2 className="font-serif text-lg font-semibold text-ink">Shaxsiy ko‘rinish</h2>
-            {dashboard ? <div className="mt-4 grid gap-4 sm:grid-cols-2">{dashboard.metrics.map((metric) => <div key={metric.label} className="rounded-xl border p-4" style={{ borderColor: "var(--border)" }}><p className="text-xs" style={{ color: "var(--muted)" }}>{metric.label}</p><p className="mt-1 font-serif text-2xl font-semibold text-ink">{metric.value}</p></div>)}</div> : <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>Boshqaruv maydoni tayyorlanmoqda...</p>}
-          </div>
-
-          <ReferralSection />
-        </div>
+    <div className="mx-auto max-w-3xl space-y-6 p-6">
+      <div>
+        <p className="text-sm uppercase tracking-[0.24em] text-indigo-500">Profile form migration</p>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Profile settings</h1>
       </div>
-    </section>
+
+      <form onSubmit={onSubmit} className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="grid gap-5 md:grid-cols-2">
+          <FormField label="First name" required error={errors.firstName?.message}>
+            <input {...register('firstName')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-indigo-400" />
+          </FormField>
+          <FormField label="Last name" required error={errors.lastName?.message}>
+            <input {...register('lastName')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-indigo-400" />
+          </FormField>
+        </div>
+
+        <FormField label="Email" required error={errors.email?.message}>
+          <input type="email" {...register('email')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-indigo-400" />
+        </FormField>
+
+        <FormField label="Headline" required error={errors.headline?.message}>
+          <input {...register('headline')} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-indigo-400" />
+        </FormField>
+
+        <FormField label="Bio" required error={errors.bio?.message}>
+          <textarea {...register('bio')} rows={5} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-indigo-400" />
+        </FormField>
+
+        <button
+          type="submit"
+          disabled={profileQuery.isLoading || updateProfile.isPending}
+          className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          <Save className="h-4 w-4" />
+          {updateProfile.isPending ? 'Saving...' : 'Save profile'}
+        </button>
+      </form>
+    </div>
   );
 }

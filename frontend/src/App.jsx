@@ -5,8 +5,8 @@ import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RouteFallback from "./components/RouteFallback";
 import SearchShortcut from "./components/SearchShortcut";
+import HomePage from "./pages/HomePage";
 
-const HomePage = lazy(() => import("./pages/HomePage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const AchievementsPage = lazy(() => import("./pages/AchievementsPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));

@@ -19,3 +19,6 @@ export function useUpdateProfile() {
     },
   });
 }
+
+export const useProfileQuery = useProfile;
+export const useUpdateProfileMutation = useUpdateProfile;

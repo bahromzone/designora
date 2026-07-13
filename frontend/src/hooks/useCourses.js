@@ -19,3 +19,6 @@ export function useSaveCourseDraft(courseId = 'draft') {
     },
   });
 }
+
+export const useCourseDraftQuery = useCourseDraft;
+export const useSaveCourseDraftMutation = useSaveCourseDraft;

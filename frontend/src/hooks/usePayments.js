@@ -6,3 +6,5 @@ export function useSubmitCheckout() {
     mutationFn: submitCheckout,
   });
 }
+
+export const useSubmitCheckoutMutation = useSubmitCheckout;

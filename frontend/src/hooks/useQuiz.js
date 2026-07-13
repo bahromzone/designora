@@ -8,3 +8,5 @@ export function useQuizSummary() {
     queryFn: fetchQuizSummary,
   });
 }
+
+export const useQuizSummaryQuery = useQuizSummary;

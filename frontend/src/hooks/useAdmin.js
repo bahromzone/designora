@@ -8,3 +8,5 @@ export function useAdminDashboard() {
     queryFn: fetchAdminDashboard,
   });
 }
+
+export const useAdminDashboardQuery = useAdminDashboard;

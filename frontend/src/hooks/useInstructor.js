@@ -17,3 +17,6 @@ export function useSubmitInstructorApplication() {
     mutationFn: submitInstructorApplication,
   });
 }
+
+export const useInstructorAnalyticsQuery = useInstructorAnalytics;
+export const useSubmitInstructorApplicationMutation = useSubmitInstructorApplication;

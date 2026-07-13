@@ -18,3 +18,6 @@ export function useStudentDashboard() {
     queryFn: fetchStudentDashboard,
   });
 }
+
+export const useDashboardInsightsQuery = useDashboardInsights;
+export const useStudentDashboardQuery = useStudentDashboard;

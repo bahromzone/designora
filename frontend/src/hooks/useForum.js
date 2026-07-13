@@ -41,3 +41,6 @@ export function useCreateForumThread() {
     },
   });
 }
+
+export const useForumThreadsQuery = useForumThreads;
+export const useCreateForumThreadMutation = useCreateForumThread;

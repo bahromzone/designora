@@ -149,6 +149,48 @@ const defaults = {
       createdAt: 'Yesterday',
     },
   ],
+  notifications: [
+    {
+      id: 'notification-1',
+      title: 'New review on your lesson',
+      body: 'A learner left feedback on the Motion Basics module.',
+      read: false,
+      createdAt: '5m ago',
+      type: 'review',
+    },
+    {
+      id: 'notification-2',
+      title: 'Payment settled',
+      body: 'Your latest instructor payout has been processed.',
+      read: false,
+      createdAt: '1h ago',
+      type: 'finance',
+    },
+    {
+      id: 'notification-3',
+      title: 'Community mention',
+      body: 'You were mentioned in a portfolio critique thread.',
+      read: true,
+      createdAt: 'Yesterday',
+      type: 'community',
+    },
+  ],
+  gamification: {
+    level: 12,
+    currentXp: 1840,
+    nextLevelXp: 2200,
+    streakDays: 16,
+    badges: [
+      { id: 'badge-1', name: 'Consistency', unlocked: true },
+      { id: 'badge-2', name: 'Mentor Pick', unlocked: true },
+      { id: 'badge-3', name: 'Quiz Streak', unlocked: false },
+    ],
+    quests: [
+      { id: 'quest-1', title: 'Finish 2 lessons this week', progress: 1, total: 2 },
+      { id: 'quest-2', title: 'Reply to 3 community threads', progress: 2, total: 3 },
+      { id: 'quest-3', title: 'Score above 85 on the quiz', progress: 68, total: 85 },
+    ],
+  },
   quizSummary: {
     averageScore: 84,
     completionRate: 79,
@@ -162,6 +204,8 @@ const STORAGE_KEYS = {
   forumThreads: 'designora.integration.forumThreads',
   instructorApplication: 'designora.integration.instructorApplication',
   checkout: 'designora.integration.checkout',
+  notifications: 'designora.integration.notifications',
+  gamification: 'designora.integration.gamification',
 };
 
 export async function fetchInstructorAnalytics() {
@@ -257,6 +301,26 @@ export async function submitCheckout(payload) {
 
   storage.write(STORAGE_KEYS.checkout, invoice);
   return invoice;
+}
+
+export async function fetchNotifications() {
+  await delay();
+  return storage.read(STORAGE_KEYS.notifications, defaults.notifications);
+}
+
+export async function markNotificationRead(notificationId) {
+  await delay();
+  const notifications = storage.read(STORAGE_KEYS.notifications, defaults.notifications);
+  const nextNotifications = notifications.map((notification) =>
+    notification.id === notificationId ? { ...notification, read: true } : notification,
+  );
+  storage.write(STORAGE_KEYS.notifications, nextNotifications);
+  return nextNotifications;
+}
+
+export async function fetchGamificationStats() {
+  await delay();
+  return storage.read(STORAGE_KEYS.gamification, defaults.gamification);
 }
 
 export async function fetchQuizSummary() {

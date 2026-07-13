@@ -30,4 +30,12 @@ export const queryKeys = {
     all: ['courses'],
     draft: (courseId = 'draft') => ['courses', 'draft', courseId],
   },
+  notifications: {
+    all: ['notifications'],
+    inbox: ['notifications', 'inbox'],
+  },
+  gamification: {
+    all: ['gamification'],
+    stats: ['gamification', 'stats'],
+  },
 };

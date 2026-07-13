@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
-import WaveAnimation from "../components/WaveAnimation";
 import { authApi, discoveryApi } from "../lib/api";
+
+const WaveAnimation = lazy(() => import("../components/WaveAnimation"));
 
 // Backend ishlamay qolsa ko'rsatiladigan zaxira kurslar
 const FALLBACK_COURSES = [
@@ -57,14 +58,6 @@ const pageStyles = `
   50% { transform: translate(40px, -40px); }
   75% { transform: translate(-20px, 20px); }
 }
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fade-up-small {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }
 .animate-blob-drift { animation: blob-drift 18s linear infinite; }
 .animate-gradient-shift {
@@ -114,10 +107,8 @@ function useReveal() {
       },
       { threshold: 0.1, rootMargin: "-50px" }
     );
-    // Observe the container and all children with reveal classes
     const revealEls = el.querySelectorAll(".reveal, .reveal-small");
     revealEls.forEach((child) => observer.observe(child));
-    // Also observe self
     if (el.classList.contains("reveal") || el.classList.contains("reveal-small")) {
       observer.observe(el);
     }
@@ -127,9 +118,24 @@ function useReveal() {
   return ref;
 }
 
+/* \u2500\u2500 Deferred render: only show after idle \u2500\u2500 */
+function useDeferred() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if ("requestIdleCallback" in window) {
+      const id = requestIdleCallback(() => setReady(true));
+      return () => cancelIdleCallback(id);
+    }
+    const t = setTimeout(() => setReady(true), 100);
+    return () => clearTimeout(t);
+  }, []);
+  return ready;
+}
+
 export default function HomePage() {
   const [courses, setCourses] = useState(FALLBACK_COURSES);
   const revealRef = useReveal();
+  const waveReady = useDeferred();
 
   useEffect(() => {
     authApi
@@ -137,7 +143,7 @@ export default function HomePage() {
       .then((list) => {
         if (Array.isArray(list) && list.length) setCourses(list.slice(0, 3));
       })
-      .catch(() => {}); // backend o'chiq bo'lsa zaxira kurslar qoladi
+      .catch(() => {});
   }, []);
 
   return (
@@ -146,10 +152,14 @@ export default function HomePage() {
 
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-white via-slate-50/50 to-white">
-        {/* Stripe-style Floating Gradient Wave Animation */}
-        <div className="absolute top-[-20%] right-[-15%] w-[70rem] h-[70rem] opacity-40 pointer-events-none z-0 animate-stripe">
-          <WaveAnimation />
-        </div>
+        {/* Stripe-style Floating Gradient Wave Animation (deferred) */}
+        {waveReady && (
+          <div className="absolute top-[-20%] right-[-15%] w-[70rem] h-[70rem] opacity-40 pointer-events-none z-0 animate-stripe">
+            <Suspense fallback={null}>
+              <WaveAnimation />
+            </Suspense>
+          </div>
+        )}
 
         {/* Subtle background blob */}
         <div className="absolute top-[10%] left-[-10%] w-[40rem] h-[40rem] bg-pink-400/10 blur-[120px] rounded-full pointer-events-none z-0 animate-blob-drift" />

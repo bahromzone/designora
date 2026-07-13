@@ -12,6 +12,10 @@ import { observeWebVitals } from "./lib/performance";
 import { installProductAnalytics } from "./lib/productAnalytics";
 import "./index.css";
 
+// Remove prerender shell so React is the single source of truth
+// (avoids duplicate <main> landmarks and H1 which tank a11y/SEO scores)
+document.getElementById("seo-prerender")?.remove();
+
 installProductAnalytics();
 
 if ("serviceWorker" in navigator)
@@ -31,12 +35,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <App />
-            <OfflineCenter />
-          </AuthProvider>
-        </ToastProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <OfflineCenter>
+              <App />
+            </OfflineCenter>
+          </ToastProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>,

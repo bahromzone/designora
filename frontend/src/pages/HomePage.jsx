@@ -1,10 +1,30 @@
-import { useEffect, useState, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
 import { authApi, discoveryApi } from "../lib/api";
 
-const WaveAnimation = lazy(() => import("../components/WaveAnimation"));
+/* Deferred WaveAnimation: loads only after browser is idle */
+function DeferredWaveAnimation() {
+  const [Wave, setWave] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      import("../components/WaveAnimation").then((mod) => {
+        if (!cancelled) setWave(() => mod.default);
+      });
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(load, { timeout: 2000 });
+      return () => { cancelled = true; window.cancelIdleCallback(id); };
+    } else {
+      const t = setTimeout(load, 1500);
+      return () => { cancelled = true; clearTimeout(t); };
+    }
+  }, []);
+  if (!Wave) return null;
+  return <Wave />;
+}
 
 // Backend ishlamay qolsa ko'rsatiladigan zaxira kurslar
 const FALLBACK_COURSES = [
@@ -89,7 +109,7 @@ const pageStyles = `
 }
 `;
 
-/* \u2500\u2500 IntersectionObserver hook for scroll reveal \u2500\u2500 */
+/* IntersectionObserver hook for scroll reveal */
 function useReveal() {
   const ref = useRef(null);
 
@@ -118,24 +138,9 @@ function useReveal() {
   return ref;
 }
 
-/* \u2500\u2500 Deferred render: only show after idle \u2500\u2500 */
-function useDeferred() {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    if ("requestIdleCallback" in window) {
-      const id = requestIdleCallback(() => setReady(true));
-      return () => cancelIdleCallback(id);
-    }
-    const t = setTimeout(() => setReady(true), 100);
-    return () => clearTimeout(t);
-  }, []);
-  return ready;
-}
-
 export default function HomePage() {
   const [courses, setCourses] = useState(FALLBACK_COURSES);
   const revealRef = useReveal();
-  const waveReady = useDeferred();
 
   useEffect(() => {
     authApi
@@ -152,14 +157,10 @@ export default function HomePage() {
 
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-white via-slate-50/50 to-white">
-        {/* Stripe-style Floating Gradient Wave Animation (deferred) */}
-        {waveReady && (
-          <div className="absolute top-[-20%] right-[-15%] w-[70rem] h-[70rem] opacity-40 pointer-events-none z-0 animate-stripe">
-            <Suspense fallback={null}>
-              <WaveAnimation />
-            </Suspense>
-          </div>
-        )}
+        {/* Stripe-style Floating Gradient Wave Animation - deferred until idle */}
+        <div className="absolute top-[-20%] right-[-15%] w-[70rem] h-[70rem] opacity-40 pointer-events-none z-0 animate-stripe">
+          <DeferredWaveAnimation />
+        </div>
 
         {/* Subtle background blob */}
         <div className="absolute top-[10%] left-[-10%] w-[40rem] h-[40rem] bg-pink-400/10 blur-[120px] rounded-full pointer-events-none z-0 animate-blob-drift" />

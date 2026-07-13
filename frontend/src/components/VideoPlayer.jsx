@@ -1,15 +1,160 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { announce } from "../lib/announce";
-import { mediaApi } from "../lib/api";
-import "./VideoPlayer.css";
-const SPEEDS=[0.75,1,1.25,1.5,2];
-export default function VideoPlayer({ src, lessonId, token, storageKey, onEnded, poster, subtitles=[], transcript="", title="Dars videosi" }){
- const videoRef=useRef(null);const transcriptId=useId();const [manifest,setManifest]=useState(null);const [selected,setSelected]=useState(0);const [speed,setSpeed]=useState(1);const [showTranscript,setShowTranscript]=useState(false);const [error,setError]=useState("");const [retry,setRetry]=useState(0);
- useEffect(()=>{let active=true;if(!lessonId||!token){setManifest(null);return;}setError("");mediaApi.signLesson(lessonId,token).then(data=>{if(active){setManifest(data);setSelected(0)}}).catch(reason=>active&&setError(reason.message));return()=>{active=false}},[lessonId,token,retry]);
- const sources=manifest?.sources||[];const preferred=manifest?.preferred_source;const activeSource=sources[selected]||preferred||{url:src,type:"video/mp4",label:"Auto"};
- useEffect(()=>{const video=videoRef.current;if(!video)return;const resume=Number(manifest?.resume_seconds||localStorage.getItem(storageKey)||0);const loaded=()=>{if(resume&&resume<video.duration-5)video.currentTime=resume};video.addEventListener("loadedmetadata",loaded);return()=>video.removeEventListener("loadedmetadata",loaded)},[activeSource.url,manifest?.resume_seconds,storageKey]);
- useEffect(()=>{const video=videoRef.current;if(!video)return;let lastSaved=0;const save=()=>{const position=Math.floor(video.currentTime||0);if(storageKey&&position)localStorage.setItem(storageKey,String(position));if(lessonId&&token&&position-lastSaved>=10){lastSaved=position;mediaApi.saveProgress(lessonId,{position_seconds:position,duration_seconds:Math.floor(video.duration||0)},token).catch(()=>{})}};const key=e=>{if(["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName))return;if(e.key===" "){e.preventDefault();video.paused?video.play():video.pause()}if(e.key==="ArrowRight")video.currentTime=Math.min(video.duration||Infinity,video.currentTime+10);if(e.key==="ArrowLeft")video.currentTime=Math.max(0,video.currentTime-10);if(e.key.toLowerCase()==="c"&&video.textTracks[0])video.textTracks[0].mode=video.textTracks[0].mode==="showing"?"hidden":"showing"};video.addEventListener("timeupdate",save);window.addEventListener("keydown",key);return()=>{video.removeEventListener("timeupdate",save);window.removeEventListener("keydown",key)}},[lessonId,storageKey,token,activeSource.url]);
- if(error)return <div role="alert">Video yuklanmadi. <button onClick={()=>setRetry(v=>v+1)}>Qayta urinish</button></div>;if(!activeSource.url)return <p>Bu dars qulflangan, ko‘rish uchun kursga yoziling.</p>;
- const changeSpeed=next=>{setSpeed(next);videoRef.current.playbackRate=next;announce(`Video tezligi ${next}x`)};const pip=()=>videoRef.current?.requestPictureInPicture?.();const fullscreen=()=>videoRef.current?.requestFullscreen?.();
- return <section className="video-player"><video key={activeSource.url} ref={videoRef} controls playsInline preload="metadata" poster={poster} onEnded={onEnded} aria-label={title} onError={()=>setError("Video manbasi ishlamadi")}><source src={activeSource.url} type={activeSource.type}/>{(manifest?.subtitles||subtitles).map(track=><track key={track.src||track.url} kind="captions" src={track.src||track.url} srcLang={track.srclang||track.lang||"uz"} label={track.label||"Subtitr"}/>)}Brauzeringiz video elementini qo‘llamaydi.</video>{sources.length>1&&<label>Sifat<select value={selected} onChange={e=>setSelected(Number(e.target.value))}>{sources.map((source,index)=><option key={source.url} value={index}>{source.label||source.delivery||`Manba ${index+1}`}</option>)}</select></label>}<div className="video-player__controls"><span>Tezlik</span>{SPEEDS.map(item=><button key={item} onClick={()=>changeSpeed(item)} aria-pressed={speed===item}>{item}x</button>)}<button onClick={pip}>Picture in Picture</button><button onClick={fullscreen}>To‘liq ekran</button>{transcript&&<button aria-expanded={showTranscript} aria-controls={transcriptId} onClick={()=>setShowTranscript(v=>!v)}>{showTranscript?"Transkriptni yopish":"Transkriptni ochish"}</button>}</div>{transcript&&<div id={transcriptId} hidden={!showTranscript}><h3>Transkript</h3><p>{transcript}</p></div>}</section>;
+import { useEffect, useMemo, useRef, useState } from 'react';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+import { Gauge, PlayCircle, ShieldCheck } from 'lucide-react';
+import './VideoPlayer.css';
+
+const buildSignedSource = (source) => {
+  if (!source?.src || !source?.token) {
+    return source;
+  }
+
+  try {
+    const url = new URL(source.src, window.location.origin);
+    url.searchParams.set('token', source.token);
+    return { ...source, src: url.toString() };
+  } catch {
+    return source;
+  }
+};
+
+export default function VideoPlayer({
+  title = 'Lesson player',
+  poster,
+  src,
+  sources = [],
+  playbackRates = [0.75, 1, 1.25, 1.5, 2],
+}) {
+  const videoRef = useRef(null);
+  const playerRef = useRef(null);
+  const [selectedQuality, setSelectedQuality] = useState('auto');
+
+  const normalizedSources = useMemo(() => {
+    const sourceList = sources.length
+      ? sources.map((source) => ({
+          label: source.label ?? 'Auto',
+          type: source.type ?? 'application/x-mpegURL',
+          ...buildSignedSource(source),
+        }))
+      : [
+          {
+            label: 'Auto',
+            src,
+            type: 'application/x-mpegURL',
+          },
+        ];
+
+    return sourceList.filter((sourceItem) => Boolean(sourceItem.src));
+  }, [sources, src]);
+
+  const activeSource = useMemo(() => {
+    return (
+      normalizedSources.find((sourceItem) => sourceItem.label === selectedQuality) ??
+      normalizedSources[0]
+    );
+  }, [normalizedSources, selectedQuality]);
+
+  useEffect(() => {
+    if (!videoRef.current || !activeSource) {
+      return undefined;
+    }
+
+    if (!playerRef.current) {
+      playerRef.current = videojs(videoRef.current, {
+        autoplay: false,
+        controls: true,
+        responsive: true,
+        fluid: true,
+        preload: 'auto',
+        playbackRates,
+        poster,
+        sources: [activeSource],
+      });
+    } else {
+      const player = playerRef.current;
+      const currentTime = player.currentTime() ?? 0;
+      const wasPlaying = !player.paused();
+
+      player.poster(poster ?? '');
+      player.playbackRates(playbackRates);
+      player.src([activeSource]);
+      player.ready(() => {
+        player.currentTime(currentTime);
+        if (wasPlaying) {
+          player.play().catch(() => {});
+        }
+      });
+    }
+
+    return () => {};
+  }, [activeSource, playbackRates, poster]);
+
+  useEffect(() => {
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!normalizedSources.length) {
+      return;
+    }
+
+    const hasSelectedSource = normalizedSources.some(
+      (sourceItem) => sourceItem.label === selectedQuality,
+    );
+
+    if (!hasSelectedSource) {
+      setSelectedQuality(normalizedSources[0].label);
+    }
+  }, [normalizedSources, selectedQuality]);
+
+  return (
+    <div className="video-player-shell rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white shadow-xl">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.24em] text-indigo-200">Video.js</p>
+          <h2 className="mt-1 text-xl font-semibold">{title}</h2>
+          <p className="mt-2 flex items-center gap-2 text-sm text-slate-300">
+            <ShieldCheck className="h-4 w-4 text-emerald-300" />
+            Signed URL, playback speed, va quality selector bir joyda boshqariladi.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <label className="video-player-control">
+            <span>Quality</span>
+            <select value={selectedQuality} onChange={(event) => setSelectedQuality(event.target.value)}>
+              {normalizedSources.map((sourceItem) => (
+                <option key={sourceItem.label} value={sourceItem.label}>
+                  {sourceItem.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="video-player-pill">
+            <Gauge className="h-4 w-4 text-indigo-300" />
+            <span>{playbackRates.join('x · ')}x</span>
+          </div>
+        </div>
+      </div>
+
+      <div data-vjs-player className="overflow-hidden rounded-2xl">
+        <video ref={videoRef} className="video-js vjs-big-play-centered" />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+        <div className="video-player-pill">
+          <PlayCircle className="h-4 w-4 text-indigo-300" />
+          <span>Adaptive player</span>
+        </div>
+        <div className="video-player-pill">
+          <span>Active source: {activeSource?.label ?? 'Auto'}</span>
+        </div>
+      </div>
+    </div>
+  );
 }

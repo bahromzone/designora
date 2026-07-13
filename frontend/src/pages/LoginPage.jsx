@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { FormField } from '../components/form/FormField';
 import GoogleAuthButton from '../components/GoogleAuthButton';
 import { useToast } from '../context/ToastContext';
-import { useLoginMutation } from '../hooks';
+import { useLoginMutation } from '../hooks/useAuth';
 import { loginSchema } from '../lib/schemas/forms';
 
 export default function LoginPage() {

@@ -1,11 +1,12 @@
 import logging
 import os
 import time
+from importlib import import_module
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 import uvicorn
-from fastapi import APIRouter, Depends, FastAPI, Request, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,7 +16,6 @@ from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.admin.admin_panel import setup_admin
-from app.core import metrics
 from app.core.config import limiter, settings
 from app.core.database import Base, engine, get_db
 from app.core.middleware import (
@@ -23,39 +23,87 @@ from app.core.middleware import (
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
 )
-from app.core.monitoring import init_sentry
 from app.core.security import get_current_user
 from app.models.user import User
-from app.routers import (
-    admin_courses,
-    assignments,
-    auth,
-    blog,
-    certificates,
-    courses_api,
-    discovery,
-    forum,
-    gamification,
-    google,
-    instructor,
-    instructors,
-    learning,
-    media,
-    notes,
-    notifications,
-    payments,
-    privacy,
-    profile,
-    qa,
-    quiz,
-    referrals,
-    reviews,
-    system,
-    token,
-    uploads,
-    users,
-)
 from app.routers.auth import public_router
+
+try:
+    from fastapi.middleware.gzip import GZipMiddleware
+except ImportError:  # pragma: no cover
+    GZipMiddleware = None
+
+try:
+    from app.core.performance import PerformanceHeadersMiddleware
+except ImportError:  # pragma: no cover
+    PerformanceHeadersMiddleware = None
+
+try:
+    from app.core import metrics
+except ImportError:  # pragma: no cover
+    metrics = None
+
+try:
+    from app.core.monitoring import init_sentry
+except ImportError:  # pragma: no cover
+    def init_sentry() -> None:
+        return None
+
+
+ROUTER_MODULES = [
+    "profile",
+    "admin_courses",
+    "admin_dashboard",
+    "analytics",
+    "assignments",
+    "assignments_upload",
+    "blog",
+    "calendar",
+    "certificates",
+    "checkout_experience",
+    "course_builder",
+    "course_forum",
+    "courses_api",
+    "discovery",
+    "forum",
+    "gamification",
+    "gamification_v2",
+    "google",
+    "instructor",
+    "instructor_analytics",
+    "instructors",
+    "learning",
+    "learning_paths",
+    "media",
+    "moderation",
+    "monetization",
+    "notes",
+    "notifications",
+    "offline_sync",
+    "onboarding",
+    "pages",
+    "payments",
+    "portfolio",
+    "privacy",
+    "qa",
+    "quiz",
+    "referrals",
+    "reviews",
+    "seo",
+    "support",
+    "system",
+    "token",
+    "uploads",
+    "users",
+]
+
+
+def _load_router(module_name: str):
+    try:
+        module = import_module(f"app.routers.{module_name}")
+    except ModuleNotFoundError:
+        return None
+    return getattr(module, "router", None)
+
 
 # ── LOGGING ────────────────────────────
 logging.basicConfig(
@@ -100,6 +148,10 @@ app.add_middleware(
         "X-Requested-With",
     ],
 )
+if GZipMiddleware is not None:
+    app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
+if PerformanceHeadersMiddleware is not None:
+    app.add_middleware(PerformanceHeadersMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(IPBlockingMiddleware)
@@ -115,59 +167,32 @@ async def _metrics_middleware(request: Request, call_next):
     start = time.perf_counter()
     response = await call_next(request)
     elapsed = time.perf_counter() - start
-    metrics.inc_counter(
-        "http_requests_total",
-        method=request.method,
-        status=str(response.status_code),
-    )
-    metrics.observe("http_request_duration_seconds", elapsed)
+    if metrics is not None:
+        metrics.inc_counter(
+            "http_requests_total",
+            method=request.method,
+            status=str(response.status_code),
+        )
+        metrics.observe("http_request_duration_seconds", elapsed)
     return response
 
 
 # ── STATIC ────────────────────────────
-# Absolyut yo'l — server qaysi papkadan ishga tushirilishidan qat'i nazar ishlaydi
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 setup_admin(app)
 
 # ── ROUTERS ──────────────────────────
-app.include_router(profile.router)
-app.include_router(admin_courses.router)
-app.include_router(courses_api.router)
-app.include_router(learning.router)
-app.include_router(instructor.router)
+for module_name in ROUTER_MODULES:
+    router = _load_router(module_name)
+    if router is not None:
+        app.include_router(router)
+
 app.include_router(public_router)
-app.include_router(auth.router)
-app.include_router(google.router)
-app.include_router(users.router)
-app.include_router(payments.router)
-
-# ── BOSQICH 3: o'rganish sifati ──
-app.include_router(quiz.router)
-app.include_router(assignments.router)
-app.include_router(certificates.router)
-app.include_router(qa.router)
-app.include_router(notes.router)
-app.include_router(gamification.router)
-
-# ── BOSQICH 4: kashfiyot, community va o'sish ──
-app.include_router(discovery.router)
-app.include_router(reviews.router)
-app.include_router(instructors.router)
-app.include_router(notifications.router)
-app.include_router(referrals.router)
-app.include_router(blog.router)
-app.include_router(forum.router)
-
-# ── BOSQICH 5: miqyoslash va mukammallik ──
-app.include_router(system.router)
-app.include_router(media.router)
-
-# ── XAVFSIZLIK: refresh-token, upload, GDPR ──
-app.include_router(token.router)
-app.include_router(uploads.router)
-app.include_router(privacy.router)
+auth_router = _load_router("auth")
+if auth_router is not None:
+    app.include_router(auth_router)
 
 _admin_router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -178,8 +203,6 @@ def _require_admin(
 ) -> User:
     user = db.query(User).filter(User.email == email).first()
     if not user or user.role != "admin":
-        from fastapi import HTTPException
-
         raise HTTPException(status_code=403, detail="Faqat adminlar uchun")
     return user
 
@@ -205,8 +228,6 @@ app.include_router(_admin_router)
 
 
 # ── ASOSIY SAHIFA ───────────────────────
-# UI endi to'liq React frontend'da (frontend/ papkasi, Vite dev: 5173-port).
-# Backend faqat JSON API xizmatini bajaradi.
 @app.get("/")
 def home():
     return {

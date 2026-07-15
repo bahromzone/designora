@@ -57,3 +57,45 @@ __all__ = [
     "Review",
     "User",
 ]
+
+try:
+    from .course_version import CourseVersion
+except ImportError:
+    CourseVersion = None
+else:
+    __all__.append("CourseVersion")
+
+try:
+    from .monetization import (
+        CourseBundle,
+        FinancialAidApplication,
+        Subscription,
+        SubscriptionPlan,
+        TeamLicense,
+        TeamLicenseMember,
+    )
+except ImportError:
+    CourseBundle = None
+    FinancialAidApplication = None
+    Subscription = None
+    SubscriptionPlan = None
+    TeamLicense = None
+    TeamLicenseMember = None
+else:
+    __all__.extend(
+        [
+            "CourseBundle",
+            "FinancialAidApplication",
+            "Subscription",
+            "SubscriptionPlan",
+            "TeamLicense",
+            "TeamLicenseMember",
+        ]
+    )
+
+try:
+    from .offline_sync import OfflineMutation
+except ImportError:
+    OfflineMutation = None
+else:
+    __all__.append("OfflineMutation")

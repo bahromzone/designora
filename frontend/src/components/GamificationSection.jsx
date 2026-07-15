@@ -1,133 +1,210 @@
-import { Award, Flame, Sparkles, Trophy } from 'lucide-react';
-import { useGamificationQuery } from '../hooks/useGamification';
+import { useCallback, useEffect, useState } from "react";
 
-const statCards = [
-  {
-    key: 'level',
-    label: 'Level',
-    icon: Trophy,
-    formatValue: (value) => value,
-  },
-  {
-    key: 'streakDays',
-    label: 'Streak',
-    icon: Flame,
-    formatValue: (value) => `${value} days`,
-  },
-];
+import { gamificationApi } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
+import { Spinner } from "./ui";
+
+// Backend bilan mos: har 100 ball = 1 daraja (POINTS_PER_LEVEL).
+const POINTS_PER_LEVEL = 100;
 
 export default function GamificationSection() {
-  const { data, isLoading } = useGamificationQuery();
+  const { token, user, isAuthenticated } = useAuth();
 
-  if (isLoading) {
+  const [me, setMe] = useState(null);
+  const [catalog, setCatalog] = useState([]);
+  const [board, setBoard] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const [meRes, badgesRes, boardRes] = await Promise.all([
+        gamificationApi.me(token),
+        gamificationApi.badges(token),
+        gamificationApi.leaderboard(10),
+      ]);
+      setMe(meRes);
+      setCatalog(Array.isArray(badgesRes) ? badgesRes : []);
+      setBoard(Array.isArray(boardRes) ? boardRes : []);
+    } catch {
+      setMe(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (!isAuthenticated) return null;
+
+  if (loading) {
     return (
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-500">Gamification progress yuklanmoqda...</p>
-      </section>
+      <div
+        className="flex justify-center rounded-2xl border p-10"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <Spinner />
+      </div>
     );
   }
 
-  const progressPercentage = data?.nextLevelXp
-    ? Math.min(Math.round((data.currentXp / data.nextLevelXp) * 100), 100)
-    : 0;
+  if (!me) {
+    return (
+      <div
+        className="rounded-2xl border p-6 text-sm"
+        style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+      >
+        Gamifikatsiya ma'lumotlarini yuklab bo'lmadi.
+      </div>
+    );
+  }
+
+  const toNext = me.points_to_next_level ?? 0;
+  const inLevel = Math.max(0, POINTS_PER_LEVEL - toNext);
+  const pct = Math.round((inLevel / POINTS_PER_LEVEL) * 100);
+  const progress = Math.min(100, pct);
+  const earnedCount = catalog.filter((b) => b.earned).length;
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-indigo-500">Gamification</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Momentum panel</h2>
-          <p className="mt-2 max-w-2xl text-sm text-slate-500">
-            XP, streak, badge va quest progress bitta query orqali yig‘ildi.
-          </p>
-        </div>
-        <div className="rounded-2xl bg-indigo-50 px-4 py-3 text-right">
-          <p className="text-xs uppercase tracking-[0.18em] text-indigo-500">Current XP</p>
-          <p className="mt-1 text-2xl font-semibold text-indigo-700">{data?.currentXp ?? 0}</p>
-        </div>
-      </div>
+    <div
+      className="rounded-2xl border p-6"
+      style={{ borderColor: "var(--border)" }}
+    >
+      <p className="label mb-2">Yutuqlar</p>
+      <h2 className="font-serif text-lg font-semibold text-ink">
+        Ball, daraja va nishonlar
+      </h2>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {statCards.map(({ key, label, icon: Icon, formatValue }) => (
-          <div key={key} className="rounded-2xl border border-slate-200 p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-500">{label}</p>
-              <Icon className="h-4 w-4 text-indigo-500" />
-            </div>
-            <p className="mt-3 text-xl font-semibold text-slate-900">
-              {formatValue(data?.[key] ?? 0)}
+      {/* Ball / daraja / streak */}
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        {[
+          { label: "Ball", value: me.points ?? 0, icon: "✨" },
+          { label: "Daraja", value: me.level ?? 1, icon: "🚀" },
+          { label: "Streak (kun)", value: me.streak_days ?? 0, icon: "🔥" },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="rounded-xl border p-4 text-center"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <div className="text-2xl">{s.icon}</div>
+            <p className="mt-1 font-serif text-2xl font-semibold text-ink">
+              {s.value}
+            </p>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              {s.label}
             </p>
           </div>
         ))}
+      </div>
 
-        <div className="rounded-2xl border border-slate-200 p-4 md:col-span-2">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-500">Next level progress</p>
-            <span className="text-sm font-medium text-slate-700">{progressPercentage}%</span>
-          </div>
-          <div className="mt-3 h-3 rounded-full bg-slate-100">
-            <div
-              className="h-3 rounded-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-          <p className="mt-2 text-xs text-slate-500">
-            {data?.currentXp ?? 0} / {data?.nextLevelXp ?? 0} XP
-          </p>
+      {/* Keyingi darajagacha progress */}
+      <div className="mt-5">
+        <div
+          className="mb-1.5 flex justify-between text-xs"
+          style={{ color: "var(--muted)" }}
+        >
+          <span>Keyingi darajagacha</span>
+          <span>{toNext} ball qoldi</span>
+        </div>
+        <div
+          className="h-2.5 w-full overflow-hidden rounded-full"
+          style={{ background: "var(--surface)" }}
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="h-full rounded-full transition-all"
+            style={{
+              width: `${progress}%`,
+              backgroundImage: "var(--gradient)",
+            }}
+          />
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_1fr]">
-        <div className="rounded-2xl border border-slate-200 p-5">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-indigo-500" />
-            <h3 className="text-lg font-semibold text-slate-900">Active quests</h3>
-          </div>
-          <div className="mt-4 space-y-4">
-            {(data?.quests ?? []).map((quest) => {
-              const percentage = Math.min(Math.round((quest.progress / quest.total) * 100), 100);
+      {/* Nishonlar katalogi */}
+      <div className="mt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-ink">Nishonlar</h3>
+          <span className="text-xs" style={{ color: "var(--muted)" }}>
+            {earnedCount}/{catalog.length}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {catalog.map((b) => (
+            <div
+              key={b.code}
+              title={b.description}
+              className="rounded-xl border p-3 text-center"
+              style={{
+                borderColor: "var(--border)",
+                opacity: b.earned ? 1 : 0.4,
+                background: b.earned ? "var(--amber-10)" : "transparent",
+              }}
+            >
+              <div className="text-2xl">{b.icon}</div>
+              <p className="mt-1 text-xs font-semibold text-ink">{b.title}</p>
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+                {b.earned ? "Qo'lga kiritildi" : `+${b.points} ball`}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Reyting jadvali (leaderboard) */}
+      {board.length > 0 && (
+        <div className="mt-6">
+          <h3 className="mb-3 text-sm font-semibold text-ink">
+            Reyting jadvali
+          </h3>
+          <ul className="space-y-1.5">
+            {board.map((row) => {
+              const isMe = user?.id === row.user_id;
               return (
-                <div key={quest.id}>
-                  <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-slate-700">{quest.title}</span>
-                    <span className="text-slate-500">{quest.progress}/{quest.total}</span>
-                  </div>
-                  <div className="h-2.5 rounded-full bg-slate-100">
-                    <div
-                      className="h-2.5 rounded-full bg-indigo-500"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
+                <li
+                  key={row.user_id}
+                  className="flex items-center gap-3 rounded-xl border px-3 py-2 text-sm"
+                  style={{
+                    borderColor: "var(--border)",
+                    background: isMe ? "var(--amber-10)" : "transparent",
+                  }}
+                >
+                  <span
+                    className="w-6 text-center font-semibold"
+                    style={{ color: "var(--brand)" }}
+                  >
+                    {row.rank}
+                  </span>
+                  <span className="flex-1 truncate font-medium text-ink">
+                    {row.name || "Foydalanuvchi"}
+                    {isMe && (
+                      <span
+                        className="ml-2 text-xs"
+                        style={{ color: "var(--muted)" }}
+                      >
+                        (siz)
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>
+                    {row.level}-daraja
+                  </span>
+                  <span className="w-16 text-right font-semibold text-ink">
+                    {row.points} ball
+                  </span>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </div>
-
-        <div className="rounded-2xl border border-slate-200 p-5">
-          <div className="flex items-center gap-2">
-            <Award className="h-4 w-4 text-indigo-500" />
-            <h3 className="text-lg font-semibold text-slate-900">Badges</h3>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {(data?.badges ?? []).map((badge) => (
-              <div
-                key={badge.id}
-                className={`rounded-2xl border px-4 py-3 text-sm ${
-                  badge.unlocked
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-slate-200 bg-slate-50 text-slate-500'
-                }`}
-              >
-                <p className="font-semibold">{badge.name}</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.18em]">
-                  {badge.unlocked ? 'Unlocked' : 'Locked'}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
+      )}
+    </div>
   );
 }

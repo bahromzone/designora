@@ -1,95 +1,31 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { DollarSign, GraduationCap, Star, TrendingUp } from 'lucide-react';
-import { ChartWrapper } from '../components/charts/ChartWrapper';
-import { useInstructorAnalytics } from '../hooks/useInstructor';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-const summaryItems = [
-  { key: 'revenue', label: 'Revenue', icon: DollarSign },
-  { key: 'enrollments', label: 'Enrollments', icon: GraduationCap },
-  { key: 'completionRate', label: 'Completion', icon: TrendingUp },
-  { key: 'averageRating', label: 'Rating', icon: Star },
-];
+import { useAuth } from "../context/AuthContext";
+import { instructorAnalyticsApi } from "../lib/instructorAnalyticsApi";
+import "./InstructorAnalyticsPage.css";
+
+function Bars({ rows, labelKey, valueKey, suffix = "%" }) {
+  const max = Math.max(1, ...rows.map((row) => Number(row[valueKey]) || 0));
+  return <div className="ia-bars">{rows.map((row) => <div className="ia-bar" key={row[labelKey]}><div><strong>{row[labelKey]}</strong><span>{row[valueKey]}{suffix}</span></div><i><b style={{ width: `${((Number(row[valueKey]) || 0) / max) * 100}%` }} /></i></div>)}</div>;
+}
 
 export default function InstructorAnalyticsPage() {
-  const { data, isLoading } = useInstructorAnalytics();
-  const empty = !data?.revenueSeries?.length;
+  const { token } = useAuth();
+  const [data, setData] = useState(null);
+  const [courseId, setCourseId] = useState("");
+  const [error, setError] = useState("");
 
-  return (
-    <div className="space-y-6 p-6">
-      <div>
-        <p className="text-sm uppercase tracking-[0.24em] text-indigo-500">Recharts integration</p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Instructor analytics</h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-500">
-          Revenue, enrollment, va course performance ko‘rinishlari React Query bilan yuklanadi.
-        </p>
-      </div>
+  useEffect(() => {
+    instructorAnalyticsApi.get(token, courseId).then(setData).catch((err) => setError(err.message));
+  }, [token, courseId]);
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {summaryItems.map(({ key, label, icon: Icon }) => (
-          <div key={key} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-500">{label}</p>
-              <Icon className="h-4 w-4 text-indigo-500" />
-            </div>
-            <p className="mt-4 text-2xl font-semibold text-slate-900">{data?.summary?.[key] ?? '—'}</p>
-          </div>
-        ))}
-      </div>
+  if (error) return <main className="ia-shell"><p>{error}</p></main>;
+  if (!data) return <main className="ia-shell"><p>Analytics yuklanmoqda...</p></main>;
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <ChartWrapper
-          title="Revenue trend"
-          description="LineChart orqali kunlik revenue va enrollments oqimi"
-          loading={isLoading}
-          empty={empty}
-        >
-          <div className="h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data?.revenueSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="label" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={3} />
-                <Line type="monotone" dataKey="enrollments" stroke="#0ea5e9" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartWrapper>
-
-        <ChartWrapper
-          title="Course performance"
-          description="BarChart orqali completion rate va satisfaction ko‘rsatkichlari"
-          loading={isLoading}
-          empty={!data?.coursePerformance?.length}
-        >
-          <div className="h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data?.coursePerformance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="name" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="completionRate" fill="#6366f1" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="satisfaction" fill="#22c55e" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartWrapper>
-      </div>
-    </div>
-  );
+  return <main className="ia-shell">
+    <header className="ia-header"><div><Link to="/instruktor-panel">← Instructor Home</Link><p>Roadmap 3.21</p><h1>Instructor analytics</h1></div><div><select value={courseId} onChange={(event) => setCourseId(event.target.value)}><option value="">Barcha kurslar</option>{data.courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}</select><a className="ia-export" href={instructorAnalyticsApi.exportUrl(courseId)}>CSV export</a></div></header>
+    <section className="ia-kpis"><article><span>Assignment</span><strong>{data.assignments.submitted}</strong><small>{data.assignments.graded} graded</small></article><article><span>Average grade</span><strong>{data.assignments.average_grade}%</strong><small>{data.assignments.returned} returned</small></article><article><span>Average rating</span><strong>{data.sentiment.average_rating}</strong><small>{data.sentiment.positive} positive</small></article><article><span>Completion</span><strong>{data.funnel.at(-1)?.conversion || 0}%</strong><small>course funnel</small></article></section>
+    <div className="ia-grid"><section className="ia-card"><h2>Enrollment funnel</h2><Bars rows={data.funnel} labelKey="step" valueKey="conversion" /></section><section className="ia-card"><h2>Video drop-off</h2><Bars rows={data.video_dropoff} labelKey="percent" valueKey="viewers" suffix=" viewers" /></section><section className="ia-card"><h2>Lesson completion</h2><Bars rows={data.lessons} labelKey="title" valueKey="completion_rate" /></section><section className="ia-card"><h2>Quiz difficulty</h2><div className="ia-table">{data.quizzes.map((quiz) => <p key={quiz.quiz_id}><strong>{quiz.title}</strong><span>{quiz.average_score}% · {quiz.difficulty}</span></p>)}{!data.quizzes.length && <p>Quiz data yo‘q.</p>}</div></section></div>
+  </main>;
 }

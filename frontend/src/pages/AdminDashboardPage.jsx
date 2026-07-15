@@ -1,91 +1,64 @@
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { Activity, CircleDollarSign, Percent, Users } from 'lucide-react';
-import { ChartWrapper } from '../components/charts/ChartWrapper';
-import { useAdminDashboard } from '../hooks/useAdmin';
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-const summaryItems = [
-  { key: 'monthlyRevenue', label: 'Monthly revenue', icon: CircleDollarSign },
-  { key: 'conversionRate', label: 'Conversion', icon: Percent },
-  { key: 'activeUsers', label: 'Active users', icon: Users },
-  { key: 'churn', label: 'Churn', icon: Activity },
-];
+import { useAuth } from "../context/AuthContext";
+import { adminOperationsApi } from "../lib/adminApi";
+import { formatPrice } from "../lib/api";
+import "./AdminDashboardPage.css";
 
-const PIE_COLORS = ['#4f46e5', '#0ea5e9', '#22c55e'];
+const dateTime = (value) => value ? new Date(value).toLocaleString("uz-UZ", { dateStyle: "medium", timeStyle: "short" }) : "";
+
+function Stat({ label, value, note }) {
+  return <div className="admin-stat"><span>{label}</span><strong>{value}</strong>{note && <small>{note}</small>}</div>;
+}
 
 export default function AdminDashboardPage() {
-  const { data, isLoading } = useAdminDashboard();
+  const { token } = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try { setData(await adminOperationsApi.dashboard(token)); }
+    catch (reason) { setError(reason.message); }
+    finally { setLoading(false); }
+  }, [token]);
+  useEffect(() => { load(); }, [load]);
+
+  if (loading) return <main className="admin-shell" aria-busy="true"><div className="admin-skeleton admin-skeleton-title" /><div className="admin-skeleton-grid">{Array.from({ length: 6 }).map((_, index) => <div className="admin-skeleton" key={index} />)}</div></main>;
+  if (error || !data) return <main className="admin-shell"><h1>Admin paneli yuklanmadi</h1><p>{error}</p><button className="btn btn-primary" type="button" onClick={load}>Qayta urinish</button></main>;
+
+  const queues = data.queues || {};
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <p className="text-sm uppercase tracking-[0.24em] text-indigo-500">Admin dashboards</p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Platform performance</h1>
-      </div>
+    <main className="admin-shell">
+      <header className="admin-header"><div><p className="admin-eyebrow">OPERATSIYALAR</p><h1>Platforma nazorati</h1><p>Yangilangan: {dateTime(data.generated_at)}</p></div><div className="admin-header-actions"><Link to="/profil">Profil</Link><button type="button" onClick={load}>Yangilash</button></div></header>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {summaryItems.map(({ key, label, icon: Icon }) => (
-          <div key={key} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-500">{label}</p>
-              <Icon className="h-4 w-4 text-indigo-500" />
-            </div>
-            <p className="mt-4 text-2xl font-semibold text-slate-900">{data?.summary?.[key] ?? '—'}</p>
-          </div>
-        ))}
-      </div>
+      <section className="admin-pulse" aria-label="Asosiy ko‘rsatkichlar">
+        <Stat label="Yangi foydalanuvchilar" value={data.users.new_30d} note="so‘nggi 30 kun" />
+        <Stat label="Faol o‘quvchilar" value={data.users.active_learners} note={`${data.users.total} jami`} />
+        <Stat label="Enrollment" value={data.learning.enrollments} note={`+${data.learning.enrollments_30d} bu oy`} />
+        <Stat label="Sof daromad" value={formatPrice(data.revenue.net)} note={`${data.revenue.paid_orders} to‘lov`} />
+        <Stat label="Completion" value={`${data.learning.completion_rate}%`} note={`${data.learning.completed} yakunlangan`} />
+        <Stat label="Kurslar" value={data.courses.published} note={`${data.courses.total} jami`} />
+      </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-        <ChartWrapper
-          title="Revenue and active users"
-          description="AreaChart bilan growth va usage signalari"
-          loading={isLoading}
-          empty={!data?.growthSeries?.length}
-        >
-          <div className="h-[340px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data?.growthSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="label" stroke="#64748b" />
-                <YAxis stroke="#64748b" />
-                <Tooltip />
-                <Area type="monotone" dataKey="revenue" stroke="#4f46e5" fill="#c7d2fe" />
-                <Area type="monotone" dataKey="activeUsers" stroke="#0ea5e9" fill="#bae6fd" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartWrapper>
+      <section className="admin-workbench">
+        <div className="admin-priority">
+          <div className="admin-section-heading"><div><p className="admin-eyebrow">NAVBATLAR</p><h2>Bugun e’tibor kerak</h2></div><span>{queues.review_count + queues.report_count + data.revenue.payment_failures} ochiq</span></div>
+          <div className="admin-queue-row"><strong>{queues.review_count}</strong><div><h3>Instructor review</h3><p>Talaba ishlari tekshiruv kutmoqda.</p></div><Link to="/instruktor-boshqaruv">Navbatni ochish</Link></div>
+          <div className="admin-queue-row"><strong>{queues.report_count}</strong><div><h3>Reported content</h3><p>Moderator qarorini kutayotgan kontent.</p></div><Link to="/forum">Reportlarni ko‘rish</Link></div>
+          <div className="admin-queue-row"><strong>{data.revenue.payment_failures}</strong><div><h3>Payment failures</h3><p>Provider yoki mijoz to‘lovi muvaffaqiyatsiz.</p></div><a href="#payment-failures">Tafsilotlar</a></div>
+        </div>
 
-        <ChartWrapper
-          title="User mix"
-          description="PieChart orqali platforma segmentlari"
-          loading={isLoading}
-          empty={!data?.userDistribution?.length}
-        >
-          <div className="h-[340px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={data?.userDistribution} dataKey="value" innerRadius={70} outerRadius={100} paddingAngle={4}>
-                  {(data?.userDistribution ?? []).map((item, index) => (
-                    <Cell key={item.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartWrapper>
-      </div>
-    </div>
+        <aside className={`admin-health admin-health-${data.system.status}`}><p className="admin-eyebrow">SYSTEM HEALTH</p><div className="admin-health-status"><span aria-hidden="true" /> <h2>{data.system.status === "healthy" ? "Tizim sog‘lom" : "Tekshiruv kerak"}</h2></div><dl><div><dt>Database</dt><dd>{data.system.database}</dd></div><div><dt>Cache</dt><dd>{data.system.cache}</dd></div><div><dt>Tekshirildi</dt><dd>{dateTime(data.system.checked_at)}</dd></div></dl></aside>
+      </section>
+
+      <section className="admin-detail-grid">
+        <div id="payment-failures"><div className="admin-section-heading"><h2>Oxirgi payment failure’lar</h2></div>{queues.payment_failures?.length ? <div className="admin-table-wrap"><table><thead><tr><th>Buyurtma</th><th>Provider</th><th>Summa</th><th>Sabab</th></tr></thead><tbody>{queues.payment_failures.map((row) => <tr key={row.id}><td>#{row.id}<small>{dateTime(row.created_at)}</small></td><td>{row.provider || "Noma’lum"}</td><td>{formatPrice(row.amount)}</td><td>{row.reason || row.status}</td></tr>)}</tbody></table></div> : <p className="admin-empty">Payment failure yo‘q. Aynan shunday qolaversin.</p>}</div>
+        <div><div className="admin-section-heading"><h2>Audit log</h2></div>{data.audit_log?.length ? <ol className="admin-audit">{data.audit_log.map((row) => <li key={row.id}><span>{row.action}</span><small>{row.target_type}{row.target_id ? ` #${row.target_id}` : ""} · {dateTime(row.created_at)}</small></li>)}</ol> : <p className="admin-empty">Audit yozuvlari hali yo‘q.</p>}</div>
+      </section>
+    </main>
   );
 }

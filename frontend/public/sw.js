@@ -1,71 +1,23 @@
-// Designora service worker — sodda va xavfsiz strategiya (FBosqich 6, PWA).
-//
-// - App shell (statik build fayllari) o'rnatishda emas, ishlatilganda cache'lanadi.
-// - Navigatsiya (HTML) so'rovlari: network-first, tarmoq bo'lmasa cache/offline.
-// - Boshqa GET so'rovlar (JS/CSS/rasm): stale-while-revalidate.
-// - API so'rovlari (/api/...) hech qachon cache'lanmaydi.
-
-const CACHE = "designora-v1";
-const OFFLINE_URL = "/";
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(["/"]))
-  );
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-      )
-      .then(() => self.clients.claim())
-  );
-});
-
+const VERSION = "designora-v330";
+const SHELL = ["/", "/manifest.webmanifest", "/favicon.svg", "/brand.css"];
+self.addEventListener("install", (event) => { event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(SHELL))); self.skipWaiting(); });
+self.addEventListener("activate", (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== VERSION).map((key) => caches.delete(key)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
-
-  // Faqat GET; boshqa metodlarga aralashmaymiz.
-  if (request.method !== "GET") return;
-
+  const request = event.request;
   const url = new URL(request.url);
-
-  // API va boshqa origin'lar — to'g'ridan-to'g'ri tarmoqqa.
-  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) {
-    return;
-  }
-
-  // HTML navigatsiya — network-first, offline'da cache yoki bosh sahifa.
+  if (request.method !== "GET" || url.origin !== location.origin || url.pathname.startsWith("/api/")) return;
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
-          return res;
-        })
-        .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL))
-        )
-    );
+    event.respondWith(fetch(request).then((response) => { caches.open(VERSION).then((cache) => cache.put(request, response.clone())); return response; }).catch(() => caches.match(request).then((cached) => cached || caches.match("/"))));
     return;
   }
-
-  // Statik resurslar — stale-while-revalidate.
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const network = fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
-          return res;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
-  );
+  event.respondWith(caches.open(VERSION).then(async (cache) => {
+    const cached = await cache.match(request);
+    const refresh = fetch(request).then((response) => { if (response.ok) cache.put(request, response.clone()); return response; });
+    return cached || refresh;
+  }));
+});
+self.addEventListener("message", (event) => {
+  if (event.data?.type !== "CACHE_LESSON") return;
+  const urls = (event.data.urls || []).filter((url) => !url.includes("/api/") && !/\.(mp4|m3u8|mpd|webm)(\?|$)/.test(url));
+  event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(urls)));
 });

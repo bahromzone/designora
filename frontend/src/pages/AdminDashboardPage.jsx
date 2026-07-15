@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { EmptyState, Spinner } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
-import { analyticsApi, formatPrice } from "../lib/api";
+import { adminOperationsApi } from "../lib/adminApi";
+import { formatPrice } from "../lib/api";
+import "./AdminDashboardPage.css";
 
-function Metric({ label, value }) {
-  return (
-    <article className="card rounded-2xl p-5">
-      <span className="text-sm text-gray-500">{label}</span>
-      <strong className="mt-2 block text-3xl">{value}</strong>
-    </article>
-  );
+const dateTime = (value) => value ? new Date(value).toLocaleString("uz-UZ", { dateStyle: "medium", timeStyle: "short" }) : "";
+
+function Stat({ label, value, note }) {
+  return <div className="admin-stat"><span>{label}</span><strong>{value}</strong>{note && <small>{note}</small>}</div>;
 }
 
 export default function AdminDashboardPage() {
@@ -20,53 +18,46 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = useCallback(() => {
-    let active = true;
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    analyticsApi
-      .admin(token)
-      .then((result) => active && setData(result))
-      .catch((err) => active && setError(err.message))
-      .finally(() => active && setLoading(false));
-    return () => { active = false; };
+    try { setData(await adminOperationsApi.dashboard(token)); }
+    catch (reason) { setError(reason.message); }
+    finally { setLoading(false); }
   }, [token]);
+  useEffect(() => { load(); }, [load]);
 
-  useEffect(() => {
-    const cleanup = load();
-    return cleanup;
-  }, [load]);
+  if (loading) return <main className="admin-shell" aria-busy="true"><div className="admin-skeleton admin-skeleton-title" /><div className="admin-skeleton-grid">{Array.from({ length: 6 }).map((_, index) => <div className="admin-skeleton" key={index} />)}</div></main>;
+  if (error || !data) return <main className="admin-shell"><h1>Admin paneli yuklanmadi</h1><p>{error}</p><button className="btn btn-primary" type="button" onClick={load}>Qayta urinish</button></main>;
 
-  if (loading) return <div className="grid min-h-[50vh] place-items-center"><Spinner /></div>;
-  if (error || !data) return <div className="shell py-12"><EmptyState title="Admin dashboard yuklanmadi" description={error} /><button className="btn-primary mt-4" onClick={load}>Qayta urinish</button></div>;
-
-  const revenue = data.revenue ?? {};
-  const users = data.users ?? {};
-  const courses = data.courses ?? {};
-
+  const queues = data.queues || {};
   return (
-    <main className="shell py-10">
-      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div><p className="label">Admin paneli</p><h1 className="mt-2 text-4xl font-extrabold">Platforma dashboard</h1></div>
-        <Link className="btn-outline" to="/profil">Profil</Link>
-      </header>
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Daromad" value={formatPrice(revenue.net_revenue ?? 0)} />
-        <Metric label="Foydalanuvchilar" value={users.total ?? 0} />
-        <Metric label="Faol foydalanuvchilar" value={users.active ?? 0} />
-        <Metric label="Chop etilgan kurslar" value={courses.published ?? 0} />
+    <main className="admin-shell">
+      <header className="admin-header"><div><p className="admin-eyebrow">OPERATSIYALAR</p><h1>Platforma nazorati</h1><p>Yangilangan: {dateTime(data.generated_at)}</p></div><div className="admin-header-actions"><Link to="/profil">Profil</Link><button type="button" onClick={load}>Yangilash</button></div></header>
+
+      <section className="admin-pulse" aria-label="Asosiy ko‘rsatkichlar">
+        <Stat label="Yangi foydalanuvchilar" value={data.users.new_30d} note="so‘nggi 30 kun" />
+        <Stat label="Faol o‘quvchilar" value={data.users.active_learners} note={`${data.users.total} jami`} />
+        <Stat label="Enrollment" value={data.learning.enrollments} note={`+${data.learning.enrollments_30d} bu oy`} />
+        <Stat label="Sof daromad" value={formatPrice(data.revenue.net)} note={`${data.revenue.paid_orders} to‘lov`} />
+        <Stat label="Completion" value={`${data.learning.completion_rate}%`} note={`${data.learning.completed} yakunlangan`} />
+        <Stat label="Kurslar" value={data.courses.published} note={`${data.courses.total} jami`} />
       </section>
-      <section className="card mt-6 rounded-2xl p-6">
-        <h2 className="text-xl font-bold">Top kurslar</h2>
-        <div className="mt-4 grid gap-3">
-          {(data.top_courses ?? []).map((course, index) => (
-            <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4" key={course.course_id}>
-              <strong>{index + 1}. {course.title}</strong>
-              <span>{course.students_count ?? 0} o'quvchi</span>
-            </div>
-          ))}
-          {!data.top_courses?.length && <p className="text-gray-500">Hali statistika yo'q.</p>}
+
+      <section className="admin-workbench">
+        <div className="admin-priority">
+          <div className="admin-section-heading"><div><p className="admin-eyebrow">NAVBATLAR</p><h2>Bugun e’tibor kerak</h2></div><span>{queues.review_count + queues.report_count + data.revenue.payment_failures} ochiq</span></div>
+          <div className="admin-queue-row"><strong>{queues.review_count}</strong><div><h3>Instructor review</h3><p>Talaba ishlari tekshiruv kutmoqda.</p></div><Link to="/instruktor-boshqaruv">Navbatni ochish</Link></div>
+          <div className="admin-queue-row"><strong>{queues.report_count}</strong><div><h3>Reported content</h3><p>Moderator qarorini kutayotgan kontent.</p></div><Link to="/forum">Reportlarni ko‘rish</Link></div>
+          <div className="admin-queue-row"><strong>{data.revenue.payment_failures}</strong><div><h3>Payment failures</h3><p>Provider yoki mijoz to‘lovi muvaffaqiyatsiz.</p></div><a href="#payment-failures">Tafsilotlar</a></div>
         </div>
+
+        <aside className={`admin-health admin-health-${data.system.status}`}><p className="admin-eyebrow">SYSTEM HEALTH</p><div className="admin-health-status"><span aria-hidden="true" /> <h2>{data.system.status === "healthy" ? "Tizim sog‘lom" : "Tekshiruv kerak"}</h2></div><dl><div><dt>Database</dt><dd>{data.system.database}</dd></div><div><dt>Cache</dt><dd>{data.system.cache}</dd></div><div><dt>Tekshirildi</dt><dd>{dateTime(data.system.checked_at)}</dd></div></dl></aside>
+      </section>
+
+      <section className="admin-detail-grid">
+        <div id="payment-failures"><div className="admin-section-heading"><h2>Oxirgi payment failure’lar</h2></div>{queues.payment_failures?.length ? <div className="admin-table-wrap"><table><thead><tr><th>Buyurtma</th><th>Provider</th><th>Summa</th><th>Sabab</th></tr></thead><tbody>{queues.payment_failures.map((row) => <tr key={row.id}><td>#{row.id}<small>{dateTime(row.created_at)}</small></td><td>{row.provider || "Noma’lum"}</td><td>{formatPrice(row.amount)}</td><td>{row.reason || row.status}</td></tr>)}</tbody></table></div> : <p className="admin-empty">Payment failure yo‘q. Aynan shunday qolaversin.</p>}</div>
+        <div><div className="admin-section-heading"><h2>Audit log</h2></div>{data.audit_log?.length ? <ol className="admin-audit">{data.audit_log.map((row) => <li key={row.id}><span>{row.action}</span><small>{row.target_type}{row.target_id ? ` #${row.target_id}` : ""} · {dateTime(row.created_at)}</small></li>)}</ol> : <p className="admin-empty">Audit yozuvlari hali yo‘q.</p>}</div>
       </section>
     </main>
   );

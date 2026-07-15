@@ -1,35 +1,13 @@
-/**
- * Boshqariladigan (controlled) tab'lar.
- * tabs: [{ value, label }], value: joriy tab, onChange: (value) => void
- */
+import { useId, useRef } from "react";
 function Tabs({ tabs = [], value, onChange, className = "" }) {
-  return (
-    <div
-      role="tablist"
-      className={`flex items-center gap-1 border-b border-border ${className}`}
-    >
-      {tabs.map((tab) => {
-        const active = tab.value === value;
-        return (
-          <button
-            key={tab.value}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange?.(tab.value)}
-            className={`relative -mb-px px-4 py-2.5 text-sm font-semibold transition-colors ${
-              active ? "text-violet-700" : "text-muted hover:text-ink"
-            }`}
-          >
-            {tab.label}
-            {active && (
-              <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-violet-600" />
-            )}
-          </button>
-        );
-      })}
-    </div>
-  );
+  const baseId = useId(); const refs = useRef([]);
+  const onKeyDown = (event, index) => {
+    const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
+    if (!keys.includes(event.key)) return;
+    event.preventDefault();
+    let next = event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : event.key === "ArrowRight" ? (index + 1) % tabs.length : (index - 1 + tabs.length) % tabs.length;
+    onChange?.(tabs[next].value); refs.current[next]?.focus();
+  };
+  return <div role="tablist" className={className}>{tabs.map((tab,index) => { const active = tab.value === value; return <button key={tab.value} ref={node => refs.current[index] = node} id={`${baseId}-tab-${index}`} role="tab" type="button" aria-selected={active} aria-controls={`${baseId}-panel-${index}`} tabIndex={active ? 0 : -1} onKeyDown={event => onKeyDown(event,index)} onClick={() => onChange?.(tab.value)}>{tab.label}</button>; })}</div>;
 }
-
 export default Tabs;

@@ -12,7 +12,9 @@
     "coverage": "vitest run --coverage",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
-    "format:check": "echo 'Prettier debt is non-blocking; ESLint, Vitest and Vite remain required'"
+    "format:check": "echo 'Prettier debt is non-blocking; ESLint, Vitest and Vite remain required'",
+    "analyze": "vite build && node scripts/performance-budget.mjs",
+    "performance:check": "node scripts/performance-budget.mjs"
   },
   "dependencies": {
     "framer-motion": "^12.38.0",

@@ -1,120 +1,160 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+import { Gauge, PlayCircle, ShieldCheck } from 'lucide-react';
+import './VideoPlayer.css';
 
-import { videoPlayerApi } from "../lib/videoPlayerApi";
-import { keyboardAction, PLAYER_SPEEDS, shouldResume } from "../lib/videoPlayerLogic";
-import "./VideoPlayer.css";
+const buildSignedSource = (source) => {
+  if (!source?.src || !source?.token) {
+    return source;
+  }
 
-export default function VideoPlayer({ src, lessonId, token, storageKey, onEnded, poster }) {
+  try {
+    const url = new URL(source.src, window.location.origin);
+    url.searchParams.set('token', source.token);
+    return { ...source, src: url.toString() };
+  } catch {
+    return source;
+  }
+};
+
+export default function VideoPlayer({
+  title = 'Lesson player',
+  poster,
+  src,
+  sources = [],
+  playbackRates = [0.75, 1, 1.25, 1.5, 2],
+}) {
   const videoRef = useRef(null);
-  const shellRef = useRef(null);
-  const saveTimer = useRef(null);
-  const [manifest, setManifest] = useState(null);
-  const [sourceIndex, setSourceIndex] = useState(0);
-  const [speed, setSpeed] = useState(1);
-  const [error, setError] = useState("");
-  const [retry, setRetry] = useState(0);
-  const [loading, setLoading] = useState(Boolean(lessonId));
+  const playerRef = useRef(null);
+  const [selectedQuality, setSelectedQuality] = useState('auto');
+
+  const normalizedSources = useMemo(() => {
+    const sourceList = sources.length
+      ? sources.map((source) => ({
+          label: source.label ?? 'Auto',
+          type: source.type ?? 'application/x-mpegURL',
+          ...buildSignedSource(source),
+        }))
+      : [
+          {
+            label: 'Auto',
+            src,
+            type: 'application/x-mpegURL',
+          },
+        ];
+
+    return sourceList.filter((sourceItem) => Boolean(sourceItem.src));
+  }, [sources, src]);
+
+  const activeSource = useMemo(() => {
+    return (
+      normalizedSources.find((sourceItem) => sourceItem.label === selectedQuality) ??
+      normalizedSources[0]
+    );
+  }, [normalizedSources, selectedQuality]);
 
   useEffect(() => {
-    if (!lessonId || !token) {
-      setManifest(src ? { sources: [{ label: "Auto", url: src, type: "video/mp4" }], subtitles: [] } : null);
-      setLoading(false);
-      return;
+    if (!videoRef.current || !activeSource) {
+      return undefined;
     }
-    let active = true;
-    setLoading(true);
-    setError("");
-    videoPlayerApi.manifest(lessonId, token)
-      .then((data) => active && setManifest(data))
-      .catch((reason) => active && setError(reason.message))
-      .finally(() => active && setLoading(false));
-    return () => { active = false; };
-  }, [lessonId, token, src, retry]);
 
-  const saveProgress = useCallback(() => {
-    const video = videoRef.current;
-    if (!video || !video.currentTime) return;
-    const body = {
-      position_seconds: Math.floor(video.currentTime),
-      duration_seconds: Math.floor(Number.isFinite(video.duration) ? video.duration : 0),
-    };
-    if (storageKey) localStorage.setItem(storageKey, String(body.position_seconds));
-    if (lessonId && token) videoPlayerApi.save(lessonId, body, token).catch(() => null);
-  }, [lessonId, storageKey, token]);
+    if (!playerRef.current) {
+      playerRef.current = videojs(videoRef.current, {
+        autoplay: false,
+        controls: true,
+        responsive: true,
+        fluid: true,
+        preload: 'auto',
+        playbackRates,
+        poster,
+        sources: [activeSource],
+      });
+    } else {
+      const player = playerRef.current;
+      const currentTime = player.currentTime() ?? 0;
+      const wasPlaying = !player.paused();
+
+      player.poster(poster ?? '');
+      player.playbackRates(playbackRates);
+      player.src([activeSource]);
+      player.ready(() => {
+        player.currentTime(currentTime);
+        if (wasPlaying) {
+          player.play().catch(() => {});
+        }
+      });
+    }
+
+    return () => {};
+  }, [activeSource, playbackRates, poster]);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !manifest) return undefined;
-    const onMetadata = () => {
-      const saved = manifest.resume_seconds ?? Number(localStorage.getItem(storageKey));
-      if (shouldResume(saved, video.duration)) video.currentTime = Number(saved);
-    };
-    const onTime = () => {
-      if (!saveTimer.current) {
-        saveTimer.current = window.setTimeout(() => {
-          saveProgress();
-          saveTimer.current = null;
-        }, 15000);
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.dispose();
+        playerRef.current = null;
       }
     };
-    video.addEventListener("loadedmetadata", onMetadata);
-    video.addEventListener("timeupdate", onTime);
-    return () => {
-      video.removeEventListener("loadedmetadata", onMetadata);
-      video.removeEventListener("timeupdate", onTime);
-      if (saveTimer.current) window.clearTimeout(saveTimer.current);
-      saveProgress();
-    };
-  }, [manifest, saveProgress, storageKey]);
+  }, []);
 
-  const togglePlayback = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) video.play().catch(() => null);
-    else video.pause();
-  };
-
-  const fullscreen = () => shellRef.current?.requestFullscreen?.();
-  const pip = () => videoRef.current?.requestPictureInPicture?.().catch(() => null);
-
-  const onKeyDown = (event) => {
-    const action = keyboardAction(event.key);
-    if (!action) return;
-    event.preventDefault();
-    const video = videoRef.current;
-    if (!video) return;
-    if (action === "toggle") togglePlayback();
-    if (action === "backward") video.currentTime = Math.max(0, video.currentTime - 10);
-    if (action === "forward") video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10);
-    if (action === "fullscreen") fullscreen();
-    if (action === "pip") pip();
-    if (action === "mute") video.muted = !video.muted;
-    if (action === "captions" && video.textTracks[0]) {
-      video.textTracks[0].mode = video.textTracks[0].mode === "showing" ? "hidden" : "showing";
+  useEffect(() => {
+    if (!normalizedSources.length) {
+      return;
     }
-  };
 
-  if (loading) return <div className="video-player-state">Video tayyorlanmoqda...</div>;
-  if (error) return <div className="video-player-state" role="alert"><b>Video ochilmadi</b><span>{error}</span><button onClick={() => setRetry((value) => value + 1)}>Qayta urinish</button></div>;
-  if (!manifest?.sources?.length) return <div className="video-player-state">Bu dars videosi mavjud emas.</div>;
+    const hasSelectedSource = normalizedSources.some(
+      (sourceItem) => sourceItem.label === selectedQuality,
+    );
 
-  const selected = manifest.sources[sourceIndex] || manifest.sources[0];
+    if (!hasSelectedSource) {
+      setSelectedQuality(normalizedSources[0].label);
+    }
+  }, [normalizedSources, selectedQuality]);
+
   return (
-    <section className="video-player-shell" ref={shellRef} tabIndex="0" onKeyDown={onKeyDown} aria-label="Video player">
-      <video ref={videoRef} key={selected.url} src={selected.url} poster={poster} controls playsInline preload="metadata" onEnded={() => { saveProgress(); onEnded?.(); }} onError={() => setError("Media manbasi javob bermadi. Boshqa sifatni tanlang yoki qayta urining.")}>
-        {(manifest.subtitles || []).map((track) => <track key={`${track.srclang}-${track.src}`} kind="subtitles" src={track.src} srcLang={track.srclang} label={track.label} default={track.default} />)}
-      </video>
-      <div className="video-player-toolbar">
-        <label>Sifat<select value={sourceIndex} onChange={(event) => { saveProgress(); setSourceIndex(Number(event.target.value)); }}>
-          {manifest.sources.map((source, index) => <option value={index} key={`${source.label}-${source.url}`}>{source.label}</option>)}
-        </select></label>
-        <label>Tezlik<select value={speed} onChange={(event) => { const value = Number(event.target.value); setSpeed(value); videoRef.current.playbackRate = value; }}>
-          {PLAYER_SPEEDS.map((value) => <option key={value} value={value}>{value}x</option>)}
-        </select></label>
-        <button type="button" onClick={pip}>PiP</button>
-        <button type="button" onClick={fullscreen}>To‘liq ekran</button>
-        <span>Space/K: play · ←/→: 10s · F: fullscreen · P: PiP · C: subtitr</span>
+    <div className="video-player-shell rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white shadow-xl">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.24em] text-indigo-200">Video.js</p>
+          <h2 className="mt-1 text-xl font-semibold">{title}</h2>
+          <p className="mt-2 flex items-center gap-2 text-sm text-slate-300">
+            <ShieldCheck className="h-4 w-4 text-emerald-300" />
+            Signed URL, playback speed, va quality selector bir joyda boshqariladi.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <label className="video-player-control">
+            <span>Quality</span>
+            <select value={selectedQuality} onChange={(event) => setSelectedQuality(event.target.value)}>
+              {normalizedSources.map((sourceItem) => (
+                <option key={sourceItem.label} value={sourceItem.label}>
+                  {sourceItem.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="video-player-pill">
+            <Gauge className="h-4 w-4 text-indigo-300" />
+            <span>{playbackRates.join('x · ')}x</span>
+          </div>
+        </div>
       </div>
-    </section>
+
+      <div data-vjs-player className="overflow-hidden rounded-2xl">
+        <video ref={videoRef} className="video-js vjs-big-play-centered" />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+        <div className="video-player-pill">
+          <PlayCircle className="h-4 w-4 text-indigo-300" />
+          <span>Adaptive player</span>
+        </div>
+        <div className="video-player-pill">
+          <span>Active source: {activeSource?.label ?? 'Auto'}</span>
+        </div>
+      </div>
+    </div>
   );
 }

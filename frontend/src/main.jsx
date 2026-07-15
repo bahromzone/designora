@@ -1,36 +1,34 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import App from './App';
+import './index.css';
+import { AppErrorBoundary } from './components/AppErrorBoundary';
+import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
+import { queryClient } from './lib/queryClient';
 
-import App from "./App";
-import { AuthProvider } from "./context/AuthContext";
-import { LanguageProvider } from "./context/LanguageContext";
-import { ThemeProvider } from "./context/ThemeContext";
-import { ToastProvider } from "./context/ToastContext";
-import "./index.css";
-
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <LanguageProvider>
+    <QueryClientProvider client={queryClient}>
+      <AppErrorBoundary>
         <ThemeProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <App />
-            </ToastProvider>
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <BrowserRouter>
+                  <App />
+                </BrowserRouter>
+              </ToastProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
-      </LanguageProvider>
-    </BrowserRouter>
-  </React.StrictMode>
+      </AppErrorBoundary>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  </React.StrictMode>,
 );
-
-// PWA: service worker'ni faqat productionda ro'yxatdan o'tkazamiz
-// (dev rejimida HMR bilan ziddiyatga bormasligi uchun).
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
-      // Ro'yxatdan o'tkazib bo'lmadi — ilova baribir ishlaydi.
-    });
-  });
-}

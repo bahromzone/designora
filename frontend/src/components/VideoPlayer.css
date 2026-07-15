@@ -1,1 +1,32 @@
-.video-player-shell{overflow:hidden;border-radius:18px;background:oklch(.16 .018 285);color:oklch(.96 .008 285);box-shadow:0 16px 42px oklch(.12 .02 285/.24)}.video-player-shell:focus-visible{outline:3px solid oklch(.72 .13 325);outline-offset:3px}.video-player-shell video{display:block;width:100%;max-height:70vh;background:oklch(.12 .015 285)}.video-player-toolbar{display:flex;align-items:center;gap:10px;padding:12px 14px;flex-wrap:wrap}.video-player-toolbar label{display:flex;align-items:center;gap:6px;font-size:.75rem}.video-player-toolbar select,.video-player-toolbar button{min-height:36px;border:1px solid oklch(.42 .025 285);border-radius:9px;background:oklch(.23 .02 285);color:inherit;padding:0 10px}.video-player-toolbar button{cursor:pointer}.video-player-toolbar button:hover{background:oklch(.3 .035 310)}.video-player-toolbar span{margin-left:auto;color:oklch(.72 .015 285);font-size:.68rem}.video-player-state{display:grid;place-items:center;gap:10px;min-height:320px;border-radius:18px;background:oklch(.18 .018 285);color:oklch(.94 .008 285);text-align:center;padding:24px}.video-player-state span{color:oklch(.72 .015 285)}.video-player-state button{min-height:42px;border:0;border-radius:10px;padding:0 16px;background:oklch(.7 .16 325);color:oklch(.98 .005 325);font-weight:700}@media(max-width:700px){.video-player-toolbar span{width:100%;margin-left:0}.video-player-toolbar{gap:8px}}
+.video-player-shell .video-js {
+  min-height: 420px;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.video-player-control {
+  display: flex;
+  min-width: 130px;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: rgb(191 219 254);
+}
+
+.video-player-control select {
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.75);
+  padding: 0.5rem 0.875rem;
+  color: white;
+}
+
+.video-player-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.75);
+  padding: 0.5rem 0.875rem;
+}

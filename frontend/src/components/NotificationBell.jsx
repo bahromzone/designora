@@ -1,64 +1,109 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, useState } from 'react';
+import { Bell, CheckCheck, Sparkles } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import {
+  useMarkNotificationReadMutation,
+  useNotificationsQuery,
+} from '../hooks/useNotifications';
 
-import { useAuth } from "../context/AuthContext";
-import { notificationsApi } from "../lib/api";
-import ReminderSettings from "./ReminderSettings";
-
-const POLL_MS = 60000;
-
-function timeAgo(iso) {
-  if (!iso) return "";
-  const min = Math.floor(Math.max(0, Date.now() - new Date(iso).getTime()) / 60000);
-  if (min < 1) return "hozir";
-  if (min < 60) return `${min} daq oldin`;
-  const hours = Math.floor(min / 60);
-  return hours < 24 ? `${hours} soat oldin` : `${Math.floor(hours / 24)} kun oldin`;
-}
+const badgeStyles = {
+  review: 'bg-indigo-50 text-indigo-600',
+  finance: 'bg-emerald-50 text-emerald-600',
+  community: 'bg-amber-50 text-amber-600',
+};
 
 export default function NotificationBell() {
-  const { token, isAuthenticated } = useAuth();
-  const [open, setOpen] = useState(false);
-  const [settings, setSettings] = useState(false);
-  const [unread, setUnread] = useState(0);
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const wrapRef = useRef(null);
-  const loadCount = useCallback(async () => {
-    if (!token) return;
-    try { setUnread((await notificationsApi.unreadCount(token)).unread || 0); } catch { /* non-critical */ }
-  }, [token]);
-  useEffect(() => {
-    if (!isAuthenticated) return undefined;
-    loadCount();
-    const id = setInterval(loadCount, POLL_MS);
-    return () => clearInterval(id);
-  }, [isAuthenticated, loadCount]);
-  async function toggle() {
-    const next = !open;
-    setOpen(next); setSettings(false);
-    if (next) {
-      setLoading(true);
-      try { setItems(await notificationsApi.list(token)); } catch { setItems([]); }
-      finally { setLoading(false); }
-    }
-  }
-  async function readOne(item) {
-    if (!item.is_read) {
-      await notificationsApi.markRead(item.id, token);
-      setUnread((count) => Math.max(0, count - 1));
-    }
-  }
-  if (!isAuthenticated) return null;
+  const [isOpen, setIsOpen] = useState(false);
+  const { info } = useToast();
+  const notificationsQuery = useNotificationsQuery();
+  const markNotificationRead = useMarkNotificationReadMutation();
+  const notifications = notificationsQuery.data ?? [];
+
+  const unreadCount = useMemo(
+    () => notifications.filter((notification) => !notification.read).length,
+    [notifications],
+  );
+
+  const handleMarkAllAsRead = async () => {
+    const unreadNotifications = notifications.filter((notification) => !notification.read);
+    await Promise.all(
+      unreadNotifications.map((notification) =>
+        markNotificationRead.mutateAsync(notification.id),
+      ),
+    );
+    info('Barcha notificationlar o‘qilgan deb belgilandi.');
+  };
+
   return (
-    <div ref={wrapRef} className="relative">
-      <button onClick={toggle} aria-label="Bildirishnomalar" className="relative p-2">🔔{unread > 0 && <b className="absolute -right-1 -top-1">{unread > 9 ? "9+" : unread}</b>}</button>
-      {open && <div className="absolute right-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border bg-white shadow-xl">
-        {settings ? <ReminderSettings onClose={() => setSettings(false)} /> : <div className="w-[360px] max-w-[calc(100vw-2rem)]">
-          <header className="flex items-center justify-between border-b px-4 py-3"><strong>Bildirishnomalar</strong><button onClick={() => setSettings(true)} aria-label="Reminder sozlamalari">⚙ Sozlamalar</button></header>
-          <div className="max-h-96 overflow-y-auto">{loading ? <p className="p-4">Yuklanmoqda...</p> : items.length === 0 ? <p className="p-4 text-slate-500">Hozircha bildirishnoma yo‘q.</p> : items.map((item) => item.link ? <Link key={item.id} to={item.link} onClick={() => { readOne(item); setOpen(false); }} className={`block border-b px-4 py-3 ${item.is_read ? "" : "bg-violet-50"}`}><b>{item.message}</b><small className="block">{timeAgo(item.created_at)}</small></Link> : <button key={item.id} onClick={() => readOne(item)} className={`block w-full border-b px-4 py-3 text-left ${item.is_read ? "" : "bg-violet-50"}`}><b>{item.message}</b><small className="block">{timeAgo(item.created_at)}</small></button>)}</div>
-        </div>}
-      </div>}
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((currentValue) => !currentValue)}
+        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-indigo-300 hover:text-indigo-600"
+      >
+        <Bell className="h-5 w-5" />
+        {unreadCount ? (
+          <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-semibold text-white">
+            {unreadCount}
+          </span>
+        ) : null}
+      </button>
+
+      {isOpen ? (
+        <div className="absolute right-0 z-30 mt-3 w-[360px] rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Notifications</p>
+              <p className="text-xs text-slate-500">React Query bilan boshqariladigan inbox</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleMarkAllAsRead}
+              disabled={!unreadCount || markNotificationRead.isPending}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-indigo-300 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <CheckCheck className="h-3.5 w-3.5" />
+              Mark all read
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {notifications.map((notification) => (
+              <button
+                key={notification.id}
+                type="button"
+                onClick={() => markNotificationRead.mutate(notification.id)}
+                className={`block w-full rounded-2xl border px-4 py-3 text-left transition ${
+                  notification.read
+                    ? 'border-slate-200 bg-slate-50 text-slate-500'
+                    : 'border-indigo-100 bg-indigo-50/60 text-slate-700 hover:border-indigo-300'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${badgeStyles[notification.type] ?? 'bg-slate-100 text-slate-600'}`}
+                      >
+                        {notification.type}
+                      </span>
+                      {!notification.read ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.18em] text-rose-500">
+                          <Sparkles className="h-3 w-3" />
+                          unread
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{notification.title}</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">{notification.body}</p>
+                  </div>
+                  <span className="shrink-0 text-xs text-slate-400">{notification.createdAt}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

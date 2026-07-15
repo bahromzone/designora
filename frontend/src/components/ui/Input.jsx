@@ -1,22 +1,28 @@
-/**
- * Umumiy matn maydoni + ixtiyoriy yorliq va xato.
- */
-function Input({ label, error, id, className = "", ...rest }) {
-  const inputId = id ?? rest.name;
+import { useId } from "react";
+
+/** Accessible text field with label, hint and assertive validation feedback. */
+function Input({ label, hint, error, id, className = "", ...rest }) {
+  const generatedId = useId();
+  const inputId = id ?? rest.name ?? generatedId;
+  const hintId = hint ? `${inputId}-hint` : null;
+  const errorId = error ? `${inputId}-error` : null;
+  const describedBy = [rest["aria-describedby"], hintId, errorId].filter(Boolean).join(" ") || undefined;
+
   return (
-    <div className="flex flex-col gap-1.5">
-      {label && (
-        <label htmlFor={inputId} className="text-sm font-medium text-ink">
-          {label}
-        </label>
-      )}
+    <div className={className}>
+      {label && <label htmlFor={inputId}>{label}</label>}
+      {hint && <p id={hintId}>{hint}</p>}
       <input
-        id={inputId}
-        className={`input-field ${error ? "border-rose-400" : ""} ${className}`}
-        aria-invalid={error ? "true" : undefined}
         {...rest}
+        id={inputId}
+        aria-invalid={error ? "true" : undefined}
+        aria-describedby={describedBy}
       />
-      {error && <span className="text-xs text-rose-600">{error}</span>}
+      {error && (
+        <p id={errorId} role="alert" aria-live="assertive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

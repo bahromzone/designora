@@ -1,64 +1,82 @@
 name: CI
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  push: {branches: [main]}
+  pull_request: {branches: [main]}
 jobs:
   backend:
-    name: Backend (lint + test)
+    name: Backend quality gate
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+    defaults: {run: {working-directory: backend}}
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
-      - name: Ruff report
-        continue-on-error: true
-        run: ruff check .
-      - name: Black report
-        continue-on-error: true
-        run: black --check .
-      - name: Pytest
-        env:
-          ENVIRONMENT: development
-          DATABASE_URL: "sqlite+pysqlite:///:memory:"
-          SECRET_KEY: ci-secret
-          SESSION_SECRET_KEY: ci-session
-          JWT_SECRET_KEY: ci-jwt
-          MAIL_USERNAME: ci@example.com
-          MAIL_PASSWORD: ci-pass
-          MAIL_FROM: ci@example.com
-          MAIL_PORT: "587"
-          MAIL_SERVER: smtp.example.com
-          RECAPTCHA_SECRET_KEY: ci-recaptcha
-        run: pytest -q --tb=short
-  frontend:
-    name: Frontend (lint + test + build)
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements-dev.txt
+      - name: Changed Python quality gate
+        shell: bash
+        run: |
+          base="${{ github.event.pull_request.base.sha || github.event.before }}"
+          files=$(git diff --name-only --diff-filter=ACMR "$base" "${{ github.sha }}" -- 'backend/**/*.py' | sed 's#^backend/##')
+          if [ -n "$files" ]; then echo "$files" | xargs ruff check; echo "$files" | xargs black --check --diff; fi
+      - name: Tests and 70% coverage
+        env: {ENVIRONMENT: development, DATABASE_URL: "sqlite+pysqlite:///:memory:", SECRET_KEY: ci-secret, SESSION_SECRET_KEY: ci-session, JWT_SECRET_KEY: ci-jwt, MAIL_USERNAME: ci@example.com, MAIL_PASSWORD: ci-pass, MAIL_FROM: ci@example.com, MAIL_PORT: "587", MAIL_SERVER: smtp.example.com, RECAPTCHA_SECRET_KEY: ci-recaptcha}
+        run: pytest --ignore=tests/test_alembic_migrations.py --ignore=tests/test_alembic_lifecycle.py --cov-fail-under=70
+  migrations:
+    name: Alembic lifecycle (PostgreSQL)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
+    services:
+      postgres:
+        image: postgres:16
+        env: {POSTGRES_USER: designora, POSTGRES_PASSWORD: designora, POSTGRES_DB: designora_migrations}
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U designora -d designora_migrations"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults: {run: {working-directory: backend}}
+    env: {ENVIRONMENT: development, DATABASE_URL: "postgresql+psycopg2://designora:designora@127.0.0.1:5432/designora_migrations", SECRET_KEY: ci-secret, SESSION_SECRET_KEY: ci-session, JWT_SECRET_KEY: ci-jwt, MAIL_USERNAME: ci@example.com, MAIL_PASSWORD: ci-pass, MAIL_FROM: ci@example.com, MAIL_PORT: "587", MAIL_SERVER: smtp.example.com, RECAPTCHA_SECRET_KEY: ci-recaptcha}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements-dev.txt
+      - run: python -m compileall -q app/alembic/versions app/alembic_canonical/versions
+      - run: pytest -q tests/test_alembic_migrations.py --no-cov
+      - run: |
+          set -euo pipefail
+          alembic -c alembic-canonical.ini upgrade head
+          alembic -c alembic-canonical.ini downgrade base
+          alembic -c alembic-canonical.ini upgrade head
+          alembic -c alembic-canonical.ini current
+  frontend:
+    name: Frontend quality, a11y and offline gate
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: frontend}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+        with: {node-version: "20", cache: npm, cache-dependency-path: frontend/package-lock.json}
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
-      - run: npm run test:run
+      - name: WCAG contract gate
+        run: npm run test:run -- accessibility.test.jsx
+      - name: Offline recovery gate
+        run: npm run test:run -- offline.test.js
       - run: npm run coverage
       - run: npm run build
+  browser-e2e:
+    name: Browser E2E critical routes
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: frontend}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "20", cache: npm, cache-dependency-path: frontend/package-lock.json}
+      - run: npm ci
+      - run: npm install --no-save @playwright/test@1.55.0
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
   docker:
     name: Docker build
     runs-on: ubuntu-latest

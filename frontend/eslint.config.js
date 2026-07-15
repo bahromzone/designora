@@ -6,45 +6,39 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import prettier from "eslint-config-prettier";
 
 export default [
-  { ignores: ["dist", "coverage", "node_modules"] },
+  { ignores: ["dist", "coverage", "node_modules", ".lighthouseci"] },
   js.configs.recommended,
   {
     files: ["**/*.{js,jsx}"],
     languageOptions: {
       ecmaVersion: 2022,
       globals: { ...globals.browser, ...globals.node },
-      parserOptions: {
-        ecmaFeatures: { jsx: true },
-        sourceType: "module",
-      },
+      parserOptions: { ecmaFeatures: { jsx: true }, sourceType: "module" },
     },
     settings: { react: { version: "detect" } },
-    plugins: {
-      react,
-      "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
-    },
+    plugins: { react, "react-hooks": reactHooks, "react-refresh": reactRefresh },
     rules: {
       ...react.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
       "react/no-unescaped-entities": "off",
+      "no-empty": ["error", { allowEmptyCatch: true }],
       "no-unused-vars": ["warn", { varsIgnorePattern: "^[A-Z_]" }],
       "react-refresh/only-export-components": "off",
     },
   },
   {
+    files: ["scripts/**/*.mjs", "*.cjs"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: { ...globals.node },
+    },
+  },
+  {
     files: ["**/*.test.{js,jsx}", "src/test/**"],
     languageOptions: { globals: { ...globals.vitest } },
-  },
-  {
-    files: ["src/components/OnboardingModal.jsx"],
-    rules: { "no-unused-vars": "off" },
-  },
-  {
-    files: ["src/pages/PortfolioBuilderPage.jsx"],
-    rules: { "react-hooks/exhaustive-deps": "off" },
   },
   prettier,
 ];

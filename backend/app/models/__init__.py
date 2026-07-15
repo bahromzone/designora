@@ -5,7 +5,8 @@ from .course_version import CourseVersion
 from .enrollment import Enrollment
 from .lesson import Lesson
 from .lesson_progress import LessonProgress
-from .monetization import CourseBundle, FinancialAidApplication, Subscription, SubscriptionPlan, TeamLicense, TeamLicenseMember
+from .monetization import CourseBundle,FinancialAidApplication,Subscription,SubscriptionPlan,TeamLicense,TeamLicenseMember
+from .offline_sync import OfflineMutation
 from .module import Module
 from .notification import Notification
 from .password_reset import PasswordReset

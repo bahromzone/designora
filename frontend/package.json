@@ -5,14 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run prerender",
+    "prerender": "node scripts/prerender.mjs && node scripts/verify-prerender.mjs",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
     "coverage": "vitest run --coverage",
-    "lint": "eslint .",
+    "lint": "eslint src",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
-    "format:check": "echo 'Prettier debt is non-blocking; ESLint, Vitest and Vite remain required'"
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\"",
+    "performance:check": "node scripts/performance-budget.mjs",
+    "lighthouse:ci": "lhci autorun --config=./lighthouserc.cjs"
   },
   "dependencies": {
     "framer-motion": "^12.38.0",

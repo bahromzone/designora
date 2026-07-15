@@ -1,0 +1,6 @@
+Canonical migration history for fresh databases and future revisions.
+
+The deployed legacy history remains under app/alembic for audit and existing installations.
+Fresh installations use: alembic -c alembic-canonical.ini upgrade head
+Existing installations must be backed up and stamped only after schema verification:
+alembic -c alembic-canonical.ini stamp head

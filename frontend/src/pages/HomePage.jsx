@@ -1,10 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
-import WaveAnimation from "../components/WaveAnimation";
 import { authApi, discoveryApi } from "../lib/api";
+
+/* Deferred WaveAnimation: loads only after browser is idle */
+function DeferredWaveAnimation() {
+  const [Wave, setWave] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      import("../components/WaveAnimation").then((mod) => {
+        if (!cancelled) setWave(() => mod.default);
+      });
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(load, { timeout: 2000 });
+      return () => { cancelled = true; window.cancelIdleCallback(id); };
+    } else {
+      const t = setTimeout(load, 1500);
+      return () => { cancelled = true; clearTimeout(t); };
+    }
+  }, []);
+  if (!Wave) return null;
+  return <Wave />;
+}
 
 // Backend ishlamay qolsa ko'rsatiladigan zaxira kurslar
 const FALLBACK_COURSES = [
@@ -37,37 +57,87 @@ const FALLBACK_COURSES = [
   },
 ];
 
-// Premium Apple-style easing curve for smooth animations
-const premiumEasing = [0.16, 1, 0.3, 1];
+const pageStyles = `
+@keyframes stripe-float {
+  0%, 100% { transform: translate(0px, 0px) rotate(35deg); }
+  50% { transform: translate(45px, 40px) rotate(50deg); }
+}
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(30px, -30px); }
+  50% { transform: translate(-20px, 20px); }
+  75% { transform: translate(10px, -10px); }
+}
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes cta-blob-drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-40px, 40px); }
+  50% { transform: translate(40px, -40px); }
+  75% { transform: translate(-20px, 20px); }
+}
+.animate-stripe { animation: stripe-float 20s ease-in-out infinite; }
+.animate-blob-drift { animation: blob-drift 18s linear infinite; }
+.animate-gradient-shift {
+  animation: gradient-shift 8s linear infinite;
+  background-size: 200% auto;
+}
+.animate-cta-blob { animation: cta-blob-drift 25s linear infinite; }
+.reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+.reveal-small { opacity: 0; transform: translateY(20px); transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+.reveal.visible, .reveal-small.visible { opacity: 1; transform: translateY(0); }
+.stagger-1 { transition-delay: 0.1s; }
+.stagger-2 { transition-delay: 0.25s; }
+.stagger-3 { transition-delay: 0.4s; }
+.hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.hover-lift:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(0,0,0,0.06); }
+.hover-scale { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.hover-scale:hover { transform: scale(1.03); box-shadow: 0 20px 40px -10px rgba(124,58,237,0.45); }
+.hover-scale:active { transform: scale(0.98); }
+.hover-scale-light { transition: transform 0.3s ease, background-color 0.3s ease; }
+.hover-scale-light:hover { transform: scale(1.03); background-color: #f8fafc; }
+.hover-scale-light:active { transform: scale(0.98); }
+.trust-chip { transition: transform 0.2s ease, opacity 0.2s ease; }
+.trust-chip:hover { transform: scale(1.05); opacity: 0.8; }
+.cta-glass {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 40px 100px rgba(79, 70, 229, 0.1);
+}
+`;
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-  },
-};
+/* IntersectionObserver hook for scroll reveal */
+function useReveal() {
+  const ref = useRef(null);
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: premiumEasing },
-  },
-};
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "-50px" }
+    );
+    const revealEls = el.querySelectorAll(".reveal, .reveal-small");
+    revealEls.forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
+  }, []);
 
-const fadeUpSmall = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: premiumEasing },
-  },
-};
+  return ref;
+}
 
 export default function HomePage() {
   const [courses, setCourses] = useState(FALLBACK_COURSES);
+  const revealRef = useReveal();
 
   useEffect(() => {
     authApi
@@ -75,300 +145,172 @@ export default function HomePage() {
       .then((list) => {
         if (Array.isArray(list) && list.length) setCourses(list.slice(0, 3));
       })
-      .catch(() => {}); // backend o'chiq bo'lsa zaxira kurslar qoladi
+      .catch(() => {});
   }, []);
 
   return (
-    <div className="w-full bg-[var(--bg-light)] relative">
-      {/* STRIPE-STYLE FLOATING MOTION ANIMATION KEYFRAMES */}
-      <style>{`
-        @keyframes stripe-float {
-          0%, 100% {
-            transform: translate(0px, 0px) rotate(35deg);
-          }
-          50% {
-            transform: translate(45px, 40px) rotate(50deg);
-          }
-        }
-        .animate-stripe {
-          animation: stripe-float 20s ease-in-out infinite;
-        }
-      `}</style>
+    <main ref={revealRef}>
+      <style dangerouslySetInnerHTML={{ __html: pageStyles }} />
 
-      {/* 1. HERO SECTION */}
-      <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden px-6 pt-20">
-        {/* Stripe-style Floating Gradient Wave Animation */}
-        {/* Positioning: top right, scaled up, rotated, with negative margin to overflow */}
-        <div className="absolute top-0 right-0 w-[120%] h-[120%] -mr-[30%] -mt-[25%] pointer-events-none z-0 scale-110 animate-stripe">
-          <WaveAnimation />
+      {/* 1. HERO SECTION - above fold, immediately visible (no .reveal) */}
+      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-white via-slate-50/50 to-white">
+        {/* Stripe-style Floating Gradient Wave Animation - deferred until idle */}
+        <div className="absolute top-[-20%] right-[-15%] w-[70rem] h-[70rem] opacity-40 pointer-events-none z-0 animate-stripe">
+          <DeferredWaveAnimation />
         </div>
 
-        {/* Subtle background blob (apple style) */}
-        <motion.div
-          animate={{ x: [0, 30, -20, 0], y: [0, -30, 20, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[10%] left-[-10%] w-[40rem] h-[40rem] bg-pink-400/10 blur-[120px] rounded-full pointer-events-none z-0"
-        />
+        {/* Subtle background blob */}
+        <div className="absolute top-[10%] left-[-10%] w-[40rem] h-[40rem] bg-pink-400/10 blur-[120px] rounded-full pointer-events-none z-0 animate-blob-drift" />
 
-        <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center relative z-10">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="text-center lg:text-left"
-          >
-            <motion.div
-              variants={fadeUp}
-              className="inline-block px-4 py-1.5 rounded-full border border-pink-100 bg-white shadow-sm mb-6"
-            >
-              <span className="text-xs font-bold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-500">
-                Ta'limning kelajagi
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+          <div className="inline-block px-4 py-1.5 rounded-full border border-pink-100 bg-white shadow-sm mb-6">
+            <span className="text-sm font-medium bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+              Ta'limning kelajagi
+            </span>
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6 text-slate-900">
+            Mahoratingizni yuksaltiring{" "}
+            <span className="animate-gradient-shift text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 inline-block pb-2">
+              Designora.
+            </span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-xl mx-auto">
+            Oddiy videodarslarni unuting. Soha yetakchilaridan kinematik
+            sifatdagi jonli masterklasslar orqali amaliy bilim oling.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/register">
+              <span className="hover-scale relative inline-block px-8 py-4 rounded-full text-white font-bold text-lg overflow-hidden group bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+                <span className="relative z-10">Hozir boshlash</span>
               </span>
-            </motion.div>
+            </Link>
 
-            <motion.h1
-              variants={fadeUp}
-              className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6 text-slate-900"
-            >
-              Mahoratingizni yuksaltiring <br />
-              {/* Flowing animated gradient text (stripe like) */}
-              <motion.span
-                animate={{
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 inline-block pb-2"
-              >
-                Designora.
-              </motion.span>
-            </motion.h1>
+            <Link to="/kurslar">
+              <span className="hover-scale-light inline-block px-8 py-4 rounded-full glass-panel text-slate-900 font-bold text-lg">
+                Kurslarni ko\u2019rish
+              </span>
+            </Link>
+          </div>
 
-            <motion.p
-              variants={fadeUp}
-              className="text-lg md:text-xl text-slate-600 mb-10 max-w-xl mx-auto lg:mx-0"
-            >
-              Oddiy videodarslarni unuting. Soha yetakchilaridan kinematik
-              sifatdagi jonli masterklasslar orqali amaliy bilim oling.
-            </motion.p>
-
-            <motion.div
-              variants={fadeUp}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
-            >
-              {/* Premium Apple-style Hover Button */}
-              <Link to="/?modal=signup">
-                <motion.span
-                  whileHover={{
-                    scale: 1.03,
-                    boxShadow: "0 20px 40px -10px rgba(124,58,237,0.45)",
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="relative inline-block px-8 py-4 rounded-full text-white font-bold text-lg overflow-hidden group bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <span className="relative z-10">Hozir boshlash</span>
-                </motion.span>
-              </Link>
-
-              <Link to="/kurslar">
-                <motion.span
-                  whileHover={{ scale: 1.03, backgroundColor: "#f8fafc" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="inline-block px-8 py-4 rounded-full glass-panel text-slate-900 font-bold text-lg transition-colors"
-                >
-                  Kurslarni ko'rish
-                </motion.span>
-              </Link>
-            </motion.div>
-
-            <motion.div
-              variants={fadeUp}
-              className="mt-12 flex items-center justify-center lg:justify-start gap-8 border-t border-gray-200 pt-8"
-            >
-              <div>
-                <p className="text-3xl font-bold text-slate-900">12,000+</p>
-                <p className="text-sm text-slate-500 font-medium">
-                  Faol o'quvchilar
-                </p>
-              </div>
-              <div className="w-px h-10 bg-gray-200" />
-              <div>
-                <p className="text-3xl font-bold text-slate-900">4.9/5</p>
-                <p className="text-sm text-slate-500 font-medium">
-                  O'rtacha baho
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
+          <div className="mt-12 flex items-center justify-center gap-8 border-t border-gray-200 pt-8">
+            <div>
+              <span className="text-2xl font-bold text-slate-900">12,000+</span>
+              <p className="text-sm text-slate-500">Faol o\u2019quvchilar</p>
+            </div>
+            <div>
+              <span className="text-2xl font-bold text-slate-900">4.9/5</span>
+              <p className="text-sm text-slate-500">O\u2019rtacha baho</p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* 2. TRUST LOGOS */}
-      <section className="border-y border-gray-200/60 bg-white/40 py-10">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 1 }}
-          className="max-w-7xl mx-auto px-6 text-center"
-        >
-          <p className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-6">
-            Platformadagi yo'nalishlar
+      <section className="py-16 border-t border-gray-100">
+        <div className="reveal max-w-7xl mx-auto px-6 text-center">
+          <p className="text-sm uppercase tracking-widest text-gray-400 mb-8">
+            Platformadagi yo\u2019nalishlar
           </p>
-          <div className="flex flex-wrap justify-center gap-10 md:gap-20 opacity-40 grayscale font-serif text-2xl md:text-3xl font-bold text-slate-800">
-            {[
-              "UI/UX",
-              "Moda dizayni",
-              "Brending",
-              "Styling",
-              "Grafik dizayn",
-            ].map((logo) => (
-              <motion.span
-                key={logo}
-                whileHover={{ scale: 1.05, opacity: 0.8 }}
-                transition={{ duration: 0.2 }}
-                className="cursor-pointer"
-              >
-                {logo}
-              </motion.span>
-            ))}
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16 text-xl font-semibold text-gray-300">
+            {["UI/UX", "Moda dizayni", "Brending", "Styling", "Grafik dizayn"].map(
+              (logo) => (
+                <span key={logo} className="trust-chip cursor-pointer">
+                  {logo}
+                </span>
+              )
+            )}
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* 3. FEATURED COURSES */}
-      <section className="py-32 px-6 max-w-7xl mx-auto">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={staggerContainer}
-          className="flex justify-between items-end mb-16 gap-4"
-        >
-          <motion.div variants={fadeUpSmall}>
-            <p className="text-sm font-bold uppercase tracking-widest text-pink-600 mb-2">
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="flex justify-between items-end mb-16 gap-4">
+          <div className="reveal-small">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
               Tanlangan dasturlar
-            </p>
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 max-w-lg leading-tight">
-              Kinematik ta'lim, <br /> amaliy natijalar.
             </h2>
-          </motion.div>
+            <p className="text-gray-500 text-lg">
+              Kinematik ta'lim, amaliy natijalar.
+            </p>
+          </div>
           <Link to="/kurslar">
-            <motion.span
-              variants={fadeUpSmall}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-block px-6 py-3 rounded-full glass-panel text-slate-900 font-bold text-sm"
-            >
+            <span className="reveal-small hover-scale-light inline-block px-6 py-3 rounded-full glass-panel text-slate-900 font-bold text-sm">
               Barcha kurslar
-            </motion.span>
+            </span>
           </Link>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={staggerContainer}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          {courses.map((course) => (
-            <motion.div
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {courses.map((course, idx) => (
+            <div
               key={course.id ?? course.title}
-              variants={fadeUpSmall}
-              whileHover={{ y: -8 }}
-              className="bg-white rounded-3xl overflow-hidden border border-gray-100 group cursor-pointer shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all duration-400"
+              className={`reveal-small stagger-${idx + 1} hover-lift bg-white rounded-3xl overflow-hidden border border-gray-100 group cursor-pointer shadow-sm`}
             >
-              <div className="aspect-[16/10] overflow-hidden">
+              <div className="aspect-[4/3] overflow-hidden">
                 <img
-                  src={course.image_url ?? course.image}
+                  src={course.image_url}
                   alt={course.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
                 />
               </div>
               <div className="p-6">
-                <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">
+                <span className="text-xs font-medium text-purple-600 uppercase tracking-wider">
                   {course.subtitle ?? course.tags}
                 </span>
-                <h3 className="font-bold text-slate-900 text-lg mt-2 mb-1 group-hover:text-indigo-600 transition-colors">
+                <h3 className="text-lg font-bold text-slate-900 mt-2 mb-1">
                   {course.title}
                 </h3>
-                <p className="text-sm text-slate-500 mb-4">
+                <p className="text-sm text-gray-500 mb-4">
                   {course.level ?? course.instructor}
                 </p>
-                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                  <p className="text-slate-900 font-bold">Bepul sinov</p>
-                  <div className="flex items-center gap-1.5 bg-violet-50 px-2.5 py-1 rounded-full text-violet-600">
-                    <span className="text-sm font-bold">
-                      {course.lessons ?? 12}
-                    </span>
-                    <span className="text-xs">dars</span>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-pink-600">
+                    Bepul sinov
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {course.lessons ?? 12} dars
+                  </span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </section>
 
       <EngagementSection />
 
       {/* Tavsiya: ko'p sotilgan kurslar */}
-      <section className="py-16 px-6 max-w-7xl mx-auto">
+      <section className="max-w-7xl mx-auto px-6 py-12">
         <RecommendationSection
-          title="Ko'p sotilgan kurslar"
-          subtitle="O'quvchilar eng ko'p tanlagan dasturlar"
-          fetcher={() => discoveryApi.bestselling(6)}
+          title="Eng mashhur kurslar"
+          fetchFn={() => discoveryApi.bestselling(6)}
           limit={3}
         />
       </section>
 
       {/* Cinematic Call to Action */}
-      <section className="py-32 px-6 max-w-7xl mx-auto relative">
-        <style>{`
-            .cta-glass {
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%);
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(255,255,255,0.4);
-                box-shadow: 0 40px 100px rgba(79, 70, 229, 0.1);
-            }
-        `}</style>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: premiumEasing }}
-          className="cta-glass rounded-[32px] p-12 md:p-20 text-center relative overflow-hidden"
-        >
-          <motion.div
-            animate={{ x: [0, -40, 40, 0], y: [0, 40, -40, 0] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute -bottom-20 -right-20 w-80 h-80 bg-indigo-200/20 blur-[100px] rounded-full"
-          />
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight max-w-2xl mx-auto relative z-10">
-            Raqamli ta'limingizni <br /> yangi bosqichga olib chiqing.
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="reveal cta-glass rounded-[32px] p-12 md:p-20 text-center relative overflow-hidden">
+          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-indigo-200/20 blur-[100px] rounded-full animate-cta-blob" />
+          <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6 relative z-10">
+            Raqamli ta'limingizni yangi bosqichga olib chiqing.
           </h2>
-          <p className="text-lg text-slate-600 mb-10 max-w-md mx-auto relative z-10">
-            Minglab mutaxassislar qatoriga qo'shiling va yangi ko'nikmalarni
+          <p className="text-gray-500 text-lg max-w-2xl mx-auto mb-10 relative z-10">
+            Minglab mutaxassislar qatoriga qo\u2019shiling va yangi ko\u2019nikmalarni
             chuqur amaliyot orqali egallang.
           </p>
-          <Link to="/?modal=signup" className="relative z-10 inline-block">
-            <motion.span
-              whileHover={{
-                scale: 1.03,
-                boxShadow: "0 20px 40px -10px rgba(124,58,237,0.45)",
-              }}
-              whileTap={{ scale: 0.98 }}
-              className="relative inline-block px-8 py-4 rounded-full text-white font-bold text-lg shadow-lg group overflow-hidden bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <span className="relative z-10">To'liq kirish olish</span>
-            </motion.span>
+          <Link to="/register" className="relative z-10">
+            <span className="hover-scale relative inline-block px-8 py-4 rounded-full text-white font-bold text-lg shadow-lg group overflow-hidden bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+              <span className="relative z-10">To\u2019liq kirish olish</span>
+            </span>
           </Link>
-        </motion.div>
+        </div>
       </section>
-    </div>
+    </main>
   );
 }

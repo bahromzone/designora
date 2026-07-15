@@ -1,1 +1,104 @@
-import{Navigate,Route,Routes}from"react-router-dom";import AppShell from"./components/AppShell";import ProtectedRoute from"./components/ProtectedRoute";import SearchShortcut from"./components/SearchShortcut";import AboutPage from"./pages/AboutPage";import AdminDashboardPage from"./pages/AdminDashboardPage";import AuthCallbackPage from"./pages/AuthCallbackPage";import BlogListPage from"./pages/BlogListPage";import BlogPostPage from"./pages/BlogPostPage";import CalendarPage from"./pages/CalendarPage";import CheckoutPage from"./pages/CheckoutPage";import CheckoutResultPage from"./pages/CheckoutResultPage";import CourseCommunityPage from"./pages/CourseCommunityPage";import CourseDetailPage from"./pages/CourseDetailPage";import CoursesPage from"./pages/CoursesPage";import ForgotPasswordPage from"./pages/ForgotPasswordPage";import ForumListPage from"./pages/ForumListPage";import ForumThreadPage from"./pages/ForumThreadPage";import GlobalSearchPage from"./pages/GlobalSearchPage";import HomePage from"./pages/HomePage";import InstructorAnalyticsPage from"./pages/InstructorAnalyticsPage";import InstructorApplyPage from"./pages/InstructorApplyPage";import InstructorCourseEditPage from"./pages/InstructorCourseEditPage";import InstructorDashboardPage from"./pages/InstructorDashboardPage";import InstructorManagePage from"./pages/InstructorManagePage";import InstructorPage from"./pages/InstructorPage";import InstructorReviewPage from"./pages/InstructorReviewPage";import LearnPage from"./pages/LearnPage";import LearningPathDetailPage from"./pages/LearningPathDetailPage";import LearningPathsPage from"./pages/LearningPathsPage";import NotFoundPage from"./pages/NotFoundPage";import PortfolioBuilderPage from"./pages/PortfolioBuilderPage";import PricingPage from"./pages/PricingPage";import PrivacyPage from"./pages/PrivacyPage";import ProfilePage from"./pages/ProfilePage";import PublicPortfolioPage from"./pages/PublicPortfolioPage";import ResetPasswordPage from"./pages/ResetPasswordPage";import StudentDashboardPage from"./pages/StudentDashboardPage";import TermsPage from"./pages/TermsPage";import VerifyPage from"./pages/VerifyPage";const p=x=><ProtectedRoute>{x}</ProtectedRoute>;export default function App(){return <AppShell><SearchShortcut/><Routes><Route path="/" element={<HomePage/>}/><Route path="/pricing" element={<PricingPage/>}/><Route path="/qidiruv" element={<GlobalSearchPage/>}/><Route path="/kurslar" element={<CoursesPage/>}/><Route path="/kurslar/:courseId" element={<CourseDetailPage/>}/><Route path="/community/:courseId" element={p(<CourseCommunityPage/>)}/><Route path="/community/:courseId/thread/:threadId" element={p(<CourseCommunityPage/>)}/><Route path="/checkout/:courseId" element={p(<CheckoutPage/>)}/><Route path="/learning-paths" element={<LearningPathsPage/>}/><Route path="/learning-paths/:slug" element={<LearningPathDetailPage/>}/><Route path="/calendar" element={p(<CalendarPage/>)}/><Route path="/blog" element={<BlogListPage/>}/><Route path="/blog/:slug" element={<BlogPostPage/>}/><Route path="/forum" element={<ForumListPage/>}/><Route path="/forum/:threadId" element={<ForumThreadPage/>}/><Route path="/instruktor/:instructorId" element={<InstructorPage/>}/><Route path="/biz-haqimizda" element={<AboutPage/>}/><Route path="/maxfiylik" element={<PrivacyPage/>}/><Route path="/shartlar" element={<TermsPage/>}/><Route path="/kirish" element={<Navigate to="/?modal=login" replace/>}/><Route path="/royxatdan-otish" element={<Navigate to="/?modal=signup" replace/>}/><Route path="/verify/:code" element={<VerifyPage/>}/><Route path="/forgot-password" element={<ForgotPasswordPage/>}/><Route path="/reset-password" element={<ResetPasswordPage/>}/><Route path="/auth/callback" element={<AuthCallbackPage/>}/><Route path="/portfolio/u/:userId" element={<PublicPortfolioPage/>}/><Route path="/kurslarim" element={p(<StudentDashboardPage/>)}/><Route path="/organish/:courseId" element={p(<LearnPage/>)}/><Route path="/tolov/natija/:orderId" element={p(<CheckoutResultPage/>)}/><Route path="/profil" element={p(<ProfilePage/>)}/><Route path="/portfolio" element={p(<PortfolioBuilderPage/>)}/><Route path="/instruktor-boshlash" element={p(<InstructorApplyPage/>)}/><Route path="/instruktor-panel" element={p(<InstructorDashboardPage/>)}/><Route path="/instruktor-analytics" element={p(<InstructorAnalyticsPage/>)}/><Route path="/instruktor-boshqaruv" element={p(<InstructorManagePage/>)}/><Route path="/instruktor/kurs/:courseId" element={p(<InstructorCourseEditPage/>)}/><Route path="/instruktor/review/:assignmentId" element={p(<InstructorReviewPage/>)}/><Route path="/admin" element={p(<AdminDashboardPage/>)}/><Route path="*" element={<NotFoundPage/>}/></Routes></AppShell>}
+import { Suspense, lazy } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+
+import AppShell from "./components/AppShell";
+import ProtectedRoute from "./components/ProtectedRoute";
+import RouteFallback from "./components/RouteFallback";
+import SearchShortcut from "./components/SearchShortcut";
+import HomePage from "./pages/HomePage";
+
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const AchievementsPage = lazy(() => import("./pages/AchievementsPage"));
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
+const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
+const BlogListPage = lazy(() => import("./pages/BlogListPage"));
+const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
+const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const CheckoutResultPage = lazy(() => import("./pages/CheckoutResultPage"));
+const CourseCommunityPage = lazy(() => import("./pages/CourseCommunityPage"));
+const CourseDetailPage = lazy(() => import("./pages/CourseDetailPage"));
+const CoursesPage = lazy(() => import("./pages/CoursesPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ForumListPage = lazy(() => import("./pages/ForumListPage"));
+const ForumThreadPage = lazy(() => import("./pages/ForumThreadPage"));
+const GlobalSearchPage = lazy(() => import("./pages/GlobalSearchPage"));
+const InstructorAnalyticsPage = lazy(() => import("./pages/InstructorAnalyticsPage"));
+const InstructorApplyPage = lazy(() => import("./pages/InstructorApplyPage"));
+const InstructorCourseEditPage = lazy(() => import("./pages/InstructorCourseEditPage"));
+const InstructorDashboardPage = lazy(() => import("./pages/InstructorDashboardPage"));
+const InstructorManagePage = lazy(() => import("./pages/InstructorManagePage"));
+const InstructorPage = lazy(() => import("./pages/InstructorPage"));
+const InstructorReviewPage = lazy(() => import("./pages/InstructorReviewPage"));
+const LearnPage = lazy(() => import("./pages/LearnPage"));
+const LearningPathDetailPage = lazy(() => import("./pages/LearningPathDetailPage"));
+const LearningPathsPage = lazy(() => import("./pages/LearningPathsPage"));
+const ModerationPage = lazy(() => import("./pages/ModerationPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
+const PortfolioBuilderPage = lazy(() => import("./pages/PortfolioBuilderPage"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const PublicPortfolioPage = lazy(() => import("./pages/PublicPortfolioPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const StudentDashboardPage = lazy(() => import("./pages/StudentDashboardPage"));
+const SupportConsolePage = lazy(() => import("./pages/SupportConsolePage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const VerifyPage = lazy(() => import("./pages/VerifyPage"));
+
+const protectedPage = (element) => <ProtectedRoute>{element}</ProtectedRoute>;
+
+export default function App() {
+  return (
+    <AppShell>
+      <SearchShortcut />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/kurslar" element={<CoursesPage />} />
+          <Route path="/kurslar/:id" element={<CourseDetailPage />} />
+          <Route path="/blog" element={<BlogListPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/instructors/:id" element={<InstructorPage />} />
+          <Route path="/register" element={<Navigate to="/" replace />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify" element={<VerifyPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/portfolio/:username" element={<PublicPortfolioPage />} />
+          <Route path="/learning-paths" element={<LearningPathsPage />} />
+          <Route path="/learning-paths/:id" element={<LearningPathDetailPage />} />
+          <Route path="/forum" element={<ForumListPage />} />
+          <Route path="/forum/:id" element={<ForumThreadPage />} />
+          <Route path="/search" element={<GlobalSearchPage />} />
+          <Route path="/dashboard" element={protectedPage(<StudentDashboardPage />)} />
+          <Route path="/my-courses" element={protectedPage(<LearnPage />)} />
+          <Route path="/learn/:courseId/:lessonId?" element={protectedPage(<LearnPage />)} />
+          <Route path="/achievements" element={protectedPage(<AchievementsPage />)} />
+          <Route path="/profile" element={protectedPage(<ProfilePage />)} />
+          <Route path="/calendar" element={protectedPage(<CalendarPage />)} />
+          <Route path="/checkout/:courseId" element={protectedPage(<CheckoutPage />)} />
+          <Route path="/checkout/result" element={protectedPage(<CheckoutResultPage />)} />
+          <Route path="/portfolio-builder" element={protectedPage(<PortfolioBuilderPage />)} />
+          <Route path="/instructor/apply" element={protectedPage(<InstructorApplyPage />)} />
+          <Route path="/instructor/dashboard" element={protectedPage(<InstructorDashboardPage />)} />
+          <Route path="/instructor/courses/:id/edit" element={protectedPage(<InstructorCourseEditPage />)} />
+          <Route path="/instructor/analytics" element={protectedPage(<InstructorAnalyticsPage />)} />
+          <Route path="/instructor/reviews" element={protectedPage(<InstructorReviewPage />)} />
+          <Route path="/course/:id/community" element={protectedPage(<CourseCommunityPage />)} />
+          <Route path="/admin" element={protectedPage(<AdminDashboardPage />)} />
+          <Route path="/admin/instructors" element={protectedPage(<InstructorManagePage />)} />
+          <Route path="/admin/moderation" element={protectedPage(<ModerationPage />)} />
+          <Route path="/admin/support" element={protectedPage(<SupportConsolePage />)} />
+          <Route path="/insights" element={protectedPage(<StudentDashboardPage />)} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </AppShell>
+  );
+}

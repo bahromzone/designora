@@ -3,34 +3,41 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
+import OfflineCenter from "./components/OfflineCenter";
 import { AuthProvider } from "./context/AuthContext";
-import { LanguageProvider } from "./context/LanguageContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider } from "./context/ToastContext";
+import { analyticsApi } from "./lib/api";
+import { observeWebVitals } from "./lib/performance";
+import { installProductAnalytics } from "./lib/productAnalytics";
 import "./index.css";
+
+installProductAnalytics();
+
+if ("serviceWorker" in navigator)
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js"));
+
+observeWebVitals((metric) => {
+  analyticsApi
+    .track({
+      name: "web_vital",
+      path: metric.path,
+      props: { metric: metric.name, value: metric.value, rating: metric.rating },
+    })
+    .catch(() => {});
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
-      <LanguageProvider>
-        <ThemeProvider>
+      <ThemeProvider>
+        <ToastProvider>
           <AuthProvider>
-            <ToastProvider>
-              <App />
-            </ToastProvider>
+            <App />
+            <OfflineCenter />
           </AuthProvider>
-        </ThemeProvider>
-      </LanguageProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
-
-// PWA: service worker'ni faqat productionda ro'yxatdan o'tkazamiz
-// (dev rejimida HMR bilan ziddiyatga bormasligi uchun).
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
-      // Ro'yxatdan o'tkazib bo'lmadi — ilova baribir ishlaydi.
-    });
-  });
-}

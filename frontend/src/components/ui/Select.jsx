@@ -1,39 +1,6 @@
-/**
- * Umumiy tanlov (select). options: [{value, label}] yoki children.
- */
-function Select({
-  label,
-  error,
-  id,
-  options,
-  className = "",
-  children,
-  ...rest
-}) {
-  const selectId = id ?? rest.name;
-  return (
-    <div className="flex flex-col gap-1.5">
-      {label && (
-        <label htmlFor={selectId} className="text-sm font-medium text-ink">
-          {label}
-        </label>
-      )}
-      <select
-        id={selectId}
-        className={`input-field cursor-pointer ${error ? "border-rose-400" : ""} ${className}`}
-        {...rest}
-      >
-        {options
-          ? options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))
-          : children}
-      </select>
-      {error && <span className="text-xs text-rose-600">{error}</span>}
-    </div>
-  );
+import { useId } from "react";
+function Select({ label, error, hint, id, options, className = "", children, required, ...rest }) {
+  const generated = useId(); const selectId = id ?? rest.name ?? generated; const errorId = `${selectId}-error`; const hintId = `${selectId}-hint`;
+  return <div className={`field ${className}`}>{label && <label htmlFor={selectId}>{label}{required && <span aria-hidden="true"> *</span>}</label>}{hint && <p id={hintId} className="field-hint">{hint}</p>}<select {...rest} id={selectId} required={required} aria-invalid={Boolean(error)} aria-describedby={[hint && hintId,error && errorId].filter(Boolean).join(" ")||undefined} className="input-field">{options ? options.map(option => <option key={option.value} value={option.value}>{option.label}</option>) : children}</select>{error && <p id={errorId} className="field-error" role="alert">{error}</p>}</div>;
 }
-
 export default Select;

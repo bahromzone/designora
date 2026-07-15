@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /checkout
+Disallow: /profil
+Disallow: /organish
+Disallow: /instructor/dashboard
+Sitemap: https://designora.uz/sitemap.xml

@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { instructorsApi } from "../lib/api";
 import SearchResultCard from "../components/SearchResultCard";
+import SeoHead, { seoSiteUrl } from "../components/SeoHead";
 import { EmptyState, Spinner } from "../components/ui";
+import { instructorsApi } from "../lib/api";
 
 export default function InstructorPage() {
   const { instructorId } = useParams();
-
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,148 +16,41 @@ export default function InstructorPage() {
     let active = true;
     setLoading(true);
     setError("");
-    instructorsApi
-      .get(instructorId)
-      .then((res) => active && setData(res))
-      .catch((e) => active && setError(e.message))
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
+    instructorsApi.get(instructorId).then((res) => active && setData(res)).catch((e) => active && setError(e.message)).finally(() => active && setLoading(false));
+    return () => { active = false; };
   }, [instructorId]);
+  useEffect(() => load(), [load]);
 
-  useEffect(() => {
-    const cleanup = load();
-    return cleanup;
-  }, [load]);
+  const schemas = useMemo(() => {
+    if (!data) return [];
+    const url = `${seoSiteUrl}/instruktor/${data.id}`;
+    return [
+      { "@context": "https://schema.org", "@type": "Person", name: data.name, description: data.bio, image: data.avatar_url, url, sameAs: data.website ? [data.website] : [], jobTitle: "Design instructor", worksFor: { "@type": "Organization", name: "Designora" }, knowsAbout: (data.courses || []).map((course) => course.title) },
+      { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Bosh sahifa", item: seoSiteUrl },
+        { "@type": "ListItem", position: 2, name: "Instruktorlar", item: `${seoSiteUrl}/kurslar` },
+        { "@type": "ListItem", position: 3, name: data.name, item: url },
+      ] },
+    ];
+  }, [data]);
 
-  if (loading) {
-    return (
-      <section className="shell flex justify-center py-24">
-        <Spinner />
-      </section>
-    );
-  }
+  if (loading) return <div className="container py-16"><Spinner /></div>;
+  if (error || !data) return <div className="container py-16"><EmptyState title={error || "Instruktor topilmadi"} /><Link to="/kurslar">← Katalogga qaytish</Link></div>;
 
-  if (error || !data) {
-    const notFoundMsg =
-      error || "Bunday instruktor mavjud emas yoki o'chirilgan.";
-    return (
-      <section className="shell py-24">
-        <EmptyState title="Instruktor topilmadi" description={notFoundMsg} />
-        <div className="mt-6 text-center">
-          <Link to="/kurslar" className="btn-outline">
-            ← Kataloga qaytish
-          </Link>
-        </div>
-      </section>
-    );
-  }
-
-  const initials = data.name?.charAt(0)?.toUpperCase() ?? "D";
-  const courses = data.courses ?? [];
-  const avgRating = Number(data.avg_rating ?? 0).toFixed(1);
-  const stats = [
-    { label: "Kurslar", value: data.courses_count ?? courses.length },
-    { label: "O'quvchilar", value: data.total_students ?? 0 },
-    { label: "O'rtacha reyting", value: avgRating },
-  ];
-
+  const courses = data.courses || [];
   return (
-    <section className="shell py-16 sm:py-20">
-      {/* Profil kartasi */}
-      <div
-        className="rounded-2xl border p-6 sm:p-8"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
-          {data.avatar_url ? (
-            <img
-              src={data.avatar_url}
-              alt={data.name}
-              className="h-24 w-24 rounded-full object-cover"
-            />
-          ) : (
-            <div
-              className="flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold text-white"
-              style={{ background: "var(--amber)" }}
-            >
-              {initials}
-            </div>
-          )}
-
-          <div className="flex-1">
-            <p className="label">Instruktor</p>
-            <h1 className="font-serif text-2xl font-semibold text-ink sm:text-3xl">
-              {data.name}
-            </h1>
-            {data.location && (
-              <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-                📍 {data.location}
-              </p>
-            )}
-            {data.website && (
-              <a
-                href={data.website}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-1 inline-block text-sm font-medium"
-                style={{ color: "var(--brand)" }}
-              >
-                {data.website}
-              </a>
-            )}
-          </div>
-        </div>
-
-        {data.bio && (
-          <p
-            className="mt-6 text-sm leading-7"
-            style={{ color: "var(--ink-60)" }}
-          >
-            {data.bio}
-          </p>
-        )}
-
-        {/* Statistika */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="rounded-xl border p-4 text-center"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <p className="font-serif text-2xl font-semibold text-ink">
-                {s.value}
-              </p>
-              <p className="text-xs" style={{ color: "var(--muted)" }}>
-                {s.label}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Kurslar */}
-      <div className="mt-10">
-        <h2 className="font-serif text-xl font-semibold text-ink">
-          {data.name} kurslari
-        </h2>
-        {courses.length === 0 ? (
-          <div className="mt-6">
-            <EmptyState
-              title="Hozircha kurs yo'q"
-              description="Bu instruktor hali kurs chop etmagan."
-            />
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course) => (
-              <SearchResultCard key={course.id} course={course} />
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+    <main className="container py-10">
+      <SeoHead title={`${data.name}, instruktor`} description={data.bio || `${data.name}ning Designora kurslari va tajribasi`} path={`/instruktor/${data.id}`} image={data.avatar_url} type="profile" structuredData={schemas} />
+      <nav aria-label="Breadcrumb"><Link to="/kurslar">Kurslar</Link> / <span>{data.name}</span></nav>
+      <section className="card p-8 text-center">
+        {data.avatar_url ? <img src={data.avatar_url} alt={`${data.name} profil rasmi`} className="mx-auto rounded-full" /> : <div aria-hidden="true">{data.name?.charAt(0)?.toUpperCase() || "D"}</div>}
+        <p>Instruktor</p><h1>{data.name}</h1>
+        {data.location && <p>📍 {data.location}</p>}
+        {data.website && <a href={data.website} rel="me noopener noreferrer">Shaxsiy sayt</a>}
+        {data.bio && <p>{data.bio}</p>}
+        <dl><div><dt>Kurslar</dt><dd>{data.courses_count || courses.length}</dd></div><div><dt>O‘quvchilar</dt><dd>{data.total_students || 0}</dd></div><div><dt>O‘rtacha reyting</dt><dd>{Number(data.avg_rating || 0).toFixed(1)}</dd></div></dl>
+      </section>
+      <section><h2>{data.name} kurslari</h2>{courses.length ? courses.map((course) => <SearchResultCard key={course.id} item={course} />) : <EmptyState title="Hozircha kurslar yo‘q" />}</section>
+    </main>
   );
 }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Designora</title><desc id="desc">Onlayn dizayn ta'lim platformasi</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#15112b"/><stop offset="1" stop-color="#6d28d9"/></linearGradient></defs>
+  <rect width="1200" height="630" fill="url(#bg)"/><circle cx="1020" cy="90" r="250" fill="#a78bfa" opacity=".22"/><circle cx="120" cy="590" r="280" fill="#22d3ee" opacity=".16"/>
+  <text x="96" y="300" fill="white" font-family="Arial, sans-serif" font-size="104" font-weight="700">Designora</text>
+  <text x="102" y="380" fill="#ddd6fe" font-family="Arial, sans-serif" font-size="42">Dizaynni amalda o‘rganing</text>
+</svg>

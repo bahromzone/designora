@@ -12,7 +12,7 @@
     "coverage": "vitest run --coverage",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
-    "format:check": "echo 'Prettier debt is non-blocking; ESLint, Vitest and Vite remain required'"
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\""
   },
   "dependencies": {
     "framer-motion": "^12.38.0",
@@ -28,6 +28,7 @@
     "@testing-library/user-event": "^14.5.2",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.8",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^9.1.0",

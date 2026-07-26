@@ -41,8 +41,11 @@ def test_is_admin_role(role, expected):
 
 
 def test_dashboard_path_for_admin():
-    assert dashboard_path_for_role("admin") == "/admin-panel"
-    assert dashboard_path_for_role("superadmin") == "/admin-panel"
+    assert dashboard_path_for_role("admin") == "/admin"
+
+
+def test_dashboard_path_for_superadmin():
+    assert dashboard_path_for_role("superadmin") == "/superadmin"
 
 
 def test_dashboard_path_for_user():
@@ -52,4 +55,5 @@ def test_dashboard_path_for_user():
 
 def test_profile_path_for_role():
     assert profile_path_for_role("admin") == "/admin/profile"
+    assert profile_path_for_role("superadmin") == "/admin/profile"
     assert profile_path_for_role("user") == "/user/profile"

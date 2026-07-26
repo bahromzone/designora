@@ -10,11 +10,14 @@ Prefix: /api/payments
 - GET  /orders/{order_id}       → buyurtma holatini tekshirish (frontend polling)
 
 To'lov muvaffaqiyatli bo'lgach _grant_access() Enrollment yaratadi —
-access control (learning.py) avtomatik ochiladi.
+access control (learning.py) avtomatik ochiladi. Bekor qilinganda/qaytarilganda
+_revoke_access() aynan shuni orqaga qaytaradi.
 """
 
 import base64
 import hashlib
+import hmac
+import logging
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -32,11 +35,21 @@ from app.models.payment import Payment
 from app.models.progress import Progress
 from app.models.user import User
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/payments", tags=["Payments"])
 
 
 def _now():
     return datetime.now(UTC)
+
+
+def _safe_int(value) -> int | None:
+    """Webhook'dan kelgan qiymatni xavfsiz int'ga o'giradi (500 o'rniga None)."""
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError, AttributeError):
+        return None
 
 
 # Payme holat kodlari
@@ -116,6 +129,67 @@ def _grant_access(db: Session, order: Order) -> None:
         coupon = db.query(Coupon).filter(Coupon.code == order.coupon_code).first()
         if coupon:
             coupon.used_count = (coupon.used_count or 0) + 1
+
+
+# ──────────────────────────────────────────────────────────────────
+# Access revoke — to'lov bekor qilinganda / qaytarilganda
+# ──────────────────────────────────────────────────────────────────
+def _revoke_access(db: Session, order: Order) -> None:
+    """✅ KRITIK FIX: bekor qilingan to'lovda kursga kirishni yopadi.
+
+    Avval CancelTransaction faqat `order.status = "cancelled"` qilardi.
+    Enrollment o'chirilmagani uchun "to'la → o'qi → refund qil" sxemasi bilan
+    kursni bepul qo'lga kiritish mumkin edi.
+
+    Progress / LessonProgress yozuvlari ataylab saqlanadi — o'quv tarixi
+    yo'qolmasin. Kirish nazorati faqat Enrollment orqali ishlaydi, shuning
+    uchun bu xavfsiz.
+    """
+    was_paid = order.status == "paid"
+
+    order.status = "cancelled"
+    order.cancel_time_ms = int(_now().timestamp() * 1000)
+
+    if not was_paid:
+        # Hech qachon to'lanmagan — qaytariladigan kirish ham yo'q.
+        return
+
+    order.refund_status = "refunded"
+
+    if order.course_id:
+        enrollment = (
+            db.query(Enrollment)
+            .filter(
+                Enrollment.user_id == order.user_id,
+                Enrollment.course_id == order.course_id,
+            )
+            .first()
+        )
+        if enrollment:
+            db.delete(enrollment)
+            course = db.query(Course).filter(Course.id == order.course_id).first()
+            if course:
+                course.students_count = max(0, (course.students_count or 1) - 1)
+
+    # Legacy Payment yozuvini "refunded" ga o'tkazamiz (admin panel shundan o'qiydi)
+    db.query(Payment).filter(
+        Payment.user_id == order.user_id,
+        Payment.course_id == order.course_id,
+        Payment.status == "paid",
+    ).update({Payment.status: "refunded"}, synchronize_session=False)
+
+    # Kupon hisoblagichini qaytaramiz
+    if order.coupon_code:
+        coupon = db.query(Coupon).filter(Coupon.code == order.coupon_code).first()
+        if coupon and coupon.used_count:
+            coupon.used_count = max(0, coupon.used_count - 1)
+
+    logger.warning(
+        "To'lov bekor qilindi — kirish yopildi: order=%s user=%s course=%s",
+        order.id,
+        order.user_id,
+        order.course_id,
+    )
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -252,7 +326,19 @@ def order_status(
 # PAYME — Merchant API (JSON-RPC 2.0)
 # ──────────────────────────────────────────────────────────────────
 def _payme_auth(request: Request) -> bool:
-    """Authorization: Basic base64('Paycom:<PAYME_KEY>')."""
+    """Authorization: Basic base64('Paycom:<PAYME_KEY>').
+
+    ✅ KRITIK FIX (ikkita):
+    1. PAYME_KEY sukut bo'yicha bo'sh ("") edi — kalit sozlanmagan hostda
+       istalgan odam "Paycom:" yuborib webhook'ni ishga tushira olardi.
+       Endi kalit bo'sh bo'lsa webhook butunlay rad etiladi.
+    2. Solishtirish `==` o'rniga hmac.compare_digest — timing attack yopildi.
+    """
+    expected = (settings.PAYME_KEY or "").strip()
+    if not expected:
+        logger.error("PAYME_KEY sozlanmagan — payme webhook rad etildi")
+        return False
+
     header = request.headers.get("Authorization", "")
     if not header.startswith("Basic "):
         return False
@@ -261,7 +347,7 @@ def _payme_auth(request: Request) -> bool:
         _, key = decoded.split(":", 1)
     except Exception:
         return False
-    return key == settings.PAYME_KEY
+    return hmac.compare_digest(key, expected)
 
 
 def _payme_error(req_id, code, message):
@@ -354,7 +440,9 @@ async def payme_webhook(request: Request, db: Session = Depends(get_db)):
             return _payme_error(
                 req_id, PAYME_ERR_TRANSACTION_NOT_FOUND, "Tranzaksiya topilmadi"
             )
-        order.status = "cancelled"
+        # ✅ KRITIK FIX: statusni o'zgartirish yetarli emas — Enrollment ham
+        # bekor qilinishi kerak, aks holda refunddan keyin kurs ochiq qoladi.
+        _revoke_access(db, order)
         order.cancel_reason = params.get("reason")
         order.provider_state = -abs(order.provider_state or 1)
         db.commit()
@@ -394,11 +482,11 @@ async def payme_webhook(request: Request, db: Session = Depends(get_db)):
 
 
 def _payme_find_order(db: Session, params: dict) -> Order | None:
-    account = params.get("account", {})
-    order_id = account.get("order_id")
+    account = params.get("account", {}) or {}
+    order_id = _safe_int(account.get("order_id"))
     if not order_id:
         return None
-    return db.query(Order).filter(Order.id == int(order_id)).first()
+    return db.query(Order).filter(Order.id == order_id).first()
 
 
 def _payme_find_by_txn(db: Session, txn: str) -> Order | None:
@@ -414,13 +502,29 @@ def _click_signature(*parts) -> str:
     return hashlib.md5("".join(str(p) for p in parts).encode()).hexdigest()
 
 
+def _click_secret() -> str:
+    """✅ KRITIK FIX: CLICK_SECRET_KEY sukut bo'yicha bo'sh edi.
+
+    Bo'sh kalit bilan imzo har kim tomonidan hisoblanishi mumkin — ya'ni
+    to'lovsiz "Complete" yuborib kurs ochib olsa bo'lardi. Kalit yo'q bo'lsa
+    webhook umuman xizmat ko'rsatmaydi.
+    """
+    return (settings.CLICK_SECRET_KEY or "").strip()
+
+
+_CLICK_NOT_CONFIGURED = {"error": -1, "error_note": "To'lov provayderi sozlanmagan"}
+
+
 @router.post("/click/prepare")
 async def click_prepare(request: Request, db: Session = Depends(get_db)):
+    secret = _click_secret()
+    if not secret:
+        logger.error("CLICK_SECRET_KEY sozlanmagan — click/prepare rad etildi")
+        return _CLICK_NOT_CONFIGURED
+
     form = dict(await request.form())
-    order_id = form.get("merchant_trans_id")
-    order = (
-        db.query(Order).filter(Order.id == int(order_id)).first() if order_id else None
-    )
+    order_id = _safe_int(form.get("merchant_trans_id"))
+    order = db.query(Order).filter(Order.id == order_id).first() if order_id else None
     if not order:
         return {"error": -5, "error_note": "Buyurtma topilmadi"}
 
@@ -429,16 +533,17 @@ async def click_prepare(request: Request, db: Session = Depends(get_db)):
     expected = _click_signature(
         form.get("click_trans_id"),
         form.get("service_id"),
-        settings.CLICK_SECRET_KEY,
+        secret,
         form.get("merchant_trans_id"),
         form.get("amount"),
         form.get("action"),
         form.get("sign_time"),
     )
-    if expected != form.get("sign_string"):
+    # ✅ Timing-safe solishtirish
+    if not hmac.compare_digest(expected, str(form.get("sign_string") or "")):
         return {"error": -1, "error_note": "Imzo noto'g'ri"}
 
-    if abs(float(form.get("amount", 0)) - (order.amount or 0)) > 0.01:
+    if abs(float(form.get("amount", 0) or 0) - (order.amount or 0)) > 0.01:
         return {"error": -2, "error_note": "Summa mos kelmadi"}
     if order.status == "paid":
         return {"error": -4, "error_note": "Allaqachon to'langan"}
@@ -450,42 +555,46 @@ async def click_prepare(request: Request, db: Session = Depends(get_db)):
         "error": 0,
         "error_note": "Success",
         "click_trans_id": form.get("click_trans_id"),
-        "merchant_trans_id": order_id,
+        "merchant_trans_id": str(order_id),
         "merchant_prepare_id": order.id,
     }
 
 
 @router.post("/click/complete")
 async def click_complete(request: Request, db: Session = Depends(get_db)):
+    secret = _click_secret()
+    if not secret:
+        logger.error("CLICK_SECRET_KEY sozlanmagan — click/complete rad etildi")
+        return _CLICK_NOT_CONFIGURED
+
     form = dict(await request.form())
-    order_id = form.get("merchant_trans_id")
-    order = (
-        db.query(Order).filter(Order.id == int(order_id)).first() if order_id else None
-    )
+    order_id = _safe_int(form.get("merchant_trans_id"))
+    order = db.query(Order).filter(Order.id == order_id).first() if order_id else None
     if not order:
         return {"error": -5, "error_note": "Buyurtma topilmadi"}
 
     expected = _click_signature(
         form.get("click_trans_id"),
         form.get("service_id"),
-        settings.CLICK_SECRET_KEY,
+        secret,
         form.get("merchant_trans_id"),
         form.get("merchant_prepare_id"),
         form.get("amount"),
         form.get("action"),
         form.get("sign_time"),
     )
-    if expected != form.get("sign_string"):
+    if not hmac.compare_digest(expected, str(form.get("sign_string") or "")):
         return {"error": -1, "error_note": "Imzo noto'g'ri"}
 
     # error < 0 → Click bekor qildi
-    if int(form.get("error", 0)) < 0:
-        order.status = "cancelled"
+    if (_safe_int(form.get("error", 0)) or 0) < 0:
+        # ✅ KRITIK FIX: bekor qilinganda kirish ham yopiladi
+        _revoke_access(db, order)
         db.commit()
         return {"error": -9, "error_note": "Tranzaksiya bekor qilindi"}
 
     # Summa tekshiruvi
-    if abs(float(form.get("amount", 0)) - (order.amount or 0)) > 0.01:
+    if abs(float(form.get("amount", 0) or 0) - (order.amount or 0)) > 0.01:
         return {"error": -2, "error_note": "Summa mos kelmadi"}
 
     if order.status != "paid":
@@ -495,6 +604,6 @@ async def click_complete(request: Request, db: Session = Depends(get_db)):
         "error": 0,
         "error_note": "Success",
         "click_trans_id": form.get("click_trans_id"),
-        "merchant_trans_id": order_id,
+        "merchant_trans_id": str(order_id),
         "merchant_confirm_id": order.id,
     }

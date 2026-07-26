@@ -8,6 +8,8 @@ Oqim:
   yangi refresh-token beradi (rotatsiya). Eski refresh bekor qilinadi.
 - Bekor qilingan tokendan qayta foydalanilsa (reuse) — foydalanuvchining barcha
   refresh tokenlari bekor qilinadi (o'g'irlik alomati).
+- Bloklangan (is_active=False) foydalanuvchining sessiyasi uzaytirilmaydi va
+  mavjud refresh tokenlari bekor qilinadi.
 - `POST /logout-all` barcha refresh tokenlarni bekor qiladi.
 """
 
@@ -20,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.deps import INACTIVE_DETAIL
 from app.core.security import create_access_token, get_current_user
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
@@ -43,6 +46,17 @@ def _set_refresh_cookie(response: Response, token: str) -> None:
         max_age=token_service.REFRESH_TOKEN_TTL_DAYS * 24 * 3600,
         samesite="strict",
         path="/api/auth",
+    )
+
+
+def _revoke_all(db: Session, user_id: int) -> int:
+    return (
+        db.query(RefreshToken)
+        .filter(
+            RefreshToken.user_id == user_id,
+            RefreshToken.revoked_at.is_(None),
+        )
+        .update({RefreshToken.revoked_at: datetime.now(UTC)})
     )
 
 
@@ -79,10 +93,7 @@ def refresh(
 
     # Reuse-detection: bekor qilingan tokendan foydalanildi — hammasi bekor qilinadi
     if not rec.is_active:
-        db.query(RefreshToken).filter(
-            RefreshToken.user_id == rec.user_id,
-            RefreshToken.revoked_at.is_(None),
-        ).update({RefreshToken.revoked_at: datetime.now(UTC)})
+        _revoke_all(db, rec.user_id)
         db.commit()
         raise HTTPException(
             status_code=401,
@@ -92,6 +103,14 @@ def refresh(
     user = db.query(User).filter(User.id == rec.user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Foydalanuvchi topilmadi")
+
+    # ✅ XAVFSIZLIK FIX: bloklangan hisob sessiyani uzaytira olmasin.
+    # Aks holda admin bloklagan foydalanuvchi refresh orqali cheksiz
+    # yangi access-token olib, tizimda qolaverardi.
+    if not user.is_active:
+        _revoke_all(db, user.id)
+        db.commit()
+        raise HTTPException(status_code=403, detail=INACTIVE_DETAIL)
 
     # Rotatsiya: eskisini bekor qilamiz, yangisini beramiz
     new_raw = issue_refresh_token(
@@ -128,14 +147,7 @@ def logout_all(
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
-    revoked = (
-        db.query(RefreshToken)
-        .filter(
-            RefreshToken.user_id == user.id,
-            RefreshToken.revoked_at.is_(None),
-        )
-        .update({RefreshToken.revoked_at: datetime.now(UTC)})
-    )
+    revoked = _revoke_all(db, user.id)
     db.commit()
     response.delete_cookie("access_token")
     response.delete_cookie(_REFRESH_COOKIE, path="/api/auth")
@@ -157,6 +169,8 @@ def issue_refresh_for_current(
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail=INACTIVE_DETAIL)
     raw = issue_refresh_token(db, user, user_agent=request.headers.get("user-agent"))
     db.commit()
     _set_refresh_cookie(response, raw)

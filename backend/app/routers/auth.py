@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import limiter, settings
 from app.core.database import get_db
+from app.core.deps import INACTIVE_DETAIL
 from app.core.email import send_email
 from app.core.password import hash_password, verify_password
 from app.core.security import create_access_token, get_current_user_optional
@@ -197,6 +198,13 @@ async def login(
         logger.warning(f"Failed login: {data.email}")
         raise HTTPException(status_code=401, detail="Login yoki parol xato")
 
+    # ✅ XAVFSIZLIK FIX: bloklangan hisob tizimga kira olmaydi.
+    # Avval is_active hech qayerda tekshirilmasdi — admin bloklagan
+    # foydalanuvchi bemalol ishlashda davom etardi.
+    if not user.is_active:
+        logger.warning(f"Blocked account login attempt: {data.email}")
+        raise HTTPException(status_code=403, detail=INACTIVE_DETAIL)
+
     logger.info(f"Successful login: {data.email}")
     update_streak(user, db)
 
@@ -248,7 +256,7 @@ def login_page(request: Request, db: Session = Depends(get_db)):
     email = get_current_user_optional(request)
     if email:
         user = db.query(User).filter(User.email == email).first()
-        if user:
+        if user and user.is_active:
             return RedirectResponse(dashboard_path_for_role(user.role), status_code=302)
     return RedirectResponse("/?modal=login", status_code=302)
 
@@ -295,8 +303,8 @@ def forgot_password(
     }
 
     user = db.query(User).filter(User.email == data.email).first()
-    if not user:
-        return SAME_RESPONSE  # timing attack dan himoya
+    if not user or not user.is_active:
+        return SAME_RESPONSE  # mavjudlikni oshkor qilmaymiz
 
     token = str(uuid4())
 
@@ -317,7 +325,7 @@ def forgot_password(
         <h3>Parolni tiklash</h3>
         <p>Quyidagi havola orqali yangi parol o'rnating:</p>
         <a href="{link}">{link}</a>
-        <p>Havola 15 daqiqa amal qiladi.</p>
+        <p>Havola 30 daqiqa amal qiladi.</p>
         """,
     )
     return SAME_RESPONSE
@@ -345,6 +353,10 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == reset.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+
+    # Bloklangan hisob parolni tiklab tizimga kira olmasin.
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail=INACTIVE_DETAIL)
 
     user.password = hash_password(data.password)
     db.delete(reset)

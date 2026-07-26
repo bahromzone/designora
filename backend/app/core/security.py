@@ -1,10 +1,15 @@
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from fastapi import HTTPException, Request
+from fastapi import Depends, HTTPException, Request
 from jose import JWTError, jwt
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.database import get_db
+
+# Bloklangan hisob uchun yagona javob matni (auth.py / token.py ham ishlatadi).
+ACCOUNT_DISABLED_DETAIL = "Hisobingiz bloklangan. Administrator bilan bog'laning."
 
 
 def create_access_token(sub: str) -> str:
@@ -79,6 +84,31 @@ def get_current_user_optional(request: Request) -> str | None:
         return get_current_user(request)
     except HTTPException:
         return None
+
+
+# ✅ KRITIK FIX: `is_active` bayrog'i hech qayerda tekshirilmasdi.
+#
+# `get_current_user` faqat JWT'ni ochadi va bazaga qaramaydi, shu sabab
+# bloklangan (is_active=False) foydalanuvchi tokeni amal qilgunicha —
+# hatto undan keyin ham, refresh orqali — bemalol ishlashda davom etardi.
+#
+# Quyidagi qo'riqchi main.py da global dependency sifatida ulanadi, shuning
+# uchun har bir routerni alohida o'zgartirish shart emas. Token bo'lmasa
+# (ommaviy endpointlar) hech narsa qilmaydi.
+def is_user_active(db: Session, email: str) -> bool:
+    from app.models.user import User
+
+    user = db.query(User).filter(User.email == email).first()
+    # Foydalanuvchi topilmasa qaror qabul qilmaymiz — endpointning o'zi 401 beradi.
+    return user is None or bool(user.is_active)
+
+
+def enforce_active_user(request: Request, db: Session = Depends(get_db)) -> None:
+    email = get_current_user_optional(request)
+    if not email:
+        return
+    if not is_user_active(db, email):
+        raise HTTPException(status_code=403, detail=ACCOUNT_DISABLED_DETAIL)
 
 
 # ✅ BUG #14 FIX: user_id parametri olib tashlandi — funksiya ichida ishlatilmasdi

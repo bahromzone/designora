@@ -5,6 +5,13 @@
 .env.*
 !.env.example
 
+# Agent/CLI sozlama fayllari — API kalit saqlab qolish xavfi bor.
+# (Repo tarixida ochiq ANTHROPIC_AUTH_TOKEN topilgan — qayta takrorlanmasin.)
+settings.json
+.claude/
+.codex/
+*.credentials.json
+
 # ===== Python =====
 __pycache__/
 *.py[cod]

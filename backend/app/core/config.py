@@ -1,4 +1,5 @@
 from fastapi_csrf_protect import CsrfProtect
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -7,6 +8,10 @@ from slowapi.util import get_remote_address
 limiter = Limiter(
     key_func=get_remote_address, default_limits=["200/minute"], storage_uri="memory://"
 )
+
+# Dev uchun media imzo kaliti. Production'da almashtirilishi SHART —
+# quyidagi validator buni tekshiradi.
+DEV_MEDIA_SIGNING_KEY = "dev-media-signing-key-change-in-prod"
 
 
 class Settings(BaseSettings):
@@ -50,7 +55,7 @@ class Settings(BaseSettings):
     # ===== MEDIA (signed video URL) =====
     # HMAC imzo kaliti va (ixtiyoriy) CDN bazasi. CDN bo'lmasa nisbiy
     # /video/... havola ishlatiladi. Prod'da media_signing_key ni almashtiring.
-    media_signing_key: str = "dev-media-signing-key-change-in-prod"
+    media_signing_key: str = DEV_MEDIA_SIGNING_KEY
     MEDIA_CDN_BASE_URL: str = ""
 
     # ===== PAYME =====
@@ -74,6 +79,33 @@ class Settings(BaseSettings):
 
     def get_allowed_origins(self) -> list[str]:
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+
+    # ✅ KRITIK FIX: production'da to'lov/media kalitlari majburiy.
+    #
+    # Avval bu qiymatlar sukut bo'yicha bo'sh ("") edi. Bo'sh kalit bilan
+    # deploy qilinsa Payme/Click webhook'larini istalgan odam soxtalashtirib,
+    # to'lovsiz kurs ochib olishi mumkin edi. Endi server bunday konfiguratsiya
+    # bilan umuman ko'tarilmaydi — xato deploy paytida, prodda emas, ko'rinadi.
+    @model_validator(mode="after")
+    def _require_production_secrets(self):
+        if self.ENVIRONMENT != "production":
+            return self
+
+        missing: list[str] = []
+        if not (self.PAYME_KEY or "").strip():
+            missing.append("PAYME_KEY")
+        if not (self.CLICK_SECRET_KEY or "").strip():
+            missing.append("CLICK_SECRET_KEY")
+        if self.media_signing_key == DEV_MEDIA_SIGNING_KEY:
+            missing.append("media_signing_key (dev qiymati o'zgartirilmagan)")
+
+        if missing:
+            raise ValueError(
+                "Production uchun majburiy maxfiy sozlamalar to'ldirilmagan: "
+                + ", ".join(missing)
+                + ". Bo'sh kalit bilan to'lov webhook'lari soxtalashtirilishi mumkin."
+            )
+        return self
 
 
 settings = Settings()

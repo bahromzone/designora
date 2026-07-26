@@ -14,7 +14,11 @@ from app.core.config import limiter, settings
 from app.core.database import get_db
 from app.core.email import send_email
 from app.core.password import hash_password, verify_password
-from app.core.security import create_access_token, get_current_user_optional
+from app.core.security import (
+    ACCOUNT_DISABLED_DETAIL,
+    create_access_token,
+    get_current_user_optional,
+)
 from app.models.password_reset import PasswordReset
 from app.models.user import User
 from app.utils.routes import dashboard_path_for_role
@@ -197,6 +201,12 @@ async def login(
         logger.warning(f"Failed login: {data.email}")
         raise HTTPException(status_code=401, detail="Login yoki parol xato")
 
+    # ✅ KRITIK FIX: `is_active` hech qayerda tekshirilmasdi — bloklangan
+    # foydalanuvchi bemalol kirib, ishlashda davom etardi.
+    if not getattr(user, "is_active", True):
+        logger.warning(f"Blocked login (inactive account): {data.email}")
+        raise HTTPException(status_code=403, detail=ACCOUNT_DISABLED_DETAIL)
+
     logger.info(f"Successful login: {data.email}")
     update_streak(user, db)
 
@@ -298,6 +308,10 @@ def forgot_password(
     if not user:
         return SAME_RESPONSE  # timing attack dan himoya
 
+    # Bloklangan hisob uchun tiklash havolasi yuborilmaydi (javob bir xil).
+    if not getattr(user, "is_active", True):
+        return SAME_RESPONSE
+
     token = str(uuid4())
 
     db.query(PasswordReset).filter(PasswordReset.user_id == user.id).delete()
@@ -345,6 +359,9 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == reset.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+
+    if not getattr(user, "is_active", True):
+        raise HTTPException(status_code=403, detail=ACCOUNT_DISABLED_DETAIL)
 
     user.password = hash_password(data.password)
     db.delete(reset)

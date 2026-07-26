@@ -20,7 +20,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.security import create_access_token, get_current_user
+from app.core.security import (
+    ACCOUNT_DISABLED_DETAIL,
+    create_access_token,
+    get_current_user,
+)
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.services import token_service
@@ -43,6 +47,17 @@ def _set_refresh_cookie(response: Response, token: str) -> None:
         max_age=token_service.REFRESH_TOKEN_TTL_DAYS * 24 * 3600,
         samesite="strict",
         path="/api/auth",
+    )
+
+
+def _revoke_all_refresh_tokens(db: Session, user_id: int) -> int:
+    return (
+        db.query(RefreshToken)
+        .filter(
+            RefreshToken.user_id == user_id,
+            RefreshToken.revoked_at.is_(None),
+        )
+        .update({RefreshToken.revoked_at: datetime.now(UTC)})
     )
 
 
@@ -79,10 +94,7 @@ def refresh(
 
     # Reuse-detection: bekor qilingan tokendan foydalanildi — hammasi bekor qilinadi
     if not rec.is_active:
-        db.query(RefreshToken).filter(
-            RefreshToken.user_id == rec.user_id,
-            RefreshToken.revoked_at.is_(None),
-        ).update({RefreshToken.revoked_at: datetime.now(UTC)})
+        _revoke_all_refresh_tokens(db, rec.user_id)
         db.commit()
         raise HTTPException(
             status_code=401,
@@ -92,6 +104,15 @@ def refresh(
     user = db.query(User).filter(User.id == rec.user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Foydalanuvchi topilmadi")
+
+    # ✅ KRITIK FIX: bloklangan foydalanuvchi refresh orqali sessiyasini
+    # cheksiz uzaytira olardi. Endi barcha refresh tokenlari bekor qilinadi.
+    if not getattr(user, "is_active", True):
+        _revoke_all_refresh_tokens(db, user.id)
+        db.commit()
+        response.delete_cookie("access_token")
+        response.delete_cookie(_REFRESH_COOKIE, path="/api/auth")
+        raise HTTPException(status_code=403, detail=ACCOUNT_DISABLED_DETAIL)
 
     # Rotatsiya: eskisini bekor qilamiz, yangisini beramiz
     new_raw = issue_refresh_token(
@@ -128,14 +149,7 @@ def logout_all(
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
-    revoked = (
-        db.query(RefreshToken)
-        .filter(
-            RefreshToken.user_id == user.id,
-            RefreshToken.revoked_at.is_(None),
-        )
-        .update({RefreshToken.revoked_at: datetime.now(UTC)})
-    )
+    revoked = _revoke_all_refresh_tokens(db, user.id)
     db.commit()
     response.delete_cookie("access_token")
     response.delete_cookie(_REFRESH_COOKIE, path="/api/auth")
@@ -157,6 +171,8 @@ def issue_refresh_for_current(
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
+    if not getattr(user, "is_active", True):
+        raise HTTPException(status_code=403, detail=ACCOUNT_DISABLED_DETAIL)
     raw = issue_refresh_token(db, user, user_agent=request.headers.get("user-agent"))
     db.commit()
     _set_refresh_cookie(response, raw)

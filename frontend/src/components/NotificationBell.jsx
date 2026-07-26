@@ -34,6 +34,18 @@ export default function NotificationBell() {
     const id = setInterval(loadCount, POLL_MS);
     return () => clearInterval(id);
   }, [isAuthenticated, loadCount]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (wrapRef.current && !wrapRef.current.contains(event.target)) {
+        setOpen(false);
+        setSettings(false);
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
   async function toggle() {
     const next = !open;
     setOpen(next); setSettings(false);

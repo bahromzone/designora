@@ -5,6 +5,13 @@
 .env.*
 !.env.example
 
+# ===== Agent / CLI konfiguratsiyalari =====
+# Bu fayllarda API kalitlari saqlanadi — hech qachon commit qilinmasin.
+settings.json
+settings.local.json
+.claude/
+.codex/
+
 # ===== Python =====
 __pycache__/
 *.py[cod]

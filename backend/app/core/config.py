@@ -8,6 +8,10 @@ limiter = Limiter(
     key_func=get_remote_address, default_limits=["200/minute"], storage_uri="memory://"
 )
 
+# Dev uchun media imzo kaliti. Prod'da almashtirilishi SHART —
+# aks holda istalgan odam himoyalangan video havolasini o'zi imzolaydi.
+DEFAULT_MEDIA_SIGNING_KEY = "dev-media-signing-key-change-in-prod"
+
 
 class Settings(BaseSettings):
     # ===== DATABASE =====
@@ -50,7 +54,7 @@ class Settings(BaseSettings):
     # ===== MEDIA (signed video URL) =====
     # HMAC imzo kaliti va (ixtiyoriy) CDN bazasi. CDN bo'lmasa nisbiy
     # /video/... havola ishlatiladi. Prod'da media_signing_key ni almashtiring.
-    media_signing_key: str = "dev-media-signing-key-change-in-prod"
+    media_signing_key: str = DEFAULT_MEDIA_SIGNING_KEY
     MEDIA_CDN_BASE_URL: str = ""
 
     # ===== PAYME =====
@@ -67,13 +71,39 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-        # ✅ BUG #17 FIX: "forbid" → "ignore"
-        # "forbid" edi: hosting tomonidan avtomatik qo'shiladigan
-        # PORT, DATABASE_URL kabi o'zgaruvchilar server ko'tarilmasligiga sabab bo'lardi.
+        # "forbid" → "ignore": hosting tomonidan avtomatik qo'shiladigan
+        # PORT kabi o'zgaruvchilar server ko'tarilmasligiga sabab bo'lardi.
         extra = "ignore"
 
     def get_allowed_origins(self) -> list[str]:
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+
+    # ── XAVFSIZLIK: prod'da xavfli standart qiymatlar bilan ishga tushmaslik ──
+    def model_post_init(self, context) -> None:  # noqa: ARG002
+        """Production'da maxfiy kalitlar to'ldirilmagan bo'lsa — fail fast.
+
+        Sabab: PAYME_KEY / CLICK_SECRET_KEY bo'sh bo'lganda to'lov
+        webhooklari amalda autentifikatsiyasiz qolardi va istalgan odam
+        "to'ladim" deb so'rov yuborib pullik kursni bepul ocha olardi.
+        Jim ishlashdan ko'ra ishga tushmagan ma'qul.
+        """
+        if self.ENVIRONMENT != "production":
+            return
+
+        missing: list[str] = []
+        if not (self.PAYME_KEY or "").strip():
+            missing.append("PAYME_KEY")
+        if not (self.CLICK_SECRET_KEY or "").strip():
+            missing.append("CLICK_SECRET_KEY")
+        if self.media_signing_key == DEFAULT_MEDIA_SIGNING_KEY:
+            missing.append("media_signing_key")
+
+        if missing:
+            raise ValueError(
+                "Production muhitida quyidagi maxfiy kalitlar to'ldirilishi SHART: "
+                + ", ".join(missing)
+                + ". Batafsil: backend/env.example"
+            )
 
 
 settings = Settings()

@@ -10,9 +10,12 @@ def is_admin_role(role: str | None) -> bool:
 
 
 def dashboard_path_for_role(role: str | None) -> str:
-    # Frontend'dagi haqiqiy admin route — /admin-panel (AdminDashboardPage).
-    # Avval /manage/courses edi, lekin bunday route yo'q va 404 berardi.
-    return "/admin-panel" if is_admin_role(role) else "/dashboard"
+    normalized = normalize_role(role)
+    if normalized == "superadmin":
+        return "/superadmin"
+    if normalized == "admin":
+        return "/admin"
+    return "/dashboard"
 
 
 def profile_path_for_role(role: str | None) -> str:

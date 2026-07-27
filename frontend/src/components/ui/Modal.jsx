@@ -1,63 +1,52 @@
 import { useEffect, useRef } from "react";
 
-// Modal ichida fokus oladigan elementlar selektori.
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
-/**
- * Oddiy modal oynasi. `open` va `onClose` bilan boshqariladi.
- * A11y: fokus tuzog'i (focus trap), ochilganda birinchi elementga fokus,
- * yopilganda fokusni oldingi elementga qaytarish, Escape bilan yopish.
- */
 function Modal({ open, onClose, title, children, footer }) {
   const panelRef = useRef(null);
+  const closeRef = useRef(onClose);
   const titleId = title ? "modal-title" : undefined;
+
+  // Parent har renderda yangi onClose function bersa ham fokus effect qayta ishlamasin.
+  closeRef.current = onClose;
 
   useEffect(() => {
     if (!open) return undefined;
 
-    // Modal ochilishidan oldingi fokusni eslab qolamiz (yopilganda tiklash uchun).
     const previouslyFocused = document.activeElement;
-
-    // Ochilganda modal ichidagi birinchi fokuslanadigan elementga o'tamiz.
     const panel = panelRef.current;
     const focusables = panel?.querySelectorAll(FOCUSABLE);
-    if (focusables && focusables.length > 0) {
-      focusables[0].focus();
-    } else {
-      panel?.focus();
-    }
+    if (focusables && focusables.length > 0) focusables[0].focus();
+    else panel?.focus();
 
-    const onKey = (e) => {
-      if (e.key === "Escape") {
-        onClose?.();
+    const onKey = (event) => {
+      if (event.key === "Escape") {
+        closeRef.current?.();
         return;
       }
-      // Fokus tuzog'i: Tab modal ichida aylanadi, tashqariga chiqmaydi.
-      if (e.key === "Tab") {
-        const items = panel?.querySelectorAll(FOCUSABLE);
-        if (!items || items.length === 0) return;
-        const first = items[0];
-        const last = items[items.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
+      if (event.key !== "Tab") return;
+      const items = panel?.querySelectorAll(FOCUSABLE);
+      if (!items || items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      // Yopilganda fokusni oldingi elementga qaytaramiz.
       if (previouslyFocused && typeof previouslyFocused.focus === "function") {
         previouslyFocused.focus();
       }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -71,7 +60,7 @@ function Modal({ open, onClose, title, children, footer }) {
     >
       <div
         className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={() => closeRef.current?.()}
         aria-hidden="true"
       />
       <div
@@ -86,7 +75,7 @@ function Modal({ open, onClose, title, children, footer }) {
             </h2>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => closeRef.current?.()}
               aria-label="Yopish"
               className="text-2xl leading-none text-muted hover:text-ink"
             >

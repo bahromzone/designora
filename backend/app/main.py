@@ -30,7 +30,7 @@ def _require_admin(email:str=Depends(get_current_user),db:Session=Depends(get_db
   raise HTTPException(status_code=403,detail="Faqat adminlar uchun")
  return u
 @_admin_router.get("/users")
-def admin_list_users(db:Session=Depends(get_db),admin:User=Depends(_require_admin)):return[{"id":u.id,"name":u.name,"email":u.email,"role":u.role,"is_active":u.is_active}for u in db.query(User).order_by(User.id.desc()).all()]
+def admin_list_users(db:Session=Depends(get_db),admin:User=Depends(_require_admin)):return[{"id":u.id,"name":u.name,"email":u.email,"role":u.role,"is_active":u.is_active,"created_at":u.created_at.isoformat() if u.created_at else None}for u in db.query(User).order_by(User.id.desc()).all()]
 app.include_router(_admin_router)
 @app.get("/")
 def home():return{"app":"Designora API","status":"ok","version":os.getenv("APP_VERSION","1.0"),"docs":"/docs"}

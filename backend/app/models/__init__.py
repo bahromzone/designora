@@ -1,4 +1,5 @@
 from .assignment import Assignment
+from .audit_log import AdminAuditLog
 from .certificate import Certificate
 from .Course import Course
 from .course_version import CourseVersion

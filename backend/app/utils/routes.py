@@ -15,6 +15,8 @@ def dashboard_path_for_role(role: str | None) -> str:
         return "/superadmin"
     if normalized == "admin":
         return "/admin"
+    if normalized == "instructor":
+        return "/instruktor-panel"
     return "/dashboard"
 
 

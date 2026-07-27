@@ -1,73 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
+import AdminWorkspaceShell from "../components/AdminWorkspaceShell";
 import { EmptyState, Spinner } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { analyticsApi, formatPrice } from "../lib/api";
 
-function Metric({ label, value }) {
-  return (
-    <article className="card rounded-2xl p-5">
-      <span className="text-sm text-gray-500">{label}</span>
-      <strong className="mt-2 block text-3xl">{value}</strong>
-    </article>
-  );
-}
-
 export default function AdminDashboardPage() {
   const { token } = useAuth();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const load = useCallback(() => {
-    let active = true;
-    setLoading(true);
-    setError("");
-    analyticsApi
-      .admin(token)
-      .then((result) => active && setData(result))
-      .catch((err) => active && setError(err.message))
-      .finally(() => active && setLoading(false));
-    return () => { active = false; };
-  }, [token]);
-
-  useEffect(() => {
-    const cleanup = load();
-    return cleanup;
-  }, [load]);
-
-  if (loading) return <div className="grid min-h-[50vh] place-items-center"><Spinner /></div>;
-  if (error || !data) return <div className="shell py-12"><EmptyState title="Admin dashboard yuklanmadi" description={error} /><button className="btn-primary mt-4" onClick={load}>Qayta urinish</button></div>;
-
-  const revenue = data.revenue ?? {};
-  const users = data.users ?? {};
-  const courses = data.courses ?? {};
-
-  return (
-    <main className="shell py-10">
-      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div><p className="label">Admin paneli</p><h1 className="mt-2 text-4xl font-extrabold">Platforma dashboard</h1></div>
-        <Link className="btn-outline" to="/profil">Profil</Link>
-      </header>
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Daromad" value={formatPrice(revenue.net_revenue ?? 0)} />
-        <Metric label="Foydalanuvchilar" value={users.total ?? 0} />
-        <Metric label="Faol foydalanuvchilar" value={users.active ?? 0} />
-        <Metric label="Chop etilgan kurslar" value={courses.published ?? 0} />
-      </section>
-      <section className="card mt-6 rounded-2xl p-6">
-        <h2 className="text-xl font-bold">Top kurslar</h2>
-        <div className="mt-4 grid gap-3">
-          {(data.top_courses ?? []).map((course, index) => (
-            <div className="flex items-center justify-between rounded-xl bg-gray-50 p-4" key={course.course_id}>
-              <strong>{index + 1}. {course.title}</strong>
-              <span>{course.students_count ?? 0} o'quvchi</span>
-            </div>
-          ))}
-          {!data.top_courses?.length && <p className="text-gray-500">Hali statistika yo'q.</p>}
-        </div>
-      </section>
-    </main>
-  );
+  const [data, setData] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState("");
+  const load = useCallback(() => { let active = true; setLoading(true); analyticsApi.admin(token).then((result) => active && setData(result)).catch((err) => active && setError(err.message)).finally(() => active && setLoading(false)); return () => { active = false; }; }, [token]);
+  useEffect(() => { const cleanup = load(); return cleanup; }, [load]);
+  if (loading) return <AdminWorkspaceShell><div className="admin-section"><Spinner /></div></AdminWorkspaceShell>;
+  if (error || !data) return <AdminWorkspaceShell><EmptyState title="Admin workspace yuklanmadi" description={error} /></AdminWorkspaceShell>;
+  const revenue = data.revenue ?? {}; const users = data.users ?? {}; const courses = data.courses ?? {};
+  return <AdminWorkspaceShell><header className="admin-page-head"><div><div className="admin-kicker">Operations workspace</div><h1>Platforma nazorati</h1><p>Kontent, foydalanuvchilar va daromadni bir joydan boshqaring.</p></div><div className="admin-actions"><Link className="admin-btn" to="/admin/courses">Kurslar</Link><Link className="admin-btn primary" to="/profil">Profil</Link></div></header><section className="admin-stat-grid"><article className="admin-stat"><small>Net revenue</small><strong>{formatPrice(revenue.net_revenue ?? 0)}</strong></article><article className="admin-stat"><small>Jami foydalanuvchi</small><strong>{users.total ?? 0}</strong></article><article className="admin-stat"><small>Faol userlar</small><strong>{users.active ?? 0}</strong></article><article className="admin-stat"><small>Published kurslar</small><strong>{courses.published ?? 0}</strong></article></section><section className="admin-section"><h2>Top kurslar</h2><div className="admin-list">{(data.top_courses ?? []).map((course,index)=><div className="admin-list-row" key={course.course_id}><strong>{index+1}. {course.title}</strong><small>{course.students_count ?? 0} o'quvchi</small></div>)}{!data.top_courses?.length&&<p>Hali statistika yo'q.</p>}</div></section></AdminWorkspaceShell>;
 }

@@ -18,13 +18,16 @@ from app.models.user import User
 
 router = APIRouter(prefix="/api/superadmin", tags=["Superadmin"])
 
+SUPERADMIN = "superadmin"
+LAST_SUPERADMIN_ERROR = "Tizimda kamida bitta faol superadmin qolishi shart"
+
 
 def require_superadmin(
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> User:
     user = db.query(User).filter(User.email == email).first()
-    if not user or user.role != "superadmin":
+    if not user or user.role != SUPERADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Faqat superadminlar uchun",
@@ -32,6 +35,24 @@ def require_superadmin(
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Hisobingiz bloklangan")
     return user
+
+
+def _other_active_superadmins(db: Session, exclude_id: int) -> int:
+    """Boshqa faol superadminlar soni.
+
+    Lockout himoyasi: bu 0 bo'lsa, oxirgi superadminni demote qilish yoki
+    bloklash tizimni boshqaruvsiz qoldiradi.
+    """
+    return (
+        db.query(func.count(User.id))
+        .filter(
+            User.role == SUPERADMIN,
+            User.is_active.is_(True),
+            User.id != exclude_id,
+        )
+        .scalar()
+        or 0
+    )
 
 
 class RoleUpdate(BaseModel):
@@ -54,7 +75,7 @@ def overview(
         "users_total": db.query(User).count(),
         "users_active": db.query(User).filter(User.is_active.is_(True)).count(),
         "admins": role_counts.get("admin", 0),
-        "superadmins": role_counts.get("superadmin", 0),
+        "superadmins": role_counts.get(SUPERADMIN, 0),
         "instructors": role_counts.get("instructor", 0),
         "students": role_counts.get("user", 0),
         "courses": db.query(Course).count(),
@@ -88,10 +109,17 @@ def update_role(
     actor: User = Depends(require_superadmin),
 ):
     if actor.id == user_id:
-        raise HTTPException(status_code=400, detail="O'zingizning rolingizni o'zgartira olmaysiz")
+        raise HTTPException(
+            status_code=400, detail="O'zingizning rolingizni o'zgartira olmaysiz"
+        )
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+    demoting_superadmin = (
+        user.role == SUPERADMIN and data.role != SUPERADMIN and user.is_active
+    )
+    if demoting_superadmin and _other_active_superadmins(db, user.id) == 0:
+        raise HTTPException(status_code=400, detail=LAST_SUPERADMIN_ERROR)
     user.role = data.role
     db.commit()
     return {"message": "Rol yangilandi", "id": user.id, "role": user.role}
@@ -109,6 +137,15 @@ def update_status(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+    blocking_superadmin = (
+        user.role == SUPERADMIN and user.is_active and not data.is_active
+    )
+    if blocking_superadmin and _other_active_superadmins(db, user.id) == 0:
+        raise HTTPException(status_code=400, detail=LAST_SUPERADMIN_ERROR)
     user.is_active = data.is_active
     db.commit()
-    return {"message": "Hisob holati yangilandi", "id": user.id, "is_active": user.is_active}
+    return {
+        "message": "Hisob holati yangilandi",
+        "id": user.id,
+        "is_active": user.is_active,
+    }

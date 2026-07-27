@@ -2,34 +2,11 @@ import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./AdminWorkspaceShell.css";
 
-const adminLinks = [
-  ["Overview", "/admin"],
-  ["Courses", "/admin/courses"],
-  ["Users", "/admin/users"],
-  ["Analytics", "/admin/analytics"],
-];
-
-const superLinks = [
-  ["Control room", "/superadmin"],
-  ["Users & roles", "/superadmin/users"],
-  ["Courses", "/admin/courses"],
-  ["Analytics", "/admin/analytics"],
-];
+const adminLinks = [["Overview", "/admin"], ["Courses", "/admin/courses"], ["Users", "/admin/users"], ["Analytics", "/admin/analytics"]];
+const superLinks = [["Control room", "/superadmin"], ["Users & roles", "/superadmin/users"], ["Audit log", "/superadmin/audit"], ["Courses", "/admin/courses"], ["Analytics", "/admin/analytics"]];
 
 export default function AdminWorkspaceShell({ children, superadmin = false }) {
   const { user, logout } = useAuth();
   const links = superadmin ? superLinks : adminLinks;
-  return (
-    <div className="admin-workspace">
-      <aside className="admin-sidebar">
-        <Link to="/" className="admin-brand">DESIGNORA <span>{superadmin ? "CONTROL" : "OPS"}</span></Link>
-        <div className="admin-identity"><small>{superadmin ? "SUPERADMIN" : "ADMIN"}</small><strong>{user?.name || user?.email}</strong><span>{user?.email}</span></div>
-        <nav className="admin-nav" aria-label="Boshqaruv menyusi">
-          {links.map(([label, to]) => <NavLink key={to} to={to} end={to === "/admin" || to === "/superadmin"} className={({ isActive }) => isActive ? "active" : ""}>{label}<span>↗</span></NavLink>)}
-        </nav>
-        <div className="admin-sidebar-footer"><Link to="/profil">Profile</Link><button onClick={logout}>Sign out</button></div>
-      </aside>
-      <main className="admin-main">{children}</main>
-    </div>
-  );
+  return <div className="admin-workspace"><aside className="admin-sidebar"><Link to="/" className="admin-brand">DESIGNORA <span>{superadmin ? "CONTROL" : "OPS"}</span></Link><div className="admin-identity"><small>{superadmin ? "SUPERADMIN" : "ADMIN"}</small><strong>{user?.name || user?.email}</strong><span>{user?.email}</span></div><nav className="admin-nav" aria-label="Boshqaruv menyusi">{links.map(([label, to]) => <NavLink key={to} to={to} end={to === "/admin" || to === "/superadmin"} className={({ isActive }) => isActive ? "active" : ""}>{label}<span>↗</span></NavLink>)}</nav><div className="admin-sidebar-footer"><Link to="/profil">Profile</Link><button onClick={logout}>Sign out</button></div></aside><main className="admin-main">{children}</main></div>;
 }

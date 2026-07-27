@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -5,8 +7,6 @@ from sqlalchemy.orm import Session
 # ✅ FIX: PyCharm authlib uchun type stub yo'qligi sababli
 # "Cannot find reference 'starlette_client'" va
 # "Unresolved reference 'OAuth' / 'OAuthError'" xatolarini ko'rsatadi.
-# Bu faqat IDE static analysis muammosi — runtime da to'g'ri ishlaydi.
-# Yechim: # type: ignore[import] + try/except
 try:
     from authlib.integrations.starlette_client import (  # type: ignore[import]
         OAuth,
@@ -42,8 +42,6 @@ async def google_login(request: Request):
 
 @router.get("/auth/google/callback")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
-    # ✅ BUG #9 FIX: OAuthError ushlanmayotgan edi — foydalanuvchi login ni
-    # bekor qilsa yoki token noto'g'ri bo'lsa ilova crash qilardi (500).
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as e:
@@ -60,7 +58,6 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 
     email = userinfo["email"]
     name = userinfo.get("name")
-
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
@@ -70,15 +67,10 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         db.refresh(user)
 
     jwt_token = create_access_token(email)
-
-    # ✅ SPA (React, 5173/prod) localStorage'dan Bearer token o'qiydi. Shuning uchun
-    # backend dashboard path'iga emas, frontend'dagi /auth/callback sahifasiga
-    # yo'naltiramiz va token'ni URL fragment (#) orqali uzatamiz. Fragment server
-    # loglariga va Referer header'iga tushmaydi — token shu bois xavfsizroq uzatiladi.
+    role = (user.role or "user").strip().lower()
     redirect = RedirectResponse(
-        f"{settings.FRONTEND_URL}/auth/callback#token={jwt_token}"
+        f"{settings.FRONTEND_URL}/auth/callback#token={quote(jwt_token)}&role={quote(role)}"
     )
-    # Same-origin (prod) stsenariysida cookie ham foydali bo'lib qoladi.
     redirect.set_cookie(
         key="access_token",
         value=f"Bearer {jwt_token}",

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
@@ -52,9 +53,9 @@ function Modal({ open, onClose, title, children, footer }) {
 
   if (!open) return null;
 
-  return (
+  const modal = (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-4"
+      className="fixed inset-0 z-[999] flex items-center justify-center overflow-y-auto overscroll-contain p-4"
       style={{ isolation: "isolate" }}
       role="dialog"
       aria-modal="true"
@@ -98,6 +99,8 @@ function Modal({ open, onClose, title, children, footer }) {
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 export default Modal;

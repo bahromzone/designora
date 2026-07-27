@@ -22,6 +22,7 @@ export default function AuthCallbackPage() {
     if (handled.current) return;
     handled.current = true;
     let active = true;
+    let errorTimer = null;
 
     async function finishLogin() {
       const rawHash = window.location.hash.startsWith("#")
@@ -30,18 +31,25 @@ export default function AuthCallbackPage() {
       const params = new URLSearchParams(rawHash);
       const token = params.get("token");
 
+      // Token URL'da qolmasin, ayniqsa refresh yoki screenshotda ko'rinmasin.
+      window.history.replaceState(null, "", "/auth/callback");
+
       if (!token) {
         setError("Google orqali kirishda xatolik yuz berdi.");
-        const timer = setTimeout(
-          () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
+        errorTimer = window.setTimeout(
+          () => {
+            if (active) {
+              navigate("/?modal=login&error=oauth_failed", { replace: true });
+            }
+          },
           1500
         );
-        return () => clearTimeout(timer);
+        return;
       }
 
       const profile = await loginWithToken(token);
       if (active) {
-        navigate(dashboardPathForRole(profile?.role), { replace: true });
+        navigate(dashboardPathForRole(profile.role), { replace: true });
       }
     }
 
@@ -54,6 +62,7 @@ export default function AuthCallbackPage() {
 
     return () => {
       active = false;
+      if (errorTimer) window.clearTimeout(errorTimer);
     };
   }, [loginWithToken, navigate]);
 

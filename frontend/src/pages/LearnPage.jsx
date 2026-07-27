@@ -8,14 +8,27 @@ import VideoPlayer from "../components/VideoPlayer";
 import { useAuth } from "../context/AuthContext";
 import { assignmentsApi } from "../lib/assignmentsApi";
 import { certificatesApi, learningApi, quizApi } from "../lib/api";
+import "./LearnPage.css";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
+function Icon({ name, size = 18 }) {
+  const paths = {
+    "arrow-left": <><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></>,
+    book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></>,
+    check: <path d="m5 12 4 4L19 6"/>,
+    paperclip: <path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 1 1-2.8-2.8l8.5-8.5"/>,
+    sparkles: <><path d="m12 3-1.5 4.5L6 9l4.5 1.5L12 15l1.5-4.5L18 9l-4.5-1.5L12 3Z"/><path d="m19 15-.7 2.3L16 18l2.3.7L19 21l.7-2.3L22 18l-2.3-.7L19 15Z"/></>,
+    award: <><circle cx="12" cy="8" r="5"/><path d="m8.5 12-1 9 4.5-2.5 4.5 2.5-1-9"/></>,
+    external: <><path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></>,
+    message: <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/>,
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+}
+
 function resolveCertificateUrl(url) {
   if (!url) return "";
-  return url.startsWith("http")
-    ? url
-    : `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+  return url.startsWith("http") ? url : `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 }
 
 export function certificatePanelState(certificate, progress, quizzes = []) {
@@ -24,124 +37,32 @@ export function certificatePanelState(certificate, progress, quizzes = []) {
   return "in_progress";
 }
 
-function CertificatePanel({
-  certificate,
-  progress,
-  quizzes,
-  issuing,
-  error,
-  onIssue,
-}) {
+function CertificatePanel({ certificate, progress, quizzes, issuing, error, onIssue }) {
   const progressValue = Math.min(100, Math.max(0, Number(progress) || 0));
   const state = certificatePanelState(certificate, progressValue, quizzes);
-
   if (state === "in_progress") return null;
-
   const issued = state === "issued";
-  const verifyUrl = certificate
-    ? `/verify/${certificate.verification_code}`
-    : null;
-  const panelStyle = {
-    border: "1px solid rgba(124, 58, 237, 0.16)",
-    background: issued
-      ? "linear-gradient(135deg, rgba(236, 72, 153, 0.11), rgba(79, 70, 229, 0.11))"
-      : "linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(236, 72, 153, 0.09))",
-    boxShadow: "0 18px 48px rgba(79, 70, 229, 0.10)",
-  };
+  const verifyUrl = certificate ? `/verify/${certificate.verification_code}` : null;
 
   return (
-    <section
-      className="relative mt-14 overflow-hidden rounded-3xl"
-      style={panelStyle}
-      aria-live="polite"
-    >
-      <div
-        className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full"
-        style={{ background: "rgba(236, 72, 153, 0.12)" }}
-        aria-hidden="true"
-      />
-      <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-start gap-4">
-          <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl"
-            style={{
-              background: issued ? "var(--brand)" : "rgba(255, 255, 255, 0.78)",
-              color: issued ? "#fff" : "var(--brand)",
-              boxShadow: "0 10px 24px rgba(124, 58, 237, 0.18)",
-            }}
-            aria-hidden="true"
-          >
-            {issued ? "✓" : "✦"}
-          </div>
-          <div className="min-w-0">
-            <p className="label mb-2">
-              {issued ? "Sertifikat tayyor" : "Kurs yakunlandi"}
-            </p>
-            <h2 className="font-serif text-2xl font-semibold leading-tight text-ink sm:text-3xl">
-              {issued
-                ? "Sizning natijangiz tasdiqlandi."
-                : "Bilimingizni sertifikat bilan yakunlang."}
-            </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-              {issued
-                ? `Serial: ${certificate.serial}${certificate.grade ? ` · ${certificate.grade}` : ""}`
-                : state === "quiz_required"
-                  ? `Sertifikat olishdan oldin ${quizzes.length} ta faol testdan o'ting.`
-                  : "Barcha darslar tugadi. Sertifikatingizni hozir olishingiz mumkin."}
-            </p>
+    <section className={`learn-certificate ${issued ? "is-issued" : "is-ready"}`} aria-live="polite">
+      <div className="learn-certificate-inner">
+        <div className="learn-certificate-copy">
+          <span className="learn-certificate-icon" aria-hidden="true"><Icon name={issued ? "check" : "award"} size={22} /></span>
+          <div>
+            <p className="learn-overline">{issued ? "Sertifikat tayyor" : "Kurs yakunlandi"}</p>
+            <h2>{issued ? "Natijangiz tasdiqlandi." : "Bilimingizni sertifikat bilan yakunlang."}</h2>
+            <p>{issued ? `Serial: ${certificate.serial}${certificate.grade ? ` · ${certificate.grade}` : ""}` : state === "quiz_required" ? `Sertifikat olishdan oldin ${quizzes.length} ta faol testdan o'ting.` : "Barcha darslar tugadi. Sertifikatingizni hozir olishingiz mumkin."}</p>
           </div>
         </div>
-
-        <div className="relative flex shrink-0 flex-wrap gap-3 lg:justify-end">
-          {issued ? (
-            <>
-              {verifyUrl && (
-                <a
-                  className="btn-outline"
-                  href={verifyUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Tekshirish
-                </a>
-              )}
-              {certificate.pdf_url && (
-                <a
-                  className="btn-primary"
-                  href={resolveCertificateUrl(certificate.pdf_url)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  PDF yuklash
-                </a>
-              )}
-            </>
-          ) : (
-            <button
-              className="btn-primary"
-              type="button"
-              onClick={onIssue}
-              disabled={issuing}
-            >
-              {issuing ? "Tayyorlanmoqda..." : "Sertifikatni olish"}
-            </button>
-          )}
+        <div className="learn-certificate-actions">
+          {issued ? <>
+            {verifyUrl && <a className="btn-outline" href={verifyUrl} target="_blank" rel="noreferrer"><Icon name="external" size={15} />Tekshirish</a>}
+            {certificate.pdf_url && <a className="btn-primary" href={resolveCertificateUrl(certificate.pdf_url)} target="_blank" rel="noreferrer"><Icon name="paperclip" size={15} />PDF yuklash</a>}
+          </> : <button className="btn-primary" type="button" onClick={onIssue} disabled={issuing}><Icon name="award" size={16} />{issuing ? "Tayyorlanmoqda..." : "Sertifikatni olish"}</button>}
         </div>
       </div>
-
-      {error && (
-        <p
-          className="relative mx-6 mb-6 rounded-2xl border px-4 py-3 text-sm sm:mx-8"
-          style={{
-            borderColor: "rgba(190, 24, 93, 0.22)",
-            background: "rgba(255, 241, 242, 0.9)",
-            color: "#9f1239",
-          }}
-          role="alert"
-        >
-          {error}
-        </p>
-      )}
+      {error && <p className="learn-certificate-error" role="alert">{error}</p>}
     </section>
   );
 }
@@ -164,21 +85,16 @@ export default function LearnPage() {
     if (!token) return;
     setError("");
     try {
-      const [course, assignmentRows, quizRows, certificateRows] =
-        await Promise.all([
-          learningApi.learn(courseId, token),
-          assignmentsApi.forCourse(courseId, token).catch(() => []),
-          quizApi.courseQuizzes(courseId, token).catch(() => []),
-          certificatesApi.mine(token).catch(() => []),
-        ]);
+      const [course, assignmentRows, quizRows, certificateRows] = await Promise.all([
+        learningApi.learn(courseId, token),
+        assignmentsApi.forCourse(courseId, token).catch(() => []),
+        quizApi.courseQuizzes(courseId, token).catch(() => []),
+        certificatesApi.mine(token).catch(() => []),
+      ]);
       setData(course);
       setAssignments(assignmentRows);
       setQuizzes(quizRows);
-      setCertificate(
-        certificateRows.find(
-          (item) => String(item.course_id) === String(courseId)
-        ) || null
-      );
+      setCertificate(certificateRows.find((item) => String(item.course_id) === String(courseId)) || null);
     } catch (reason) {
       setError(reason.message);
     } finally {
@@ -186,40 +102,27 @@ export default function LearnPage() {
     }
   }, [courseId, token]);
 
-  useEffect(() => {
-    setLoading(true);
-    load();
-  }, [load]);
+  useEffect(() => { setLoading(true); load(); }, [load]);
 
-  const flatLessons = useMemo(
-    () =>
-      data
-        ? (data.modules || []).flatMap((module) => module.lessons || [])
-        : [],
-    [data]
-  );
+  const flatLessons = useMemo(() => data ? (data.modules || []).flatMap((module) => module.lessons || []) : [], [data]);
+  const activeModule = useMemo(() => (data?.modules || []).find((module) => (module.lessons || []).some((lesson) => lesson.id === activeId)), [data, activeId]);
 
   useEffect(() => {
     if (!data || activeId !== null) return;
-    const firstOpen =
-      flatLessons.find((lesson) => !lesson.is_locked && !lesson.is_completed) ||
-      flatLessons.find((lesson) => !lesson.is_locked);
+    const firstOpen = flatLessons.find((lesson) => !lesson.is_locked && !lesson.is_completed) || flatLessons.find((lesson) => !lesson.is_locked);
     setActiveId(firstOpen?.id ?? flatLessons[0]?.id ?? null);
   }, [data, flatLessons, activeId]);
 
-  const activeLesson =
-    flatLessons.find((lesson) => lesson.id === activeId) || null;
+  const activeLesson = flatLessons.find((lesson) => lesson.id === activeId) || null;
+  const activeIndex = Math.max(1, flatLessons.findIndex((lesson) => lesson.id === activeId) + 1);
 
   async function toggleComplete(lesson) {
     if (!lesson || lesson.is_locked) return;
     setMarking(true);
     setError("");
     try {
-      if (lesson.is_completed) {
-        await learningApi.uncompleteLesson(lesson.id, token);
-      } else {
-        await learningApi.completeLesson(lesson.id, token);
-      }
+      if (lesson.is_completed) await learningApi.uncompleteLesson(lesson.id, token);
+      else await learningApi.completeLesson(lesson.id, token);
       await load();
     } catch (reason) {
       setError(reason.message);
@@ -240,105 +143,65 @@ export default function LearnPage() {
     }
   }
 
-  if (loading) return <section className="shell py-24">Dars yuklanmoqda...</section>;
-  if (error && !data) {
-    return (
-      <section className="shell py-24" role="alert">
-        {error} <button onClick={load}>Qayta urinish</button>
-      </section>
-    );
-  }
+  if (loading) return <section className="shell learn-page learn-loading">Dars yuklanmoqda...</section>;
+  if (error && !data) return <section className="shell learn-page learn-empty" role="alert"><h1>Darsni ochib bo'lmadi</h1><p>{error}</p><button className="btn-primary" onClick={load}>Qayta urinish</button></section>;
   if (!data) return null;
-  if (!data.is_enrolled) {
-    return (
-      <section className="shell py-24">
-        <h1>Bu kursga hali yozilmagansiz</h1>
-        <p>To'liq darslarga kirish uchun avval kursga yoziling.</p>
-        <Link to={`/kurslar/${courseId}`}>Kurs sahifasiga o'tish</Link>
-      </section>
-    );
-  }
+  if (!data.is_enrolled) return <section className="shell learn-page learn-empty"><h1>Bu kursga hali yozilmagansiz</h1><p>To'liq darslarga kirish uchun avval kursga yoziling.</p><Link to={`/kurslar/${courseId}`}>Kurs sahifasiga o'tish</Link></section>;
+
+  const progress = Math.min(100, Math.max(0, Number(data.progress_percent) || 0));
+  const completedLessons = data.completed_lessons || 0;
+  const totalLessons = data.total_lessons || flatLessons.length;
 
   return (
-    <section className="shell py-16">
-      <Link to="/kurslarim">← {data.title}</Link>
-      {error && <p role="alert">{error}</p>}
+    <section className="shell learn-page py-12 sm:py-16">
+      <header className="learn-hero">
+        <div className="learn-breadcrumb">
+          <Link to="/kurslarim"><Icon name="arrow-left" size={15} /> Kurslarimga qaytish</Link>
+          <span className="learn-status"><Icon name="sparkles" size={14} /> O'rganish davom etmoqda</span>
+        </div>
+        <div className="learn-hero-copy">
+          <div className="learn-kicker"><span className="learn-kicker-dot" /> Kursni o'zlashtirish</div>
+          <h1>{data.title}</h1>
+          <p>Har bir darsni bosqichma-bosqich tugating, fikrlaringizni yozib boring va yakunda natijangizni sertifikat bilan tasdiqlang.</p>
+        </div>
+        <div className="learn-hero-progress" aria-label="Kurs progressi">
+          <header><span>Kurs progressi</span><strong>{progress}%</strong></header>
+          <div className="learn-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100"><i style={{ width: `${progress}%` }} /></div>
+          <small>{completedLessons} / {totalLessons} dars tugatildi</small>
+        </div>
+      </header>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <main>
-          {activeLesson && (
-            <VideoPlayer
-              lessonId={activeLesson.id}
-              token={token}
-              src={activeLesson.video_url}
-              storageKey={`lesson-${activeLesson.id}-position`}
-              poster={activeLesson.thumbnail_url}
-              onEnded={() =>
-                activeLesson &&
-                !activeLesson.is_completed &&
-                toggleComplete(activeLesson)
-              }
-            />
-          )}
+      {error && <p className="learn-alert" role="alert">{error}</p>}
 
-          {activeLesson && (
-            <article className="mt-6">
-              <h1 className="font-serif text-3xl">{activeLesson.title}</h1>
-              {activeLesson.description && <p>{activeLesson.description}</p>}
-              {activeLesson.content && <div>{activeLesson.content}</div>}
-              {(activeLesson.resources || []).length > 0 && (
-                <div>
-                  <h2>Materiallar</h2>
-                  {activeLesson.resources.map((resource, index) => (
-                    <a key={index} href={resource.url}>
-                      ↓ {resource.title || resource.url}
-                    </a>
-                  ))}
-                </div>
-              )}
-              <button
-                className="mt-6"
-                onClick={() => toggleComplete(activeLesson)}
-                disabled={marking}
-              >
-                {activeLesson.is_completed
-                  ? "✓ Tugatilgan (bekor qilish)"
-                  : "Tugatilgan deb belgilash"}
-              </button>
-            </article>
-          )}
+      <div className="learn-layout">
+        <main className="learn-main">
+          <section className="learn-lesson" aria-labelledby="active-lesson-title">
+            <div className="learn-lesson-heading">
+              <div><div className="learn-overline"><Icon name="book" size={14} /> Hozirgi dars</div><h2 id="active-lesson-title">{activeLesson?.title || "Dars tanlang"}</h2></div>
+              {activeLesson && <span className="learn-lesson-meta"><Icon name="sparkles" size={15} /> {activeModule?.title || "Kurs darsi"} · {activeIndex}-dars</span>}
+            </div>
+            {activeLesson && <>
+              <div className="learn-video-frame"><VideoPlayer lessonId={activeLesson.id} token={token} src={activeLesson.video_url} storageKey={`lesson-${activeLesson.id}-position`} poster={activeLesson.thumbnail_url} onEnded={() => !activeLesson.is_completed && toggleComplete(activeLesson)} /></div>
+              <article className="learn-lesson-copy">
+                <h3>Dars haqida</h3>
+                {activeLesson.description && <p>{activeLesson.description}</p>}
+                {activeLesson.content && <div>{activeLesson.content}</div>}
+                {(activeLesson.resources || []).length > 0 && <div className="learn-resources"><span className="learn-overline" style={{ gridColumn: "1 / -1" }}><Icon name="paperclip" size={14} /> Qo'shimcha materiallar</span>{activeLesson.resources.map((resource, index) => <a className="learn-resource" key={index} href={resource.url} target="_blank" rel="noreferrer"><span className="learn-resource-icon"><Icon name="external" size={16} /></span><span className="learn-resource-copy"><strong>{resource.title || `Material ${index + 1}`}</strong><small>Yangi oynada ochish</small></span></a>)}</div>}
+                <button className={`learn-complete-button ${activeLesson.is_completed ? "is-complete" : ""}`} onClick={() => toggleComplete(activeLesson)} disabled={marking}><Icon name="check" size={17} />{marking ? "Saqlanmoqda..." : activeLesson.is_completed ? "Dars tugatilgan" : "Darsni tugatdim"}</button>
+              </article>
+            </>}
+          </section>
 
-          {activeLesson && (
-            <>
-              <AssignmentSection
-                courseId={Number(courseId)}
-                lessonId={activeLesson.id}
-              />
-              <QASection lessonId={activeLesson.id} />
-              <NotesSection lessonId={activeLesson.id} />
-            </>
-          )}
+          <div className="learn-section-stack">
+            <AssignmentSection courseId={Number(courseId)} activeLessonId={activeLesson?.id} />
+            {activeLesson && <section className="learn-qa-wrap"><header><span><Icon name="message" size={18} /></span><div><h2>Savol-javob</h2><p>Dars bo'yicha savolingizni qoldiring yoki boshqalarga yordam bering.</p></div></header><QASection lessonId={activeLesson.id} /></section>}
+            {activeLesson && <NotesSection lessonId={activeLesson.id} />}
+          </div>
 
-          <CertificatePanel
-            certificate={certificate}
-            progress={data.progress_percent || 0}
-            quizzes={quizzes}
-            issuing={issuing}
-            error={certificateError}
-            onIssue={issueCertificate}
-          />
+          <CertificatePanel certificate={certificate} progress={progress} quizzes={quizzes} issuing={issuing} error={certificateError} onIssue={issueCertificate} />
         </main>
 
-        <LessonSidebar
-          modules={data.modules || []}
-          activeId={activeId}
-          assignments={assignments}
-          quizzes={quizzes}
-          progressPercent={data.progress_percent || 0}
-          completedLessons={data.completed_lessons || 0}
-          totalLessons={data.total_lessons || 0}
-          onSelect={setActiveId}
-        />
+        <LessonSidebar modules={data.modules || []} activeId={activeId} assignments={assignments} quizzes={quizzes} progressPercent={progress} completedLessons={completedLessons} totalLessons={totalLessons} onSelect={setActiveId} />
       </div>
     </section>
   );

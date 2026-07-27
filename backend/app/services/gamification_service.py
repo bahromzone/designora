@@ -16,61 +16,63 @@ from app.models.user import User
 # Har 100 ball = 1 daraja
 POINTS_PER_LEVEL = 100
 
+# Icon qiymatlari bazaga saqlanadigan xavfsiz nomlar bo'lishi kerak.
+# Windows'dagi cp1251 ulanishi emoji'ni encode qila olmaydi.
 DEFAULT_BADGES = [
     {
         "code": "first_enroll",
         "title": "Birinchi qadam",
         "description": "Birinchi kursga yozildingiz",
-        "icon": "🎯",
+        "icon": "target",
         "points": 10,
     },
     {
         "code": "first_lesson",
         "title": "O'rganish boshlandi",
         "description": "Birinchi darsni tugatdingiz",
-        "icon": "📘",
+        "icon": "book",
         "points": 10,
     },
     {
         "code": "quiz_passed",
         "title": "Bilimdon",
         "description": "Birinchi testdan o'tdingiz",
-        "icon": "🧠",
+        "icon": "brain",
         "points": 20,
     },
     {
         "code": "quiz_perfect",
         "title": "Mukammal",
         "description": "Testni 100% bilan topshirdingiz",
-        "icon": "💯",
+        "icon": "sparkles",
         "points": 30,
     },
     {
         "code": "course_completed",
         "title": "Bitiruvchi",
         "description": "Kursni 100% tugatdingiz",
-        "icon": "🏆",
+        "icon": "trophy",
         "points": 50,
     },
     {
         "code": "certified",
         "title": "Sertifikatli",
         "description": "Sertifikat qo'lga kiritdingiz",
-        "icon": "📜",
+        "icon": "certificate",
         "points": 50,
     },
     {
         "code": "streak_7",
         "title": "Izchil hafta",
         "description": "7 kunlik streak",
-        "icon": "🔥",
+        "icon": "flame",
         "points": 40,
     },
     {
         "code": "streak_30",
         "title": "Izchil oy",
         "description": "30 kunlik streak",
-        "icon": "⚡",
+        "icon": "bolt",
         "points": 100,
     },
 ]

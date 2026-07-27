@@ -79,7 +79,7 @@ export default function AdminAnalyticsPage() {
       <section className="admin-stat-grid">
         <article className="admin-stat">
           <small>Net revenue</small>
-          <strong>{formatPrice(revenue.net_verue ?? revenue.net_revenue ?? 0)}</strong>
+          <strong>{formatPrice(revenue.net_revenue ?? 0)}</strong>
         </article>
         <article className="admin-stat">
           <small>O'rtacha chek</small>

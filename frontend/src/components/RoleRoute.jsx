@@ -3,6 +3,18 @@ import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
 
 /**
+ * Foydalanuvchi berilgan rollardan biriga egami?
+ *
+ * Alohida sof funksiya sifatida eksport qilinadi — shunda ruxsat mantig'i
+ * React render'siz test qilinadi.
+ */
+export function canAccess(user, roles = []) {
+  if (!user) return false;
+  if (!roles.length) return true;
+  return roles.includes(user.role);
+}
+
+/**
  * Rolga asoslangan route qo'riqchisi.
  *
  * ProtectedRoute faqat "login qilinganmi?" degan savolga javob beradi.
@@ -27,7 +39,7 @@ function RoleGate({ roles, children }) {
     );
   }
 
-  if (!user || !roles.includes(user.role)) {
+  if (!canAccess(user, roles)) {
     return (
       <Navigate
         to="/"

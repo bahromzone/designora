@@ -2,11 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+function dashboardPathForRole(role) {
+  if (role === "superadmin") return "/superadmin";
+  if (role === "admin") return "/admin";
+  if (role === "instructor") return "/instruktor-panel";
+  return "/";
+}
+
 // Google OAuth qaytish sahifasi.
 // Backend /auth/google/callback bu yerga token'ni URL fragmentida yuboradi:
 //   /auth/callback#token=<JWT>
-// Fragment server loglariga va Referer header'iga tushmaydi — token shu bois
-// xavfsizroq uzatiladi.
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const { loginWithToken } = useAuth();
@@ -16,25 +21,40 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     if (handled.current) return;
     handled.current = true;
+    let active = true;
 
-    const rawHash = window.location.hash.startsWith("#")
-      ? window.location.hash.slice(1)
-      : window.location.hash;
-    const params = new URLSearchParams(rawHash);
-    const token = params.get("token");
+    async function finishLogin() {
+      const rawHash = window.location.hash.startsWith("#")
+        ? window.location.hash.slice(1)
+        : window.location.hash;
+      const params = new URLSearchParams(rawHash);
+      const token = params.get("token");
 
-    if (!token) {
-      setError("Google orqali kirishda xatolik yuz berdi.");
-      const t = setTimeout(
-        () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
-        1500
-      );
-      return () => clearTimeout(t);
+      if (!token) {
+        setError("Google orqali kirishda xatolik yuz berdi.");
+        const timer = setTimeout(
+          () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
+          1500
+        );
+        return () => clearTimeout(timer);
+      }
+
+      const profile = await loginWithToken(token);
+      if (active) {
+        navigate(dashboardPathForRole(profile?.role), { replace: true });
+      }
     }
 
-    loginWithToken(token);
-    // Sessiya boshlandi — bosh sahifaga o'tamiz (token URL'da qolmaydi).
-    navigate("/", { replace: true });
+    finishLogin().catch(() => {
+      if (active) {
+        setError("Google orqali kirishda xatolik yuz berdi.");
+        navigate("/?modal=login&error=oauth_failed", { replace: true });
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, [loginWithToken, navigate]);
 
   return (

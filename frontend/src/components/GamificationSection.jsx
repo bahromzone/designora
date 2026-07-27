@@ -4,6 +4,22 @@ import { gamificationApi } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { Spinner } from "./ui";
 
+// Backend bazaga emoji emas, cp1251 bilan xavfsiz nomlarni saqlaydi.
+const BADGE_ICONS = {
+  target: "🎯",
+  book: "📘",
+  brain: "🧠",
+  sparkles: "💯",
+  trophy: "🏆",
+  certificate: "📜",
+  flame: "🔥",
+  bolt: "⚡",
+};
+
+function badgeIcon(value) {
+  return BADGE_ICONS[value] || value || "✦";
+}
+
 // Backend bilan mos: har 100 ball = 1 daraja (POINTS_PER_LEVEL).
 const POINTS_PER_LEVEL = 100;
 
@@ -148,7 +164,7 @@ export default function GamificationSection() {
                 background: b.earned ? "var(--amber-10)" : "transparent",
               }}
             >
-              <div className="text-2xl">{b.icon}</div>
+              <div className="text-2xl">{badgeIcon(b.icon)}</div>
               <p className="mt-1 text-xs font-semibold text-ink">{b.title}</p>
               <p className="text-[11px]" style={{ color: "var(--muted)" }}>
                 {b.earned ? "Qo'lga kiritildi" : `+${b.points} ball`}

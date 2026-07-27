@@ -13,6 +13,8 @@ function Modal({ open, onClose, title, children, footer }) {
   useEffect(() => {
     if (!open) return undefined;
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const previouslyFocused = document.activeElement;
     const panel = panelRef.current;
     const focusables = panel?.querySelectorAll(FOCUSABLE);
@@ -41,6 +43,7 @@ function Modal({ open, onClose, title, children, footer }) {
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
       if (previouslyFocused && typeof previouslyFocused.focus === "function") {
         previouslyFocused.focus();
       }
@@ -51,7 +54,8 @@ function Modal({ open, onClose, title, children, footer }) {
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto overscroll-contain p-4 sm:items-center"
+      className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto overscroll-contain p-4"
+      style={{ isolation: "isolate" }}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -65,7 +69,8 @@ function Modal({ open, onClose, title, children, footer }) {
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="relative z-10 my-4 flex w-full max-w-lg max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-mockup sm:my-8"
+        className="relative z-10 my-4 flex w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-mockup sm:my-8"
+        style={{ maxHeight: "calc(100dvh - 32px)" }}
       >
         {title && (
           <div className="flex shrink-0 items-center justify-between border-b border-black/5 bg-white px-6 py-5">

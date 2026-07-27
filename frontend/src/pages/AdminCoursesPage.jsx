@@ -3,18 +3,17 @@ import AdminWorkspaceShell from "../components/AdminWorkspaceShell";
 import { request } from "../lib/request";
 import { useAuth } from "../context/AuthContext";
 
+const empty = { title: "", description: "", category: "", price: 0, thumbnail_url: "", is_active: true };
+
 export default function AdminCoursesPage() {
   const { token } = useAuth();
-  const [courses, setCourses] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    request("/api/admin/courses", { token })
-      .then((result) => active && setCourses(result))
-      .catch((err) => active && setError(err.message));
-    return () => { active = false; };
-  }, [token]);
-
-  return <AdminWorkspaceShell><header className="admin-page-head"><div><div className="admin-kicker">Content operations</div><h1>Kurslar</h1><p>Barcha kurslarni ko'ring, holatini boshqaring va kontent oqimini kuzating.</p></div></header>{error&&<div className="admin-section">{error}</div>}<section className="admin-section"><table className="admin-table"><thead><tr><th>Kurs</th><th>Kategoriya</th><th>Narx</th><th>Holat</th></tr></thead><tbody>{courses.map(course=><tr key={course.id}><td><strong>{course.title}</strong><br/><small>{course.description||"Tavsif kiritilmagan"}</small></td><td>{course.category||"-"}</td><td>{course.price||0} so'm</td><td>{course.is_active?"Faol":"Yopiq"}</td></tr>)}</tbody></table>{!courses.length&&!error&&<p>Hozircha kurslar yo'q.</p>}</section></AdminWorkspaceShell>;
+  const [courses, setCourses] = useState([]); const [form, setForm] = useState(empty); const [editing, setEditing] = useState(null); const [error, setError] = useState(""); const [saving, setSaving] = useState(false);
+  const load = () => request("/api/admin/courses", { token }).then(setCourses).catch((err) => setError(err.message));
+  useEffect(() => { load(); }, [token]);
+  const change = (e) => setForm((v) => ({ ...v, [e.target.name]: e.target.name === "price" ? Number(e.target.value) : e.target.value }));
+  const submit = async (e) => { e.preventDefault(); setSaving(true); setError(""); try { await request(editing ? `/api/admin/courses/${editing}` : "/api/admin/courses", { method: editing ? "PATCH" : "POST", body: JSON.stringify(form), token }); setForm(empty); setEditing(null); await load(); } catch (err) { setError(err.message); } finally { setSaving(false); } };
+  const edit = (course) => { setEditing(course.id); setForm({ title: course.title || "", description: course.description || "", category: course.category || "", price: course.price || 0, thumbnail_url: course.thumbnail_url || "", is_active: course.is_active }); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const remove = async (id) => { if (!window.confirm("Kursni o'chirishni tasdiqlaysizmi?")) return; try { await request(`/api/admin/courses/${id}`, { method: "DELETE", token }); await load(); } catch (err) { setError(err.message); } };
+  const toggle = async (id) => { try { await request(`/api/admin/courses/${id}/toggle`, { method: "PATCH", token }); await load(); } catch (err) { setError(err.message); } };
+  return <AdminWorkspaceShell><header className="admin-page-head"><div><div className="admin-kicker">Content operations</div><h1>Kurslar</h1><p>Kurslarni yaratish, tahrirlash va nashr holatini boshqarish.</p></div></header>{error && <div className="admin-inline-error">{error}</div>}<section className="admin-section"><h2>{editing ? "Kursni tahrirlash" : "Yangi kurs"}</h2><form className="admin-user-filters" onSubmit={submit}><input name="title" required minLength="3" placeholder="Kurs nomi" value={form.title} onChange={change}/><input name="category" placeholder="Kategoriya" value={form.category} onChange={change}/><input name="price" type="number" min="0" placeholder="Narx" value={form.price} onChange={change}/><input name="thumbnail_url" placeholder="Thumbnail URL" value={form.thumbnail_url} onChange={change}/><input name="description" placeholder="Qisqa tavsif" value={form.description} onChange={change}/><button className="admin-btn primary" disabled={saving}>{saving ? "Saqlanmoqda..." : editing ? "Yangilash" : "Qo'shish"}</button>{editing && <button type="button" className="admin-btn" onClick={() => { setEditing(null); setForm(empty); }}>Bekor qilish</button>}</form></section><section className="admin-section"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Kurs</th><th>Kategoriya</th><th>Narx</th><th>Holat</th><th>Amallar</th></tr></thead><tbody>{courses.map((course) => <tr key={course.id}><td><strong>{course.title}</strong><br/><small>{course.description || "Tavsif kiritilmagan"}</small></td><td>{course.category || "-"}</td><td>{Number(course.price || 0).toLocaleString("uz-UZ")} so'm</td><td><button className="admin-btn" onClick={() => toggle(course.id)}>{course.is_active ? "Faol" : "Yopiq"}</button></td><td><button className="admin-btn" onClick={() => edit(course)}>Tahrirlash</button> <button className="admin-btn" onClick={() => remove(course.id)}>O'chirish</button></td></tr>)}</tbody></table>{!courses.length && <p className="admin-empty">Hozircha kurslar yo'q.</p>}</div></section></AdminWorkspaceShell>;
 }

@@ -8,7 +8,6 @@ function Modal({ open, onClose, title, children, footer }) {
   const closeRef = useRef(onClose);
   const titleId = title ? "modal-title" : undefined;
 
-  // Parent har renderda yangi onClose function bersa ham fokus effect qayta ishlamasin.
   closeRef.current = onClose;
 
   useEffect(() => {
@@ -52,7 +51,7 @@ function Modal({ open, onClose, title, children, footer }) {
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto overscroll-contain p-4 sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -66,10 +65,10 @@ function Modal({ open, onClose, title, children, footer }) {
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-mockup"
+        className="relative z-10 my-4 flex w-full max-w-lg max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-mockup sm:my-8"
       >
         {title && (
-          <div className="mb-4 flex items-center justify-between">
+          <div className="flex shrink-0 items-center justify-between border-b border-black/5 bg-white px-6 py-5">
             <h2 id={titleId} className="text-lg font-bold text-ink">
               {title}
             </h2>
@@ -77,14 +76,20 @@ function Modal({ open, onClose, title, children, footer }) {
               type="button"
               onClick={() => closeRef.current?.()}
               aria-label="Yopish"
-              className="text-2xl leading-none text-muted hover:text-ink"
+              className="rounded-lg px-2 text-2xl leading-none text-muted hover:bg-surface hover:text-ink"
             >
               ×
             </button>
           </div>
         )}
-        <div>{children}</div>
-        {footer && <div className="mt-6 flex justify-end gap-3">{footer}</div>}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          {children}
+        </div>
+        {footer && (
+          <div className="flex shrink-0 justify-end gap-3 border-t border-black/5 bg-white px-6 py-4">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

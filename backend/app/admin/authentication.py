@@ -24,4 +24,6 @@ class AdminAuth(AuthenticationBackend):
         try:
             user=db.query(User).filter(User.email==session_user.get("email")).first()
             return bool(user and user.is_active and user.role in _ADMIN_ROLES)
+        except Exception as exc:
+            logger.error("Admin authentication error: %s",exc);return False
         finally:db.close()

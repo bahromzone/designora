@@ -3,6 +3,7 @@ import { authApi } from "../lib/api";
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = "designora-auth-token";
+const OAUTH_PROFILE_TIMEOUT_MS = 10000;
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(STORAGE_KEY));
@@ -76,16 +77,31 @@ export function AuthProvider({ children }) {
   }
 
   async function loginWithToken(nextToken) {
-    if (!nextToken) return null;
+    if (!nextToken) throw new Error("OAuth token topilmadi");
     localStorage.setItem(STORAGE_KEY, nextToken);
     setToken(nextToken);
     authApi.issueRefresh(nextToken).catch(() => {});
+
+    let timeoutId;
     try {
-      const profile = await authApi.profile(nextToken);
+      const profile = await Promise.race([
+        authApi.profile(nextToken),
+        new Promise((_, reject) => {
+          timeoutId = window.setTimeout(
+            () => reject(new Error("Profilni yuklash vaqti tugadi")),
+            OAUTH_PROFILE_TIMEOUT_MS
+          );
+        }),
+      ]);
       setUser(profile);
       return profile;
-    } catch {
-      return null;
+    } catch (error) {
+      localStorage.removeItem(STORAGE_KEY);
+      setToken(null);
+      setUser(null);
+      throw error;
+    } finally {
+      if (timeoutId) window.clearTimeout(timeoutId);
     }
   }
 

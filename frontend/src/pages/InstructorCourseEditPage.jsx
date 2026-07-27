@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { EmptyState, Spinner } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { cloudinaryConfig, uploadVideo } from "../lib/cloudinaryApi";
 import { instructorApi } from "../lib/api";
 import { courseBuilderApi } from "../lib/courseBuilderApi";
 import "./InstructorCourseEditPage.css";
@@ -21,6 +22,7 @@ export default function InstructorCourseEditPage() {
   const [preview, setPreview] = useState(false);
   const [bulk, setBulk] = useState("");
   const [drag, setDrag] = useState(null);
+  const [videoUploads, setVideoUploads] = useState({});
   const hydrated = useRef(false);
 
   const load = useCallback(async () => {
@@ -64,6 +66,27 @@ export default function InstructorCourseEditPage() {
   ], [data]);
 
   const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+
+  async function uploadLessonVideo(lesson, file) {
+    if (!cloudinaryConfig.ready) {
+      toast.error("Cloudinary sozlanmagan. frontend/.env.local faylini to'ldiring.");
+      return;
+    }
+    setVideoUploads((current) => ({ ...current, [lesson.id]: { status: "uploading", progress: 0 } }));
+    try {
+      const asset = await uploadVideo(file, {
+        folder: `designora/courses/${courseId}/lessons`,
+        onProgress: (progress) => setVideoUploads((current) => ({ ...current, [lesson.id]: { status: "uploading", progress } })),
+      });
+      await instructorApi.updateLesson(lesson.id, { video_url: asset.secure_url, duration_seconds: Math.round(asset.duration || lesson.duration_seconds || 0) }, token);
+      setVideoUploads((current) => ({ ...current, [lesson.id]: { status: "ready", progress: 100 } }));
+      toast.success("Video yuklandi va darsga biriktirildi");
+      await load();
+    } catch (err) {
+      setVideoUploads((current) => ({ ...current, [lesson.id]: { status: "error", progress: 0 } }));
+      toast.error(err.message || "Video yuklanmadi");
+    }
+  }
 
   async function createModule() {
     const title = window.prompt("Yangi modul nomi");
@@ -176,11 +199,12 @@ export default function InstructorCourseEditPage() {
       <div className="builder-layout">
         <section className="builder-main">
           <article className="builder-card">
-            <div className="builder-card__head"><div><span>Curriculum</span><h2>Modullar va darslar</h2></div><div className="builder-actions"><button onClick={createModule}>+ Modul</button><strong>{allLessons.length} dars</strong></div></div>
+            <div className="builder-card__head"><div><span>Curriculum</span><h2>Modullar va darslar</h2><p className="media-help">Local video tanlang, Cloudinary uni saqlaydi va darsga avtomatik biriktiradi.</p></div><div className="builder-actions"><button onClick={createModule}>+ Modul</button><strong>{allLessons.length} dars</strong></div></div>
+            {!cloudinaryConfig.ready && <p className="media-config-warning">Cloudinary hali sozlanmagan. `frontend/.env.local` ga cloud name va unsigned upload preset qo'shing.</p>}
             {data.modules.map((module) => (
               <div className="builder-module" draggable key={module.id} onDragStart={() => setDrag({ type: "module", id: module.id })} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (drag?.type === "module") moveModule(drag.id, module.id); setDrag(null); }}>
                 <div className="builder-module__head"><span className="drag-handle">⠿</span><strong>{module.title}</strong><small>{module.lessons.length} dars</small><button onClick={() => createLesson(module.id)}>+ Dars</button></div>
-                <div className="builder-lessons">{module.lessons.map((lesson) => <div className="builder-lesson" draggable key={lesson.id} onDragStart={(event) => { event.stopPropagation(); setDrag({ type: "lesson", id: lesson.id }); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.stopPropagation(); if (drag?.type === "lesson") moveLesson(drag.id, lesson.id, module.id); setDrag(null); }}><span className="drag-handle">⋮⋮</span><div><strong>{lesson.title}</strong><small>{lesson.type} · {lesson.processing_status}</small></div><em className={`media-state media-state--${lesson.processing_status}`}>{lesson.processing_status}</em></div>)}</div>
+                <div className="builder-lessons">{module.lessons.map((lesson) => { const upload = videoUploads[lesson.id]; return <div className="builder-lesson" draggable key={lesson.id} onDragStart={(event) => { event.stopPropagation(); setDrag({ type: "lesson", id: lesson.id }); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.stopPropagation(); if (drag?.type === "lesson") moveLesson(drag.id, lesson.id, module.id); setDrag(null); }}><span className="drag-handle">⋮⋮</span><div className="builder-lesson-copy"><strong>{lesson.title}</strong><small>{lesson.type} · {lesson.processing_status}</small></div><div className="builder-lesson-media">{lesson.video_url && <a href={lesson.video_url} target="_blank" rel="noreferrer">Ko'rish</a>}<label className="media-upload-control" onMouseDown={(event) => event.stopPropagation()}><input type="file" accept="video/*" disabled={upload?.status === "uploading" || !cloudinaryConfig.ready} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) uploadLessonVideo(lesson, file); }} />{upload?.status === "uploading" ? `Yuklanmoqda ${upload.progress}%` : upload?.status === "error" ? "Qayta yuklash" : lesson.video_url ? "Videoni almashtirish" : "Video yuklash"}</label><em className={`media-state media-state--${lesson.processing_status}`}>{lesson.processing_status}</em></div></div>; })}</div>
               </div>
             ))}
             {!data.modules.length && <p className="builder-empty">Modul yo'q. “+ Modul” bilan boshlang.</p>}

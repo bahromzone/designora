@@ -191,7 +191,7 @@ export default function InstructorManagePage() {
                   {c.status === "published" ? "Qoralamaga" : "Chop etish"}
                 </Button>
                 <Link
-                  to={`/instruktor/boshqaruv/${c.id}`}
+                  to={`/instruktor/kurs/${c.id}`}
                   className="btn-primary"
                 >
                   Tahrirlash
@@ -202,7 +202,6 @@ export default function InstructorManagePage() {
         </div>
       )}
 
-      {/* Yangi kurs modali */}
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

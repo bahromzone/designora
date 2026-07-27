@@ -10,8 +10,7 @@ function dashboardPathForRole(role) {
 }
 
 // Google OAuth qaytish sahifasi.
-// Backend /auth/google/callback bu yerga token'ni URL fragmentida yuboradi:
-//   /auth/callback#token=<JWT>
+// Backend /auth/google/callback bu yerga token va tasdiqlangan rolni fragmentda yuboradi.
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const { loginWithToken } = useAuth();
@@ -22,38 +21,39 @@ export default function AuthCallbackPage() {
     if (handled.current) return;
     handled.current = true;
     let active = true;
+    let errorTimer = null;
 
-    async function finishLogin() {
-      const rawHash = window.location.hash.startsWith("#")
-        ? window.location.hash.slice(1)
-        : window.location.hash;
-      const params = new URLSearchParams(rawHash);
-      const token = params.get("token");
+    const rawHash = window.location.hash.startsWith("#")
+      ? window.location.hash.slice(1)
+      : window.location.hash;
+    const params = new URLSearchParams(rawHash);
+    const token = params.get("token");
+    const role = params.get("role") || "user";
 
-      if (!token) {
-        setError("Google orqali kirishda xatolik yuz berdi.");
-        const timer = setTimeout(
-          () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
-          1500
-        );
-        return () => clearTimeout(timer);
-      }
+    // JWT URL'da qolmasin.
+    window.history.replaceState(null, "", "/auth/callback");
 
-      const profile = await loginWithToken(token);
-      if (active) {
-        navigate(dashboardPathForRole(profile?.role), { replace: true });
-      }
+    if (!token) {
+      setError("Google orqali kirishda xatolik yuz berdi.");
+      errorTimer = window.setTimeout(() => {
+        if (active) {
+          navigate("/?modal=login&error=oauth_failed", { replace: true });
+        }
+      }, 1500);
+      return () => {
+        active = false;
+        if (errorTimer) window.clearTimeout(errorTimer);
+      };
     }
 
-    finishLogin().catch(() => {
-      if (active) {
-        setError("Google orqali kirishda xatolik yuz berdi.");
-        navigate("/?modal=login&error=oauth_failed", { replace: true });
-      }
-    });
+    // Profil so'rovi sekinlashsa ham callback ekrani qotib qolmaydi.
+    // AuthContext sessiyani fonda tasdiqlaydi, route esa server yuborgan role bilan ochiladi.
+    loginWithToken(token).catch(() => {});
+    navigate(dashboardPathForRole(role), { replace: true });
 
     return () => {
       active = false;
+      if (errorTimer) window.clearTimeout(errorTimer);
     };
   }, [loginWithToken, navigate]);
 

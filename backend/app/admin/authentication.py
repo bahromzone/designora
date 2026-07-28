@@ -1,104 +1,29 @@
-"""
-SQLAdmin Authentication Backend
-Admin panelga kirish uchun authentication
-"""
-
 import logging
-
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy.orm import Session
 from starlette.requests import Request
-
 from app.core.database import SessionLocal
 from app.core.password import verify_password
 from app.models.user import User
 
-logger = logging.getLogger(__name__)
-
-
+logger=logging.getLogger(__name__);_ADMIN_ROLES={"admin","superadmin"}
 class AdminAuth(AuthenticationBackend):
-    """
-    SQLAdmin uchun authentication backend
-    Faqat role="admin" bo'lgan userlar kirishlari mumkin
-    """
-
-    async def login(self, request: Request) -> bool:
-        """
-        Login form submit qilinganda chaqiriladi
-        """
-        form = await request.form()
-        username = form.get("username")  # SQLAdmin default: username
-        password = form.get("password")
-
-        logger.info(f"Admin login attempt: {username}")
-
-        # Database session
-        db: Session = SessionLocal()
-
+    async def login(self,request:Request)->bool:
+        form=await request.form();username=form.get("username");password=form.get("password");db:Session=SessionLocal()
         try:
-            # User topish (email bo'yicha)
-            user = db.query(User).filter(User.email == username).first()
-
-            # Tekshirish
-            if not user:
-                logger.warning(f"Admin login failed: User not found - {username}")
-                return False
-
-            if not verify_password(password, user.password):
-                logger.warning(f"Admin login failed: Wrong password - {username}")
-                return False
-
-            if user.role != "admin":
-                logger.warning(f"Admin login failed: Not admin role - {username}")
-                return False
-
-            # ✅ SUCCESS - Session ga saqlash
-            # session ni to'liq tozalab, qaytadan yozamiz
-            request.session.clear()
-            request.session["user"] = {
-                "id": user.id,
-                "email": user.email,
-                "role": user.role,
-                "name": user.name,
-            }
-            logger.info(f"Admin login successful: {username}")
-            return True
-
-        except Exception as e:
-            logger.error(f"Admin login error: {e}")
-            return False
-        finally:
-            db.close()
-
-    async def logout(self, request: Request) -> bool:
-        """
-        Logout qilinganda chaqiriladi
-        """
-        user_email = request.session.get("user", {}).get("email", "unknown")
-        logger.info(f"Admin logout: {user_email}")
-
-        # Session tozalash
-        request.session.clear()
-        return True
-
-    async def authenticate(self, request: Request) -> bool:
-        """
-        Har bir admin sahifaga kirishda tekshiriladi.
-        """
+            user=db.query(User).filter(User.email==username).first()
+            if not user or not user.password or not verify_password(password,user.password) or user.role not in _ADMIN_ROLES or not user.is_active:return False
+            request.session.clear();request.session["user"]={"id":user.id,"email":user.email,"role":user.role,"name":user.name};return True
+        except Exception as exc:logger.error("Admin login error: %s",exc);return False
+        finally:db.close()
+    async def logout(self,request:Request)->bool:request.session.clear();return True
+    async def authenticate(self,request:Request)->bool:
+        session_user=request.session.get("user")
+        if not isinstance(session_user,dict) or session_user.get("role") not in _ADMIN_ROLES:return False
+        db:Session=SessionLocal()
         try:
-            # Sensitive session/cookie details only at DEBUG level (never INFO in prod logs)
-            logger.debug(f"[AUTHENTICATE] session keys: {list(request.session.keys())}")
-            logger.debug(f"[AUTHENTICATE] cookies: {list(request.cookies.keys())}")
-
-            user = request.session.get("user")
-            if not user:
-                logger.warning("[AUTHENTICATE] No user in session → False")
-                return False
-            if isinstance(user, dict):
-                role = user.get("role")
-                logger.debug(f"[AUTHENTICATE] role={role}")
-                return role == "admin"
-            return False
-        except Exception as e:
-            logger.error(f"[AUTHENTICATE] Error: {e}")
-            return False
+            user=db.query(User).filter(User.email==session_user.get("email")).first()
+            return bool(user and user.is_active and user.role in _ADMIN_ROLES)
+        except Exception as exc:
+            logger.error("Admin authentication error: %s",exc);return False
+        finally:db.close()

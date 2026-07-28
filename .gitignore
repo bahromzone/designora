@@ -5,6 +5,15 @@
 .env.*
 !.env.example
 
+# ===== Agent / CLI konfiguratsiyalari =====
+# Bu fayllarda API kalitlari saqlanadi — hech qachon commit qilinmasin.
+# (Repo tarixida ochiq ANTHROPIC_AUTH_TOKEN topilgan — qayta takrorlanmasin.)
+settings.json
+settings.local.json
+.claude/
+.codex/
+*.credentials.json
+
 # ===== Python =====
 __pycache__/
 *.py[cod]

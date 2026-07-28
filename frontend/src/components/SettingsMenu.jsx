@@ -37,9 +37,10 @@ export default function SettingsMenu() {
         <div className="border-b border-slate-100 px-3 pb-3"><p className="text-xs font-bold uppercase tracking-widest text-violet-600">Sozlamalar</p><p className="mt-1 truncate text-sm font-semibold text-slate-900">{user?.email}</p><p className="text-xs text-slate-500">Rol: {user?.role}</p></div>
         <div className="grid gap-1 py-2">
           <Link role="menuitem" className="rounded-xl px-3 py-2.5 text-sm hover:bg-slate-50" to="/profil">Profil</Link>
+          <Link role="menuitem" className="rounded-xl px-3 py-2.5 text-sm hover:bg-slate-50" to="/kurslarim">Mening kurslarim</Link>
+          <Link role="menuitem" className="rounded-xl px-3 py-2.5 text-sm hover:bg-slate-50" to="/calendar">Kalendar</Link>
           {isAdmin && <Link role="menuitem" className="rounded-xl px-3 py-2.5 text-sm hover:bg-slate-50" to="/admin">Admin paneli</Link>}
           {isSuperadmin && <Link role="menuitem" className="rounded-xl px-3 py-2.5 text-sm hover:bg-violet-50 hover:text-violet-700" to="/superadmin">Superadmin paneli</Link>}
-          <Link role="menuitem" className="rounded-xl px-3 py-2.5 text-sm hover:bg-slate-50" to="/profil">Profil sozlamalari</Link>
         </div>
         <button type="button" className="w-full rounded-xl border-t border-slate-100 px-3 py-2.5 text-left text-sm font-semibold text-red-600 hover:bg-red-50" onClick={signOut}>Chiqish</button>
       </div>}

@@ -40,18 +40,18 @@ export default function ProfilePage() {
 
           <div className="space-y-3">
             <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Rol</span><span className="font-semibold text-ink">{user?.role === "admin" ? "Administrator" : user?.role === "instructor" ? "Instruktor" : "Talaba"}</span></div>
-            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Qo\u2018shilgan</span><span className="font-semibold text-ink">{user?.created_at ? formatDate(user.created_at) : "\u2014"}</span></div>
+            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Qo‘shilgan</span><span className="font-semibold text-ink">{user?.created_at ? formatDate(user.created_at) : "—"}</span></div>
           </div>
 
-          {/* Route App.jsx'da /portfolio deb ro'yxatdan o'tgan. Avval bu yerda
-              /portfolio-studio turardi \u2014 bunday route yo'q, shuning uchun tugma
+          {/* App.jsx'da route /portfolio deb ro'yxatdan o'tgan. Avval bu yerda
+              /portfolio-studio turardi — bunday route yo'q, shuning uchun tugma
               NotFoundPage'ga olib borardi. */}
           <Link to="/portfolio" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
-            Portfolio Studio <span aria-hidden>\u2192</span>
+            Portfolio Studio <span aria-hidden>→</span>
           </Link>
 
-          {/* Ommaviy portfolio route'i \u2014 /portfolio/u/:userId */}
-          {user?.id && <Link to={`/portfolio/u/${user.id}`} target="_blank" className="block text-center text-sm font-semibold" style={{ color: "var(--muted)" }}>Public portfolio \u2197</Link>}
+          {/* Ommaviy portfolio route'i — /portfolio/u/:userId */}
+          {user?.id && <Link to={`/portfolio/u/${user.id}`} target="_blank" className="block text-center text-sm font-semibold" style={{ color: "var(--muted)" }}>Public portfolio ↗</Link>}
           {error && <p className="rounded-xl px-4 py-2.5 text-xs" style={{ background: "#fff0ef", color: "#c0392b" }}>{error}</p>}
         </aside>
 
@@ -59,7 +59,7 @@ export default function ProfilePage() {
           <div className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
             <p className="label mb-2">Keyingi qadam</p>
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div><h2 className="font-serif text-lg font-semibold text-ink">Eng yaxshi ishlaringizni ko\u2018rsating</h2><p className="mt-2 max-w-2xl text-sm leading-7" style={{ color: "var(--ink-60)" }}>Baholangan topshiriqlarni professional case study\u2019ga aylantiring va bitta public havola bilan ulashing.</p></div>
+              <div><h2 className="font-serif text-lg font-semibold text-ink">Eng yaxshi ishlaringizni ko‘rsating</h2><p className="mt-2 max-w-2xl text-sm leading-7" style={{ color: "var(--ink-60)" }}>Baholangan topshiriqlarni professional case study’ga aylantiring va bitta public havola bilan ulashing.</p></div>
               <Link to="/portfolio" className="btn-primary">Portfolio yaratish</Link>
             </div>
           </div>
@@ -67,8 +67,8 @@ export default function ProfilePage() {
           <GamificationSection />
 
           <div className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
-            <p className="label mb-2">Boshqaruv ma\u2019lumotlari</p>
-            <h2 className="font-serif text-lg font-semibold text-ink">Shaxsiy ko\u2018rinish</h2>
+            <p className="label mb-2">Boshqaruv ma’lumotlari</p>
+            <h2 className="font-serif text-lg font-semibold text-ink">Shaxsiy ko‘rinish</h2>
             {dashboard ? <div className="mt-4 grid gap-4 sm:grid-cols-2">{dashboard.metrics.map((metric) => <div key={metric.label} className="rounded-xl border p-4" style={{ borderColor: "var(--border)" }}><p className="text-xs" style={{ color: "var(--muted)" }}>{metric.label}</p><p className="mt-1 font-serif text-2xl font-semibold text-ink">{metric.value}</p></div>)}</div> : <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>Boshqaruv maydoni tayyorlanmoqda...</p>}
           </div>
 

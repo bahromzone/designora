@@ -1,18 +1,7 @@
-"""Admin users router — admin va superadmin uchun foydalanuvchilar ro'yxati.
+"""Admin users router — server-side search, filters and pagination."""
 
-Bu endpoint ilgari `app/main.py` ichida inline `APIRouter` sifatida yozilgan edi.
-Ikki muammosi bor edi:
-
-1. `is_active` tekshirilmasdi — superadmin tomonidan bloklangan admin hali ham
-   butun foydalanuvchilar bazasini o'qiy olardi.
-2. Javobda `created_at` yo'q edi, lekin frontend (`AdminUsersPage`) uni
-   render qilardi va ustun doim "-" ko'rsatardi.
-
-Rol va account holatini o'zgartirish bu yerda emas — u superadmin control
-plane'da (`app/routers/superadmin.py`).
-"""
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -20,14 +9,10 @@ from app.core.security import get_current_user
 from app.models.user import User
 
 router = APIRouter(prefix="/api/admin", tags=["Admin - Users"])
-
 _ADMIN_ROLES = {"admin", "superadmin"}
 
 
-def require_admin(
-    email: str = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> User:
+def require_admin(email: str = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
@@ -39,20 +24,23 @@ def require_admin(
 
 
 def _serialize(user: User) -> dict:
-    return {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "role": user.role,
-        "is_active": user.is_active,
-        "created_at": user.created_at.isoformat() if user.created_at else None,
-    }
+    return {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "is_active": user.is_active, "created_at": user.created_at.isoformat() if user.created_at else None}
+
+
+def _list_users(db: Session, q: str | None, role: str | None, status: str | None, page: int, per_page: int):
+    query = db.query(User)
+    if q:
+        term = f"%{q.strip()}%"
+        query = query.filter(or_(User.name.ilike(term), User.email.ilike(term)))
+    if role and role != "all":
+        query = query.filter(User.role == role)
+    if status and status != "all":
+        query = query.filter(User.is_active.is_(status == "active"))
+    total = query.count()
+    users = query.order_by(User.id.desc()).offset((page - 1) * per_page).limit(per_page).all()
+    return {"items": [_serialize(user) for user in users], "page": page, "per_page": per_page, "total": total, "pages": (total + per_page - 1) // per_page}
 
 
 @router.get("/users")
-def list_users(
-    db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
-):
-    users = db.query(User).order_by(User.id.desc()).all()
-    return [_serialize(user) for user in users]
+def list_users(q: str | None = None, role: str | None = None, status: str | None = None, page: int = Query(1, ge=1), per_page: int = Query(25, ge=1, le=100), db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    return _list_users(db, q, role, status, page, per_page)

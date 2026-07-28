@@ -6,9 +6,9 @@ platform content and analytics, but cannot change user roles or account state.
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -24,13 +24,19 @@ def require_superadmin(
     db: Session = Depends(get_db),
 ) -> User:
     user = db.query(User).filter(User.email == email).first()
+
     if not user or user.role != "superadmin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Faqat superadminlar uchun",
         )
+
     if not user.is_active:
-        raise HTTPException(status_code=403, detail="Hisobingiz bloklangan")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Hisobingiz bloklangan",
+        )
+
     return user
 
 
@@ -48,11 +54,16 @@ def overview(
     _: User = Depends(require_superadmin),
 ):
     role_counts = dict(
-        db.query(User.role, func.count(User.id)).group_by(User.role).all()
+        db.query(User.role, func.count(User.id))
+        .group_by(User.role)
+        .all()
     )
+
     return {
         "users_total": db.query(User).count(),
-        "users_active": db.query(User).filter(User.is_active.is_(True)).count(),
+        "users_active": db.query(User)
+        .filter(User.is_active.is_(True))
+        .count(),
         "admins": role_counts.get("admin", 0),
         "superadmins": role_counts.get("superadmin", 0),
         "instructors": role_counts.get("instructor", 0),
@@ -63,21 +74,66 @@ def overview(
 
 @router.get("/users")
 def list_users(
+    q: str | None = None,
+    role: str | None = None,
+    status_filter: str | None = Query(
+        default=None,
+        alias="status",
+    ),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(25, ge=1, le=100),
     db: Session = Depends(get_db),
     _: User = Depends(require_superadmin),
 ):
-    users = db.query(User).order_by(User.id.desc()).all()
-    return [
-        {
-            "id": user.id,
-            "email": user.email,
-            "name": user.name,
-            "role": user.role,
-            "is_active": user.is_active,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-        }
-        for user in users
-    ]
+    query = db.query(User)
+
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        query = query.filter(
+            or_(
+                User.name.ilike(term),
+                User.email.ilike(term),
+            )
+        )
+
+    if role and role != "all":
+        query = query.filter(User.role == role)
+
+    if status_filter and status_filter != "all":
+        query = query.filter(
+            User.is_active.is_(status_filter == "active")
+        )
+
+    total = query.count()
+
+    users = (
+        query.order_by(User.id.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+        .all()
+    )
+
+    return {
+        "items": [
+            {
+                "id": user.id,
+                "email": user.email,
+                "name": user.name,
+                "role": user.role,
+                "is_active": user.is_active,
+                "created_at": (
+                    user.created_at.isoformat()
+                    if user.created_at
+                    else None
+                ),
+            }
+            for user in users
+        ],
+        "page": page,
+        "per_page": per_page,
+        "total": total,
+        "pages": (total + per_page - 1) // per_page,
+    }
 
 
 @router.patch("/users/{user_id}/role")
@@ -88,13 +144,27 @@ def update_role(
     actor: User = Depends(require_superadmin),
 ):
     if actor.id == user_id:
-        raise HTTPException(status_code=400, detail="O'zingizning rolingizni o'zgartira olmaysiz")
+        raise HTTPException(
+            status_code=400,
+            detail="O'zingizning rolingizni o'zgartira olmaysiz",
+        )
+
     user = db.query(User).filter(User.id == user_id).first()
+
     if not user:
-        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+        raise HTTPException(
+            status_code=404,
+            detail="Foydalanuvchi topilmadi",
+        )
+
     user.role = data.role
     db.commit()
-    return {"message": "Rol yangilandi", "id": user.id, "role": user.role}
+
+    return {
+        "message": "Rol yangilandi",
+        "id": user.id,
+        "role": user.role,
+    }
 
 
 @router.patch("/users/{user_id}/status")
@@ -105,10 +175,24 @@ def update_status(
     actor: User = Depends(require_superadmin),
 ):
     if actor.id == user_id and not data.is_active:
-        raise HTTPException(status_code=400, detail="O'zingizni bloklay olmaysiz")
+        raise HTTPException(
+            status_code=400,
+            detail="O'zingizni bloklay olmaysiz",
+        )
+
     user = db.query(User).filter(User.id == user_id).first()
+
     if not user:
-        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+        raise HTTPException(
+            status_code=404,
+            detail="Foydalanuvchi topilmadi",
+        )
+
     user.is_active = data.is_active
     db.commit()
-    return {"message": "Hisob holati yangilandi", "id": user.id, "is_active": user.is_active}
+
+    return {
+        "message": "Hisob holati yangilandi",
+        "id": user.id,
+        "is_active": user.is_active,
+    }

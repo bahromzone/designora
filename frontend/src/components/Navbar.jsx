@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink, useSearchParams } from "react-router-dom";
+import { Link, NavLink, useLocation, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
 import GoogleAuthButton from "./GoogleAuthButton";
+import SettingsMenu from "./SettingsMenu";
 
 const links = [
   { label: "Bosh sahifa", to: "/" },
@@ -396,6 +397,8 @@ export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false); // YANGI: Sichqoncha holati uchun state
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
 
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -407,6 +410,11 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Sahifa almashganda mobil menyu ochiq qolib ketmasin.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // Google callback / ProtectedRoute / Hero "?modal=" orqali modalni ochadi,
   // so'ng parametrni URL'dan tozalaydi (yangilashda qayta ochilmasin).
@@ -425,7 +433,16 @@ export default function Navbar() {
   const openModal = (mode) => {
     setAuthModalMode(mode);
     setIsAuthModalOpen(true);
+    setMobileOpen(false);
   };
+
+  // Foydalanuvchi ismi: /api/profile/me `name` qaytaradi (`full_name` emas).
+  const displayName = user?.name || user?.email || "Profil";
+
+  const mobileLinkClass = ({ isActive }) =>
+    `block rounded-xl px-3 py-3 text-base font-medium transition-colors ${
+      isActive ? "bg-slate-100 text-slate-900 font-bold" : "text-slate-600 hover:bg-slate-50"
+    }`;
 
   return (
     <>
@@ -437,7 +454,7 @@ export default function Navbar() {
         onMouseLeave={() => setIsHovered(false)} // YANGI: Sichqoncha ketganda
         // YANGI: scrolled YOKI isHovered holatida Navbar oq fonga kiradi (Stripe uslubi)
         className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
-          scrolled || isHovered
+          scrolled || isHovered || mobileOpen
             ? "py-4 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm"
             : "py-6 bg-transparent"
         }`}
@@ -522,7 +539,7 @@ export default function Navbar() {
                   to="/profil"
                   className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors"
                 >
-                  {user?.full_name}
+                  {displayName}
                 </Link>
                 <button
                   onClick={logout}
@@ -548,8 +565,100 @@ export default function Navbar() {
               </>
             )}
           </div>
+
+          {/* Mobil hamburger — avval mobil ekranda hech qanday navigatsiya,
+              kirish yoki chiqish tugmasi ko'rinmasdi (hidden md:flex). */}
+          <div className="flex items-center gap-2 md:hidden">
+            {isAuthenticated && <NotificationBell />}
+            <button
+              type="button"
+              onClick={() => setMobileOpen((value) => !value)}
+              aria-label={mobileOpen ? "Menyuni yopish" : "Menyuni ochish"}
+              aria-expanded={mobileOpen}
+              className="-mr-2 p-2 text-slate-700"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                {mobileOpen ? (
+                  <>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </>
+                ) : (
+                  <>
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                  </>
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {/* Mobil menyu paneli */}
+        {mobileOpen && (
+          <div className="md:hidden mt-4 max-h-[calc(100vh-6rem)] overflow-y-auto border-t border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-xl">
+            <div className="space-y-1">
+              {links.map((l) => (
+                <NavLink key={l.to} to={l.to} className={mobileLinkClass}>
+                  {l.label}
+                </NavLink>
+              ))}
+              {isAuthenticated && (
+                <>
+                  <NavLink to="/kurslarim" className={mobileLinkClass}>
+                    Mening kurslarim
+                  </NavLink>
+                  <NavLink to="/profil" className={mobileLinkClass}>
+                    {displayName}
+                  </NavLink>
+                </>
+              )}
+            </div>
+
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              {isAuthenticated ? (
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    logout();
+                  }}
+                  className="w-full rounded-full border border-gray-300 px-4 py-3 text-sm font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Chiqish
+                </button>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => openModal("login")}
+                    className="w-full rounded-full border border-gray-300 px-4 py-3 text-sm font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Kirish
+                  </button>
+                  <button
+                    onClick={() => openModal("signup")}
+                    className="w-full rounded-full bg-slate-900 px-4 py-3 text-sm font-bold text-white transition-all hover:shadow-[0_8px_20px_rgba(15,23,42,0.2)]"
+                  >
+                    Hisob yaratish
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </motion.header>
+
+      {/* Sozlamalar menyusi hech qayerda mount qilinmagan edi — /admin va
+          /superadmin panellariga UI orqali kirish yo'li yo'q edi. */}
+      <SettingsMenu />
 
       {/* Mount Modal */}
       <AuthModal

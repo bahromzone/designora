@@ -34,7 +34,7 @@ def test_admin_users_payload_exposes_created_at(client, db_session):
     response = client.get("/api/admin/users", headers=_auth(admin.email))
 
     assert response.status_code == 200
-    rows = response.json()
+    rows = response.json()["items"]
     assert rows
     assert all("created_at" in row for row in rows)
 

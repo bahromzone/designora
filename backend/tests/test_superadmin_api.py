@@ -27,7 +27,7 @@ def test_superadmin_can_list_users_and_update_role(client, db_session):
 
     response = client.get("/api/superadmin/users", headers=_auth(root.email))
     assert response.status_code == 200
-    assert any(row["email"] == target.email for row in response.json())
+    assert any(row["email"] == target.email for row in response.json()["items"])
 
     response = client.patch(
         f"/api/superadmin/users/{target.id}/role",

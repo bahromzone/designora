@@ -4,6 +4,13 @@ import { authApi } from "../lib/api";
 const AuthContext = createContext(null);
 const STORAGE_KEY = "designora-auth-token";
 
+function dashboardPathForRole(role) {
+  if (role === "superadmin") return "/superadmin";
+  if (role === "admin") return "/admin";
+  if (role === "instructor") return "/instruktor-panel";
+  return "/dashboard";
+}
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(STORAGE_KEY));
   const [user, setUser] = useState(null);
@@ -61,7 +68,9 @@ export function AuthProvider({ children }) {
     setToken(response.access_token);
     setUser(response.user);
     authApi.issueRefresh(response.access_token).catch(() => {});
-    if (response.redirect) window.location.assign(response.redirect);
+    window.location.assign(
+      dashboardPathForRole(response.user?.role) || response.redirect || "/"
+    );
     return response;
   }
 
@@ -71,22 +80,20 @@ export function AuthProvider({ children }) {
     setToken(response.access_token);
     setUser(response.user);
     authApi.issueRefresh(response.access_token).catch(() => {});
-    if (response.redirect) window.location.assign(response.redirect);
+    window.location.assign(
+      dashboardPathForRole(response.user?.role) || response.redirect || "/"
+    );
     return response;
   }
 
   async function loginWithToken(nextToken) {
-    if (!nextToken) return null;
+    if (!nextToken) throw new Error("OAuth token topilmadi");
     localStorage.setItem(STORAGE_KEY, nextToken);
     setToken(nextToken);
     authApi.issueRefresh(nextToken).catch(() => {});
-    try {
-      const profile = await authApi.profile(nextToken);
-      setUser(profile);
-      return profile;
-    } catch {
-      return null;
-    }
+    const profile = await authApi.profile(nextToken);
+    setUser(profile);
+    return profile;
   }
 
   function logout() {

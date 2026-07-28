@@ -1,9 +1,0 @@
-{
-    "env":{
-        "ANTHROPIC_BASE_URL": "https://agentrouter.org",
-        "ANTHROPIC_AUTH_TOKEN": "sk-Rx048uFbitmpvGCxWFvReHPjAnk78Podz0YJ8mSzIgdLiLkd",
-        "ANTHROPIC_API_KEY": "",
-        "ANTHROPIC_MODEL": "claude-opus-4-8"
-    },
-    "model": "claude-opus-4-8"
-}

@@ -1,7 +1,8 @@
 """Autentifikatsiya API (/api/auth) va streak mantiqi testlari."""
 
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
+from app.core.password import hash_password
 from app.models.user import User
 from app.routers.auth import update_streak
 
@@ -13,7 +14,7 @@ def _register_payload(**over):
         "username": "testuser",
         "email": "test@example.com",
         "password": VALID_PASSWORD,
-        "recaptcha_token": "dummy",  # development'da tekshirilmaydi
+        "recaptcha_token": "dummy",
     }
     data.update(over)
     return data
@@ -35,16 +36,12 @@ def test_register_duplicate_email(client):
 
 
 def test_register_weak_password_no_uppercase(client):
-    resp = client.post(
-        "/api/auth/register", json=_register_payload(password="password123")
-    )
+    resp = client.post("/api/auth/register", json=_register_payload(password="password123"))
     assert resp.status_code == 422
 
 
 def test_register_weak_password_no_digit(client):
-    resp = client.post(
-        "/api/auth/register", json=_register_payload(password="Passwordxx")
-    )
+    resp = client.post("/api/auth/register", json=_register_payload(password="Passwordxx"))
     assert resp.status_code == 422
 
 
@@ -55,32 +52,43 @@ def test_register_short_username(client):
 
 def test_login_success(client):
     client.post("/api/auth/register", json=_register_payload())
-    resp = client.post(
-        "/api/auth/login",
-        json={"email": "test@example.com", "password": VALID_PASSWORD},
-    )
+    resp = client.post("/api/auth/login", json={"email": "test@example.com", "password": VALID_PASSWORD})
     assert resp.status_code == 200
     assert resp.json()["success"] is True
 
 
+def test_instructor_login_redirects_to_instructor_panel(client, db_session):
+    user = User(
+        email="baxromjonolimov0000@gmail.com",
+        name="Baxrom",
+        password=hash_password(VALID_PASSWORD),
+        role="instructor",
+        provider="google",
+    )
+    db_session.add(user)
+    db_session.commit()
+
+    response = client.post(
+        "/api/auth/login",
+        json={"email": user.email, "password": VALID_PASSWORD},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["user"]["role"] == "instructor"
+    assert response.json()["redirect"] == "/instruktor-panel"
+
+
 def test_login_wrong_password(client):
     client.post("/api/auth/register", json=_register_payload())
-    resp = client.post(
-        "/api/auth/login",
-        json={"email": "test@example.com", "password": "WrongPass123"},
-    )
+    resp = client.post("/api/auth/login", json={"email": "test@example.com", "password": "WrongPass123"})
     assert resp.status_code == 401
 
 
 def test_login_unknown_user(client):
-    resp = client.post(
-        "/api/auth/login",
-        json={"email": "nobody@example.com", "password": VALID_PASSWORD},
-    )
+    resp = client.post("/api/auth/login", json={"email": "nobody@example.com", "password": VALID_PASSWORD})
     assert resp.status_code == 401
 
 
-# ── Streak mantiqi (birlik testlari) ─────────────────────────────────────────
 def test_streak_first_login(db_session):
     user = User(email="s1@example.com", name="S1", streak_days=0)
     db_session.add(user)
@@ -91,9 +99,7 @@ def test_streak_first_login(db_session):
 
 def test_streak_consecutive_day(db_session):
     yesterday = datetime.now(UTC) - timedelta(days=1)
-    user = User(
-        email="s2@example.com", name="S2", streak_days=3, last_login_date=yesterday
-    )
+    user = User(email="s2@example.com", name="S2", streak_days=3, last_login_date=yesterday)
     db_session.add(user)
     db_session.commit()
     update_streak(user, db_session)

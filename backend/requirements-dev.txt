@@ -3,9 +3,9 @@
 -r requirements.txt
 
 # ===== Test =====
-pytest==9.1.1
-pytest-cov==7.1.0
-pytest-asyncio==1.4.0
+pytest==8.4.2
+pytest-cov==6.2.1
+pytest-asyncio==1.2.0
 
 # ===== Lint / format =====
 ruff==0.16.0

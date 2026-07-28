@@ -23,7 +23,7 @@ dnspython==2.8.0
 ecdsa==0.19.2
 email-validator==2.3.0
 Faker==40.31.0
-fastapi==0.139.2
+fastapi==0.128.0
 fastapi-csrf-protect==1.0.7
 fastapi-mail==1.6.5
 frozenlist==1.8.0
@@ -51,9 +51,9 @@ propcache==0.5.2
 psycopg2-binary==2.9.12
 pyasn1==0.6.4
 pycparser==3.0
-pydantic==2.13.4
-pydantic-settings==2.14.2
-pydantic_core==2.47.0
+pydantic==2.12.5
+pydantic-settings==2.12.0
+pydantic_core==2.41.5
 python-dotenv==1.2.2
 python-jose==3.5.0
 python-multipart==0.0.32
@@ -67,7 +67,7 @@ six==1.17.0
 slowapi==0.1.10
 sqladmin==0.29.0
 SQLAlchemy==2.0.51
-starlette==0.52.1
+starlette==0.50.0
 typing-inspection==0.4.2
 typing_extensions==4.16.0
 tzdata==2026.3

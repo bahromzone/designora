@@ -59,7 +59,7 @@ python-jose==3.5.0
 python-multipart==0.0.32
 pytokens==0.4.1
 pytz==2026.3.post1
-regex==2026.7.19
+regex==2025.11.3
 reportlab==4.2.5
 requests==2.34.2
 rsa==4.9.1

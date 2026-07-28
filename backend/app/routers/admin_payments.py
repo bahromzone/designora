@@ -31,7 +31,8 @@ class CouponIn(BaseModel):
 @router.get("/orders")
 def orders(status: str | None = None, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     query = db.query(Order).order_by(Order.id.desc())
-    if status and status != "all": query = query.filter(Order.status == status)
+    if status and status != "all":
+        query = query.filter(Order.status == status)
     rows = query.limit(200).all()
     return [{"id": row.id, "user_id": row.user_id, "user_email": row.user.email if row.user else None, "course_id": row.course_id, "course_title": row.course.title if row.course else None, "amount": row.amount, "discount_amount": row.discount_amount, "provider": row.provider, "status": row.status, "refund_status": row.refund_status, "created_at": row.created_at.isoformat() if row.created_at else None} for row in rows]
 
@@ -39,10 +40,14 @@ def orders(status: str | None = None, db: Session = Depends(get_db), _: User = D
 @router.post("/orders/{order_id}/refund")
 def request_refund(order_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     order = db.query(Order).filter(Order.id == order_id).first()
-    if not order: raise HTTPException(status_code=404, detail="Buyurtma topilmadi")
-    if order.status != "paid": raise HTTPException(status_code=400, detail="Faqat to'langan order refund qilinadi")
-    if order.refund_status != "none": raise HTTPException(status_code=400, detail="Refund allaqachon yuborilgan")
-    order.refund_status = "requested"; db.commit()
+    if not order:
+        raise HTTPException(status_code=404, detail="Buyurtma topilmadi")
+    if order.status != "paid":
+        raise HTTPException(status_code=400, detail="Faqat to'langan order refund qilinadi")
+    if order.refund_status != "none":
+        raise HTTPException(status_code=400, detail="Refund allaqachon yuborilgan")
+    order.refund_status = "requested"
+    db.commit()
     return {"message": "Refund so'rovi qayd etildi", "id": order.id, "refund_status": order.refund_status}
 
 
@@ -54,18 +59,27 @@ def coupons(db: Session = Depends(get_db), _: User = Depends(require_admin)):
 
 @router.post("/coupons", status_code=201)
 def create_coupon(data: CouponIn, db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    if data.type not in {"percent", "fixed"} or data.value < 0 or (data.type == "percent" and data.value > 100):
-        raise HTTPException(status_code=400, detail="Kupon qiymati noto'g'ri")
     code = data.code.strip().upper()
-    if db.query(Coupon).filter(Coupon.code == code).first(): raise HTTPException(status_code=409, detail="Bu kupon mavjud")
+    if not code:
+        raise HTTPException(status_code=400, detail="Kupon kodi bo'sh bo'lishi mumkin emas")
+    if data.type not in {"percent", "fixed"} or data.value <= 0 or (data.type == "percent" and data.value > 100):
+        raise HTTPException(status_code=400, detail="Kupon qiymati noto'g'ri")
+    if data.max_uses is not None and data.max_uses <= 0:
+        raise HTTPException(status_code=400, detail="max_uses 0 dan katta bo'lishi kerak")
+    if db.query(Coupon).filter(Coupon.code == code).first():
+        raise HTTPException(status_code=409, detail="Bu kupon mavjud")
     row = Coupon(code=code, type=data.type, value=data.value, max_uses=data.max_uses, expires_at=data.expires_at)
-    db.add(row); db.commit(); db.refresh(row)
+    db.add(row)
+    db.commit()
+    db.refresh(row)
     return {"id": row.id, "code": row.code}
 
 
 @router.patch("/coupons/{coupon_id}/toggle")
 def toggle_coupon(coupon_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     row = db.query(Coupon).filter(Coupon.id == coupon_id).first()
-    if not row: raise HTTPException(status_code=404, detail="Kupon topilmadi")
-    row.is_active = not row.is_active; db.commit()
+    if not row:
+        raise HTTPException(status_code=404, detail="Kupon topilmadi")
+    row.is_active = not row.is_active
+    db.commit()
     return {"id": row.id, "is_active": row.is_active}

@@ -1,5 +1,8 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, StringConstraints
+from pydantic.types import PositiveInt
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -11,9 +14,9 @@ router = APIRouter(prefix="/api", tags=["Moderation"])
 
 
 class ReportIn(BaseModel):
-    content_type: str
-    content_id: int
-    reason: str
+    content_type: Annotated[str, StringConstraints(min_length=1, max_length=50)]
+    content_id: PositiveInt
+    reason: Annotated[str, StringConstraints(min_length=10, max_length=1000)]
 
 
 class ReviewIn(BaseModel):
@@ -24,23 +27,20 @@ def current_user(email: str = Depends(get_current_user), db: Session = Depends(g
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Hisobingiz bloklangan")
     return user
 
 
 def admin(user: User = Depends(current_user)) -> User:
-    if not user.is_active or user.role not in {"admin", "superadmin"}:
+    if user.role not in {"admin", "superadmin"}:
         raise HTTPException(status_code=403, detail="Faqat adminlar uchun")
     return user
 
 
 @router.post("/moderation/reports", status_code=201)
 def report(data: ReportIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    row = ModerationReport(
-        reporter_id=user.id,
-        content_type=data.content_type,
-        content_id=data.content_id,
-        reason=data.reason,
-    )
+    row = ModerationReport(reporter_id=user.id, content_type=data.content_type.strip(), content_id=data.content_id, reason=data.reason.strip())
     db.add(row)
     db.commit()
     db.refresh(row)
@@ -49,24 +49,8 @@ def report(data: ReportIn, user: User = Depends(current_user), db: Session = Dep
 
 @router.get("/admin/moderation")
 def queue(status: str = "open", db: Session = Depends(get_db), _: User = Depends(admin)):
-    rows = (
-        db.query(ModerationReport)
-        .filter(ModerationReport.status == status)
-        .order_by(ModerationReport.created_at.asc())
-        .all()
-    )
-    return [
-        {
-            "id": row.id,
-            "reporter_id": row.reporter_id,
-            "content_type": row.content_type,
-            "content_id": row.content_id,
-            "reason": row.reason,
-            "status": row.status,
-            "created_at": row.created_at.isoformat() if row.created_at else None,
-        }
-        for row in rows
-    ]
+    rows = db.query(ModerationReport).filter(ModerationReport.status == status).order_by(ModerationReport.created_at.asc()).all()
+    return [{"id": row.id, "reporter_id": row.reporter_id, "content_type": row.content_type, "content_id": row.content_id, "reason": row.reason, "status": row.status, "created_at": row.created_at.isoformat() if row.created_at else None} for row in rows]
 
 
 @router.patch("/admin/moderation/{report_id}")

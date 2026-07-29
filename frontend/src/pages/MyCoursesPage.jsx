@@ -158,7 +158,9 @@ export default function MyCoursesPage() {
     [assignments]
   );
   const feedbackItems = assignments.filter((item) => item.my_submission?.status === "graded");
-  const firstName = (user?.full_name || user?.username || "Talaba").trim().split(" ")[0];
+  // ✅ TUZATILDI: /api/profile/me `name` qaytaradi. full_name/username hech qachon
+  // mavjud bo'lmagani uchun salomlashuv doim "Salom, Talaba" bo'lib chiqardi.
+  const firstName = (user?.name || user?.full_name || "Talaba").trim().split(" ")[0];
 
   if (loading) return <section className="student-dashboard"><DashboardSkeleton /></section>;
 

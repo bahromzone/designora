@@ -5,6 +5,7 @@ import AssignmentSection from "../components/AssignmentSection";
 import LessonSidebar from "../components/LessonSidebar";
 import NotesSection from "../components/NotesSection";
 import QASection from "../components/QASection";
+import QuizSection from "../components/QuizSection";
 import VideoPlayer from "../components/VideoPlayer";
 import { useAuth } from "../context/AuthContext";
 import { learningApi, quizApi } from "../lib/api";
@@ -65,19 +66,17 @@ export default function LearnPage() {
   if (!data) return null;
   if (!data.is_enrolled) return <section className="shell py-24"><h1>Bu kursga hali yozilmagansiz</h1><p>To‘liq darslarga kirish uchun avval kursga yoziling.</p><Link to={`/kurslar/${courseId}`}>Kurs sahifasiga o‘tish</Link></section>;
 
+  const courseCompleted = Number(data.progress_percent) >= 100 && Number(data.total_lessons) > 0;
+
   return (
     <section className="shell py-16">
       <div className="mb-8 flex flex-col gap-4 sm:mb-10">
-        <Link
-          to="/kurslarim"
-          aria-label="Kurslarim sahifasiga qaytish"
-          className="group inline-flex w-fit min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-6 sm:text-lg"
-        >
+        <Link to="/kurslarim" aria-label="Kurslarim sahifasiga qaytish" className="group inline-flex w-fit min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-6 sm:text-lg">
           <span className="text-xl leading-none transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true">←</span>
           <span>Kurslarimga qaytish</span>
         </Link>
         <div className="max-w-4xl">
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-600">Hozir o‘rganilmoqda</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-600">{courseCompleted ? "Kurs tugallangan" : "Hozir o‘rganilmoqda"}</p>
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">{data.title}</h1>
           <div className="mt-4 h-1.5 w-20 rounded-full bg-violet-500" aria-hidden="true" />
         </div>
@@ -91,6 +90,7 @@ export default function LearnPage() {
             <button className="mt-6" onClick={() => toggleComplete(activeLesson)} disabled={marking}>{activeLesson.is_completed ? "✓ Tugatilgan (bekor qilish)" : "Tugatilgan deb belgilash"}</button>
           </article>}
           {activeLesson && <><AssignmentSection courseId={Number(courseId)} lessonId={activeLesson.id} /><QASection lessonId={activeLesson.id} /><NotesSection lessonId={activeLesson.id} /></>}
+          <QuizSection courseId={Number(courseId)} isEnrolled={data.is_enrolled} />
         </main>
         <LessonSidebar modules={data.modules || []} activeId={activeId} assignments={assignments} quizzes={quizzes} progressPercent={data.progress_percent || 0} completedLessons={data.completed_lessons || 0} totalLessons={data.total_lessons || 0} onSelect={setActiveId} />
       </div>

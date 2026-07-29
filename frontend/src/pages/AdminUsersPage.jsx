@@ -4,12 +4,16 @@ import { useAuth } from "../context/AuthContext";
 import { request } from "../lib/request";
 
 const ROLES = ["user", "instructor", "admin", "superadmin"];
+const SEARCH_DEBOUNCE_MS = 350;
 
 export default function AdminUsersPage() {
   const { token, user } = useAuth();
   const isSuperadmin = user?.role === "superadmin";
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState("");
+  // ✅ TUZATILDI: har bosilgan harf uchun alohida so'rov ketardi — natijalar
+  // sakrab turardi va input "tutilib" qolardi.
+  const [searchTerm, setSearchTerm] = useState("");
   const [role, setRole] = useState("all");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
@@ -18,11 +22,19 @@ export default function AdminUsersPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(null);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(query.trim());
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     const params = new URLSearchParams({ page: String(page), per_page: "25" });
-    if (query.trim()) params.set("q", query.trim());
+    if (searchTerm) params.set("q", searchTerm);
     if (role !== "all") params.set("role", role);
     if (status !== "all") params.set("status", status);
 
@@ -38,7 +50,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [isSuperadmin, token, query, role, status, page]);
+  }, [isSuperadmin, token, searchTerm, role, status, page]);
 
   useEffect(() => {
     load();
@@ -53,7 +65,7 @@ export default function AdminUsersPage() {
     setBusy(id);
     setError("");
     try {
-      const path = patch.role
+      const path = "role" in patch
         ? `/api/superadmin/users/${id}/role`
         : `/api/superadmin/users/${id}/status`;
       await request(path, {
@@ -92,7 +104,7 @@ export default function AdminUsersPage() {
             aria-label="User qidirish"
             placeholder="Ism yoki email qidirish"
             value={query}
-            onChange={(event) => changeFilter(setQuery, event.target.value)}
+            onChange={(event) => setQuery(event.target.value)}
           />
           <select
             aria-label="Rol bo'yicha filter"

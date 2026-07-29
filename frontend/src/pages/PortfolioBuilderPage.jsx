@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
@@ -7,7 +7,11 @@ import { portfolioApi } from "../lib/portfolioApi";
 import "./Portfolio.css";
 
 const blank = { submission_id: null, title: "", summary: "", story: "", cover_url: "", project_url: "", skills: [], tools: [], is_public: false };
+const FIELDS = Object.keys(blank);
 const splitTags = (value) => value.split(",").map((item) => item.trim()).filter(Boolean).slice(0, 12);
+// ✅ Faqat backend kutayotgan maydonlarni yuboramiz (id, created_at kabi
+// qo'shimcha maydonlar tahrirlashda payload'ga tushib qolardi).
+const pickFields = (source) => FIELDS.reduce((acc, key) => ({ ...acc, [key]: source[key] ?? blank[key] }), {});
 
 export default function PortfolioBuilderPage() {
   const { token, user } = useAuth();
@@ -21,33 +25,39 @@ export default function PortfolioBuilderPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
+    if (!token) return;
     setLoading(true); setError("");
     try {
       const [mine, source] = await Promise.all([portfolioApi.mine(token), portfolioApi.eligible(token)]);
-      setProjects(mine); setEligible(source);
+      setProjects(Array.isArray(mine) ? mine : []);
+      setEligible(Array.isArray(source) ? source : []);
       const requested = Number(params.get("submission"));
-      const candidate = source.find((item) => item.submission_id === requested && item.available);
-      if (candidate && !selected) chooseSource(candidate);
+      const candidate = (Array.isArray(source) ? source : []).find((item) => item.submission_id === requested && item.available);
+      if (candidate) {
+        setSelected(null);
+        setForm({ ...blank, submission_id: candidate.submission_id, title: candidate.title, summary: candidate.content || candidate.description || "", cover_url: candidate.file_url?.match(/\.(png|jpe?g|webp)$/i) ? candidate.file_url : "", project_url: candidate.file_url || "" });
+      }
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
-  }
-  useEffect(() => { load(); }, [token]);
+  }, [token, params]);
+
+  useEffect(() => { load(); }, [load]);
 
   function chooseSource(source) {
     setSelected(null);
     setForm({ ...blank, submission_id: source.submission_id, title: source.title, summary: source.content || source.description || "", cover_url: source.file_url?.match(/\.(png|jpe?g|webp)$/i) ? source.file_url : "", project_url: source.file_url || "" });
   }
-  function edit(project) { setSelected(project.id); setForm({ ...blank, ...project }); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function edit(project) { setSelected(project.id); setForm(pickFields(project)); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function reset() { setSelected(null); setForm(blank); }
   function field(key, value) { setForm((old) => ({ ...old, [key]: value })); }
 
   async function save(event) {
     event.preventDefault();
-    if (!form.title.trim()) return;
+    if (!form.title.trim()) { toast.error("Loyiha nomini kiriting"); return; }
     setSaving(true);
     try {
-      const body = { ...form, title: form.title.trim(), skills: form.skills, tools: form.tools };
+      const body = { ...pickFields(form), title: form.title.trim() };
       if (selected) await portfolioApi.update(selected, body, token);
       else await portfolioApi.create(body, token);
       toast.success(selected ? "Loyiha yangilandi" : "Portfolio loyihasi yaratildi");
@@ -58,7 +68,7 @@ export default function PortfolioBuilderPage() {
 
   async function remove(id) {
     if (!window.confirm("Loyihani portfolio'dan o'chirasizmi?")) return;
-    try { await portfolioApi.remove(id, token); toast.success("Loyiha o'chirildi"); await load(); }
+    try { await portfolioApi.remove(id, token); toast.success("Loyiha o'chirildi"); if (selected === id) reset(); await load(); }
     catch (err) { toast.error(err.message); }
   }
 
@@ -69,7 +79,8 @@ export default function PortfolioBuilderPage() {
   if (error) return <section className="portfolio-builder"><div className="portfolio-error"><h1>Portfolio ochilmadi</h1><p>{error}</p><button onClick={load}>Qayta urinish</button></div></section>;
 
   return <section className="portfolio-builder">
-    <header className="portfolio-builder-head"><div><p>Portfolio studio</p><h1>Ishlaringiz gapirsin.</h1><span>Baholangan loyihalarni professional case study’ga aylantiring.</span></div>{userId && <Link to={`/portfolio/${userId}`} target="_blank">Public ko‘rinish <b>↗</b></Link>}</header>
+    {/* ✅ TUZATILDI: public portfolio route — /portfolio/u/:userId (avval /portfolio/:id → 404) */}
+    <header className="portfolio-builder-head"><div><p>Portfolio studio</p><h1>Ishlaringiz gapirsin.</h1><span>Baholangan loyihalarni professional case study’ga aylantiring.</span></div>{userId && <Link to={`/portfolio/u/${userId}`} target="_blank">Public ko‘rinish <b>↗</b></Link>}</header>
 
     <div className="portfolio-builder-grid">
       <form className="portfolio-editor" onSubmit={save}>

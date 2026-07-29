@@ -27,8 +27,9 @@ class CompletePart(BaseModel):
     part_number: int = Field(ge=1, le=10000)
     etag: str = Field(min_length=1, max_length=200)
 class CompleteIn(BaseModel):
-    upload_id: str = Field(min_length=1, max_length=300)
-    key: str = Field(min_length=1, max_length=500)
+    # S3-compatible providers may return long opaque UploadId values.
+    upload_id: str = Field(min_length=1, max_length=2000)
+    key: str = Field(min_length=1, max_length=1024)
     parts: list[CompletePart] = Field(min_length=1, max_length=10000)
 def _lesson(course_id: int, lesson_id: int, db: Session, user: User) -> Lesson:
     course = _owned_course(db, course_id, user)

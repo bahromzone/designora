@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const CALLBACK_TIMEOUT_MS = 12000;
+
 function dashboardPathForRole(role) {
   const normalized = (role || "user").trim().toLowerCase();
   if (normalized === "superadmin") return "/superadmin";
@@ -10,9 +12,6 @@ function dashboardPathForRole(role) {
   return "/";
 }
 
-// Google OAuth qaytish sahifasi.
-// Backend /auth/google/callback bu yerga token'ni URL fragmentida yuboradi:
-//   /auth/callback#token=<JWT>
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
   const { loginWithToken } = useAuth();
@@ -26,8 +25,7 @@ export default function AuthCallbackPage() {
     const rawHash = window.location.hash.startsWith("#")
       ? window.location.hash.slice(1)
       : window.location.hash;
-    const params = new URLSearchParams(rawHash);
-    const token = params.get("token");
+    const token = new URLSearchParams(rawHash).get("token");
 
     if (!token) {
       setError("Google orqali kirishda xatolik yuz berdi.");
@@ -39,27 +37,28 @@ export default function AuthCallbackPage() {
     }
 
     let active = true;
-    const completeLogin = async () => {
-      try {
-        const profile = await loginWithToken(token);
-        if (!active) return;
-        // Redirect faqat serverdan qaytgan profil roli asosida qilinadi.
-        navigate(dashboardPathForRole(profile?.role), { replace: true });
-      } catch {
-        if (active) {
-          setError("Google orqali kirishda sessiyani tasdiqlab bo'lmadi.");
-          const timeout = setTimeout(
-            () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
-            1500
-          );
-          return () => clearTimeout(timeout);
-        }
-      }
+    let errorTimeout;
+    const fail = () => {
+      if (!active) return;
+      setError("Google orqali kirishda sessiyani tasdiqlab bo'lmadi.");
+      errorTimeout = setTimeout(
+        () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
+        1500
+      );
     };
+    const callbackTimeout = setTimeout(fail, CALLBACK_TIMEOUT_MS);
 
-    completeLogin();
+    loginWithToken(token)
+      .then((profile) => {
+        if (active) navigate(dashboardPathForRole(profile?.role), { replace: true });
+      })
+      .catch(fail)
+      .finally(() => clearTimeout(callbackTimeout));
+
     return () => {
       active = false;
+      clearTimeout(callbackTimeout);
+      clearTimeout(errorTimeout);
     };
   }, [loginWithToken, navigate]);
 

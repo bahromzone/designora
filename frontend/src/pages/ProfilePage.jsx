@@ -6,6 +6,13 @@ import ReferralSection from "../components/ReferralSection";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../lib/api";
 
+const ROLE_LABELS = {
+  superadmin: "Superadmin",
+  admin: "Administrator",
+  instructor: "Instruktor",
+  user: "Talaba",
+};
+
 function formatDate(value) {
   return new Date(value).toLocaleDateString("uz-UZ", {
     year: "numeric",
@@ -39,15 +46,17 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Rol</span><span className="font-semibold text-ink">{user?.role === "admin" ? "Administrator" : user?.role === "instructor" ? "Instruktor" : "Talaba"}</span></div>
+            <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Rol</span><span className="font-semibold text-ink">{ROLE_LABELS[user?.role] ?? "Talaba"}</span></div>
             <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Qo‘shilgan</span><span className="font-semibold text-ink">{user?.created_at ? formatDate(user.created_at) : "—"}</span></div>
           </div>
 
-          <Link to="/portfolio-studio" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
+          {/* ✅ TUZATILDI: /portfolio-studio route mavjud emas edi → 404. To'g'ri manzil /portfolio */}
+          <Link to="/portfolio" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
             Portfolio Studio <span aria-hidden>→</span>
           </Link>
 
-          {user?.id && <Link to={`/portfolio/${user.id}`} target="_blank" className="block text-center text-sm font-semibold" style={{ color: "var(--muted)" }}>Public portfolio ↗</Link>}
+          {/* ✅ TUZATILDI: public portfolio route — /portfolio/u/:userId */}
+          {user?.id && <Link to={`/portfolio/u/${user.id}`} target="_blank" className="block text-center text-sm font-semibold" style={{ color: "var(--muted)" }}>Public portfolio ↗</Link>}
           {error && <p className="rounded-xl px-4 py-2.5 text-xs" style={{ background: "#fff0ef", color: "#c0392b" }}>{error}</p>}
         </aside>
 
@@ -56,7 +65,7 @@ export default function ProfilePage() {
             <p className="label mb-2">Keyingi qadam</p>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div><h2 className="font-serif text-lg font-semibold text-ink">Eng yaxshi ishlaringizni ko‘rsating</h2><p className="mt-2 max-w-2xl text-sm leading-7" style={{ color: "var(--ink-60)" }}>Baholangan topshiriqlarni professional case study’ga aylantiring va bitta public havola bilan ulashing.</p></div>
-              <Link to="/portfolio-studio" className="btn-primary">Portfolio yaratish</Link>
+              <Link to="/portfolio" className="btn-primary">Portfolio yaratish</Link>
             </div>
           </div>
 
@@ -65,7 +74,7 @@ export default function ProfilePage() {
           <div className="rounded-2xl border p-6" style={{ borderColor: "var(--border)" }}>
             <p className="label mb-2">Boshqaruv ma’lumotlari</p>
             <h2 className="font-serif text-lg font-semibold text-ink">Shaxsiy ko‘rinish</h2>
-            {dashboard ? <div className="mt-4 grid gap-4 sm:grid-cols-2">{dashboard.metrics.map((metric) => <div key={metric.label} className="rounded-xl border p-4" style={{ borderColor: "var(--border)" }}><p className="text-xs" style={{ color: "var(--muted)" }}>{metric.label}</p><p className="mt-1 font-serif text-2xl font-semibold text-ink">{metric.value}</p></div>)}</div> : <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>Boshqaruv maydoni tayyorlanmoqda...</p>}
+            {dashboard?.metrics?.length ? <div className="mt-4 grid gap-4 sm:grid-cols-2">{dashboard.metrics.map((metric) => <div key={metric.label} className="rounded-xl border p-4" style={{ borderColor: "var(--border)" }}><p className="text-xs" style={{ color: "var(--muted)" }}>{metric.label}</p><p className="mt-1 font-serif text-2xl font-semibold text-ink">{metric.value}</p></div>)}</div> : <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>Boshqaruv maydoni tayyorlanmoqda...</p>}
           </div>
 
           <ReferralSection />

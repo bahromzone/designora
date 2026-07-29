@@ -1,4 +1,5 @@
 ADMIN_ROLES = {"admin", "superadmin"}
+INSTRUCTOR_ROLES = {"instructor"}
 
 
 def normalize_role(role: str | None) -> str:
@@ -15,6 +16,8 @@ def dashboard_path_for_role(role: str | None) -> str:
         return "/superadmin"
     if normalized == "admin":
         return "/admin"
+    if normalized in INSTRUCTOR_ROLES:
+        return "/instruktor-panel"
     return "/dashboard"
 
 

@@ -98,7 +98,6 @@ export default function HomePage() {
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden px-6 pt-20">
         {/* Stripe-style Floating Gradient Wave Animation */}
-        {/* Positioning: top right, scaled up, rotated, with negative margin to overflow */}
         <div className="absolute top-0 right-0 w-[120%] h-[120%] -mr-[30%] -mt-[25%] pointer-events-none z-0 scale-110 animate-stripe">
           <WaveAnimation />
         </div>
@@ -131,7 +130,6 @@ export default function HomePage() {
               className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6 text-slate-900"
             >
               Mahoratingizni yuksaltiring <br />
-              {/* Flowing animated gradient text (stripe like) */}
               <motion.span
                 animate={{
                   backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
@@ -155,7 +153,6 @@ export default function HomePage() {
               variants={fadeUp}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
-              {/* Premium Apple-style Hover Button */}
               <Link to="/?modal=signup">
                 <motion.span
                   whileHover={{
@@ -275,40 +272,41 @@ export default function HomePage() {
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {courses.map((course) => (
-            <motion.div
-              key={course.id ?? course.title}
-              variants={fadeUpSmall}
-              whileHover={{ y: -8 }}
-              className="bg-white rounded-3xl overflow-hidden border border-gray-100 group cursor-pointer shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all duration-400"
-            >
-              <div className="aspect-[16/10] overflow-hidden">
-                <img
-                  src={course.image_url ?? course.image}
-                  alt={course.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                />
-              </div>
-              <div className="p-6">
-                <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">
-                  {course.subtitle ?? course.tags}
-                </span>
-                <h3 className="font-bold text-slate-900 text-lg mt-2 mb-1 group-hover:text-indigo-600 transition-colors">
-                  {course.title}
-                </h3>
-                <p className="text-sm text-slate-500 mb-4">
-                  {course.level ?? course.instructor}
-                </p>
-                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                  <p className="text-slate-900 font-bold">Bepul sinov</p>
-                  <div className="flex items-center gap-1.5 bg-violet-50 px-2.5 py-1 rounded-full text-violet-600">
-                    <span className="text-sm font-bold">
-                      {course.lessons ?? 12}
-                    </span>
-                    <span className="text-xs">dars</span>
+            <Link key={course.id ?? course.title} to={`/kurslar/${course.id}`}>
+              <motion.div
+                variants={fadeUpSmall}
+                whileHover={{ y: -8 }}
+                className="bg-white rounded-3xl overflow-hidden border border-gray-100 group cursor-pointer shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all duration-400 h-full"
+              >
+                <div className="aspect-[16/10] overflow-hidden">
+                  <img
+                    src={course.image_url ?? course.image}
+                    alt={course.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  />
+                </div>
+                <div className="p-6">
+                  <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">
+                    {course.subtitle ?? course.tags}
+                  </span>
+                  <h3 className="font-bold text-slate-900 text-lg mt-2 mb-1 group-hover:text-indigo-600 transition-colors">
+                    {course.title}
+                  </h3>
+                  <p className="text-sm text-slate-500 mb-4">
+                    {course.level ?? course.instructor}
+                  </p>
+                  <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <p className="text-slate-900 font-bold">Bepul sinov</p>
+                    <div className="flex items-center gap-1.5 bg-violet-50 px-2.5 py-1 rounded-full text-violet-600">
+                      <span className="text-sm font-bold">
+                        {course.lessons ?? 12}
+                      </span>
+                      <span className="text-xs">dars</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </Link>
           ))}
         </motion.div>
       </section>

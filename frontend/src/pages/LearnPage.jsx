@@ -67,7 +67,15 @@ export default function LearnPage() {
 
   return (
     <section className="shell py-16">
-      <Link to="/kurslarim">← {data.title}</Link>
+      <Link
+        to="/kurslarim"
+        aria-label="Kurslarim sahifasiga qaytish"
+        className="group inline-flex min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-6 sm:text-lg"
+      >
+        <span className="text-xl leading-none transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true">←</span>
+        <span>Kurslarimga qaytish</span>
+      </Link>
+      <p className="mt-3 ml-2 text-sm text-slate-500 sm:text-base">{data.title}</p>
       {error && <p role="alert">{error}</p>}
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <main>

@@ -64,5 +64,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t designora-backend ./backend
-      - run: docker build -t designora-frontend ./frontend
+      - name: Build backend image with retry
+        run: |
+          for attempt in 1 2 3; do
+            docker build -t designora-backend ./backend && exit 0
+            echo "Backend Docker pull/build failed, retrying in 15s (attempt ${attempt}/3)"
+            sleep 15
+          done
+          exit 1
+      - name: Build frontend image with retry
+        run: |
+          for attempt in 1 2 3; do
+            docker build -t designora-frontend ./frontend && exit 0
+            echo "Frontend Docker pull/build failed, retrying in 15s (attempt ${attempt}/3)"
+            sleep 15
+          done
+          exit 1

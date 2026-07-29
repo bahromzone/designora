@@ -11,15 +11,20 @@ const FOCUSABLE =
  */
 function Modal({ open, onClose, title, children, footer }) {
   const panelRef = useRef(null);
+  const onCloseRef = useRef(onClose);
   const titleId = title ? "modal-title" : undefined;
+
+  // Parent har renderda yangi inline onClose funksiyasini berishi mumkin.
+  // Uni effect dependency'siga qo'shsak, input yozilganda modal cleanup ishga
+  // tushib, fokusni eski tugmaga qaytaradi va input yozishni to'xtatadi.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return undefined;
 
-    // Modal ochilishidan oldingi fokusni eslab qolamiz (yopilganda tiklash uchun).
     const previouslyFocused = document.activeElement;
-
-    // Ochilganda modal ichidagi birinchi fokuslanadigan elementga o'tamiz.
     const panel = panelRef.current;
     const focusables = panel?.querySelectorAll(FOCUSABLE);
     if (focusables && focusables.length > 0) {
@@ -30,10 +35,9 @@ function Modal({ open, onClose, title, children, footer }) {
 
     const onKey = (e) => {
       if (e.key === "Escape") {
-        onClose?.();
+        onCloseRef.current?.();
         return;
       }
-      // Fokus tuzog'i: Tab modal ichida aylanadi, tashqariga chiqmaydi.
       if (e.key === "Tab") {
         const items = panel?.querySelectorAll(FOCUSABLE);
         if (!items || items.length === 0) return;
@@ -52,12 +56,11 @@ function Modal({ open, onClose, title, children, footer }) {
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      // Yopilganda fokusni oldingi elementga qaytaramiz.
       if (previouslyFocused && typeof previouslyFocused.focus === "function") {
         previouslyFocused.focus();
       }
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -71,7 +74,7 @@ function Modal({ open, onClose, title, children, footer }) {
     >
       <div
         className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={() => onCloseRef.current?.()}
         aria-hidden="true"
       />
       <div
@@ -86,7 +89,7 @@ function Modal({ open, onClose, title, children, footer }) {
             </h2>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => onCloseRef.current?.()}
               aria-label="Yopish"
               className="text-2xl leading-none text-muted hover:text-ink"
             >

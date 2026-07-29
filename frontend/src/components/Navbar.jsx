@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink, useSearchParams } from "react-router-dom";
+import { Link, NavLink, useLocation, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -11,6 +11,22 @@ const links = [
   { label: "Blog", to: "/blog" },
   { label: "Forum", to: "/forum" },
 ];
+
+// Rolga qarab qo'shimcha panel havolalari (faqat mobil menyuda ko'rsatiladi;
+// desktopda bu ishni SettingsMenu bajaradi).
+function panelLinks(role) {
+  const items = [];
+  if (["instructor", "admin", "superadmin"].includes(role)) {
+    items.push({ label: "Instruktor paneli", to: "/instruktor-panel" });
+  }
+  if (["admin", "superadmin"].includes(role)) {
+    items.push({ label: "Admin paneli", to: "/admin" });
+  }
+  if (role === "superadmin") {
+    items.push({ label: "Superadmin paneli", to: "/superadmin" });
+  }
+  return items;
+}
 
 function AuthModal({ isOpen, onClose, initialMode = "login" }) {
   const [mode, setMode] = useState(initialMode);
@@ -396,6 +412,8 @@ export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false); // YANGI: Sichqoncha holati uchun state
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
 
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -407,6 +425,25 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Sahifa almashganda mobil menyu yopilsin.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  // Mobil menyu ochiq bo'lsa fon scroll qilinmasin + Escape yopsin.
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileOpen]);
 
   // Google callback / ProtectedRoute / Hero "?modal=" orqali modalni ochadi,
   // so'ng parametrni URL'dan tozalaydi (yangilashda qayta ochilmasin).
@@ -423,9 +460,16 @@ export default function Navbar() {
   }, [searchParams, setSearchParams]);
 
   const openModal = (mode) => {
+    setMobileOpen(false);
     setAuthModalMode(mode);
     setIsAuthModalOpen(true);
   };
+
+  // Backend /api/profile/me `name` qaytaradi. Avval `full_name` o'qilardi —
+  // u har doim undefined bo'lgani uchun profil havolasi bo'sh chiqib,
+  // bosib bo'lmasdi.
+  const displayName = user?.name || user?.email || "Profil";
+  const rolePanels = panelLinks(user?.role);
 
   return (
     <>
@@ -437,7 +481,7 @@ export default function Navbar() {
         onMouseLeave={() => setIsHovered(false)} // YANGI: Sichqoncha ketganda
         // YANGI: scrolled YOKI isHovered holatida Navbar oq fonga kiradi (Stripe uslubi)
         className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
-          scrolled || isHovered
+          scrolled || isHovered || mobileOpen
             ? "py-4 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm"
             : "py-6 bg-transparent"
         }`}
@@ -522,7 +566,7 @@ export default function Navbar() {
                   to="/profil"
                   className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors"
                 >
-                  {user?.full_name}
+                  {displayName}
                 </Link>
                 <button
                   onClick={logout}
@@ -548,7 +592,128 @@ export default function Navbar() {
               </>
             )}
           </div>
+
+          {/* Mobile trigger — avval umuman yo'q edi, shuning uchun telefonda
+              navigatsiyaning hech bir tugmasi ishlamasdi. */}
+          <div className="flex md:hidden items-center gap-2">
+            {isAuthenticated && <NotificationBell />}
+            <button
+              type="button"
+              onClick={() => setMobileOpen((value) => !value)}
+              aria-label={mobileOpen ? "Menyuni yopish" : "Menyuni ochish"}
+              aria-expanded={mobileOpen}
+              aria-controls="mobil-menyu"
+              className="grid h-10 w-10 place-items-center rounded-full border border-gray-300 text-slate-700 hover:bg-gray-50 transition-colors"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                {mobileOpen ? (
+                  <>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </>
+                ) : (
+                  <>
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                  </>
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {/* Mobile drawer */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.nav
+              id="mobil-menyu"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="md:hidden overflow-hidden border-t border-gray-200 bg-white"
+            >
+              <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col gap-1">
+                {links.map((l) => (
+                  <NavLink
+                    key={l.to}
+                    to={l.to}
+                    className={({ isActive }) =>
+                      `rounded-xl px-3 py-3 text-base font-medium transition-colors ${isActive ? "bg-slate-100 text-slate-900 font-bold" : "text-slate-600 hover:bg-slate-50"}`
+                    }
+                  >
+                    {l.label}
+                  </NavLink>
+                ))}
+
+                {isAuthenticated ? (
+                  <>
+                    <NavLink
+                      to="/kurslarim"
+                      className={({ isActive }) =>
+                        `rounded-xl px-3 py-3 text-base font-medium transition-colors ${isActive ? "bg-slate-100 text-slate-900 font-bold" : "text-slate-600 hover:bg-slate-50"}`
+                      }
+                    >
+                      Mening kurslarim
+                    </NavLink>
+                    <NavLink
+                      to="/profil"
+                      className={({ isActive }) =>
+                        `rounded-xl px-3 py-3 text-base font-medium transition-colors ${isActive ? "bg-slate-100 text-slate-900 font-bold" : "text-slate-600 hover:bg-slate-50"}`
+                      }
+                    >
+                      {displayName}
+                    </NavLink>
+                    {rolePanels.map((item) => (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        className={({ isActive }) =>
+                          `rounded-xl px-3 py-3 text-base font-medium transition-colors ${isActive ? "bg-violet-100 text-violet-800 font-bold" : "text-violet-700 hover:bg-violet-50"}`
+                        }
+                      >
+                        {item.label}
+                      </NavLink>
+                    ))}
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        logout();
+                      }}
+                      className="mt-2 rounded-xl border border-gray-300 px-3 py-3 text-left text-base font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      Chiqish
+                    </button>
+                  </>
+                ) : (
+                  <div className="mt-2 flex flex-col gap-2">
+                    <button
+                      onClick={() => openModal("login")}
+                      className="rounded-xl border border-gray-300 px-3 py-3 text-base font-semibold text-slate-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Kirish
+                    </button>
+                    <button
+                      onClick={() => openModal("signup")}
+                      className="rounded-xl bg-slate-900 px-3 py-3 text-base font-bold text-white hover:bg-slate-800 transition-colors"
+                    >
+                      Hisob yaratish
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </motion.header>
 
       {/* Mount Modal */}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, NavLink, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, NavLink, useLocation, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "./NotificationBell";
@@ -395,12 +395,27 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
 export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
-  const [isHovered, setIsHovered] = useState(false); // YANGI: Sichqoncha holati uchun state
+  const [isHovered, setIsHovered] = useState(false); // Sichqoncha holati uchun state
 
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState("login");
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
+  // ✅ TUZATILDI: mobil menyu umuman yo'q edi — telefonda navigatsiya ham,
+  // "Kirish" tugmasi ham ko'rinmasdi.
+  const [mobileOpen, setMobileOpen] = useState(false);
+  // ✅ TUZATILDI: admin/superadmin paneliga UI orqali yo'l yo'q edi.
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  // ✅ TUZATILDI: backend `name` qaytaradi, `full_name` emas — shu sababli
+  // navbar'dagi profil havolasi bo'sh (ko'rinmas) bo'lib qolgan edi.
+  const displayName = user?.name || user?.email || "Profil";
+  const isSuperadmin = user?.role === "superadmin";
+  const isAdmin = isSuperadmin || user?.role === "admin";
+  const isInstructor = isAdmin || user?.role === "instructor";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -422,10 +437,50 @@ export default function Navbar() {
     }
   }, [searchParams, setSearchParams]);
 
+  // Sahifa almashganda ochiq menyular yopiladi.
+  useEffect(() => {
+    setMobileOpen(false);
+    setUserMenuOpen(false);
+  }, [location.pathname]);
+
+  // Tashqariga bosilganda user menyusi yopiladi.
+  useEffect(() => {
+    if (!userMenuOpen) return undefined;
+    function onPointerDown(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    }
+    function onKeyDown(event) {
+      if (event.key === "Escape") setUserMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [userMenuOpen]);
+
   const openModal = (mode) => {
     setAuthModalMode(mode);
     setIsAuthModalOpen(true);
+    setMobileOpen(false);
   };
+
+  // Rolga qarab qo'shimcha havolalar (menyularda takrorlanadi).
+  const accountLinks = [
+    { label: "Profil", to: "/profil" },
+    { label: "Mening kurslarim", to: "/kurslarim" },
+    { label: "Portfolio studio", to: "/portfolio" },
+    ...(isInstructor
+      ? [{ label: "Instruktor paneli", to: "/instruktor-panel" }]
+      : []),
+    ...(isAdmin ? [{ label: "Admin paneli", to: "/admin" }] : []),
+    ...(isSuperadmin
+      ? [{ label: "Superadmin paneli", to: "/superadmin" }]
+      : []),
+  ];
 
   return (
     <>
@@ -433,11 +488,10 @@ export default function Navbar() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        onMouseEnter={() => setIsHovered(true)} // YANGI: Sichqoncha ustiga kelganda
-        onMouseLeave={() => setIsHovered(false)} // YANGI: Sichqoncha ketganda
-        // YANGI: scrolled YOKI isHovered holatida Navbar oq fonga kiradi (Stripe uslubi)
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
-          scrolled || isHovered
+          scrolled || isHovered || mobileOpen
             ? "py-4 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm"
             : "py-6 bg-transparent"
         }`}
@@ -488,12 +542,13 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop Nav */}
+          {/* Desktop Nav — SearchShortcut shu <nav> ichiga portal qiladi */}
           <nav className="hidden md:flex items-center gap-8">
             {links.map((l) => (
               <NavLink
                 key={l.to}
                 to={l.to}
+                end={l.to === "/"}
                 className={({ isActive }) =>
                   `text-sm font-medium transition-colors ${isActive ? "text-slate-900 font-bold" : "text-slate-500 hover:text-slate-900"}`
                 }
@@ -513,23 +568,81 @@ export default function Navbar() {
             )}
           </nav>
 
-          {/* Auth CTA */}
+          {/* Auth CTA (desktop) */}
           <div className="hidden md:flex items-center gap-5">
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
                 <NotificationBell />
-                <Link
-                  to="/profil"
-                  className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors"
-                >
-                  {user?.full_name}
-                </Link>
-                <button
-                  onClick={logout}
-                  className="text-sm font-medium px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-50 transition-colors"
-                >
-                  Chiqish
-                </button>
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setUserMenuOpen((value) => !value)}
+                    aria-haspopup="menu"
+                    aria-expanded={userMenuOpen}
+                    className="flex items-center gap-2 rounded-full border border-gray-300 py-1.5 pl-1.5 pr-3 text-sm font-medium text-slate-700 transition-colors hover:bg-gray-50"
+                  >
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-r from-pink-500 to-indigo-500 text-xs font-bold text-white">
+                      {displayName.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="max-w-[10rem] truncate">{displayName}</span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className={`h-4 w-4 transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+
+                  {userMenuOpen && (
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+                    >
+                      <div className="border-b border-slate-100 px-3 pb-3 pt-2">
+                        <p className="truncate text-sm font-semibold text-slate-900">
+                          {displayName}
+                        </p>
+                        <p className="truncate text-xs text-slate-500">
+                          {user?.email}
+                        </p>
+                        {user?.role && (
+                          <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-violet-600">
+                            {user.role}
+                          </p>
+                        )}
+                      </div>
+                      <div className="grid gap-1 py-2">
+                        {accountLinks.map((item) => (
+                          <Link
+                            key={item.to}
+                            role="menuitem"
+                            to={item.to}
+                            onClick={() => setUserMenuOpen(false)}
+                            className="rounded-xl px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          logout();
+                        }}
+                        className="w-full rounded-xl border-t border-slate-100 px-3 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                      >
+                        Chiqish
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <>
@@ -548,7 +661,125 @@ export default function Navbar() {
               </>
             )}
           </div>
+
+          {/* Mobile controls */}
+          <div className="flex items-center gap-2 md:hidden">
+            {isAuthenticated && <NotificationBell />}
+            <button
+              type="button"
+              onClick={() => setMobileOpen((value) => !value)}
+              aria-label={mobileOpen ? "Menyuni yopish" : "Menyuni ochish"}
+              aria-expanded={mobileOpen}
+              className="grid h-10 w-10 place-items-center rounded-full border border-gray-300 text-slate-700 transition-colors hover:bg-gray-50"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                {mobileOpen ? (
+                  <>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </>
+                ) : (
+                  <>
+                    <line x1="3" y1="7" x2="21" y2="7" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="17" x2="21" y2="17" />
+                  </>
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {/* Mobile menu panel */}
+        <AnimatePresence>
+          {mobileOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="md:hidden overflow-hidden border-t border-gray-200 bg-white"
+            >
+              <div className="max-w-7xl mx-auto grid gap-1 px-6 py-4">
+                {links.map((l) => (
+                  <NavLink
+                    key={l.to}
+                    to={l.to}
+                    end={l.to === "/"}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      `rounded-xl px-3 py-2.5 text-base font-medium transition-colors ${isActive ? "bg-slate-100 font-bold text-slate-900" : "text-slate-600 hover:bg-slate-50"}`
+                    }
+                  >
+                    {l.label}
+                  </NavLink>
+                ))}
+
+                <Link
+                  to="/qidiruv"
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-xl px-3 py-2.5 text-base font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                >
+                  Qidiruv
+                </Link>
+
+                {isAuthenticated ? (
+                  <>
+                    <div className="my-2 border-t border-gray-200" />
+                    <p className="px-3 pb-1 text-xs font-bold uppercase tracking-widest text-slate-400">
+                      {displayName}
+                    </p>
+                    {accountLinks.map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setMobileOpen(false)}
+                        className="rounded-xl px-3 py-2.5 text-base font-medium text-slate-600 transition-colors hover:bg-slate-50"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        logout();
+                      }}
+                      className="mt-1 rounded-xl px-3 py-2.5 text-left text-base font-semibold text-red-600 transition-colors hover:bg-red-50"
+                    >
+                      Chiqish
+                    </button>
+                  </>
+                ) : (
+                  <div className="mt-3 flex flex-col gap-2 border-t border-gray-200 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => openModal("login")}
+                      className="rounded-full border border-gray-300 py-3 text-sm font-bold text-slate-700"
+                    >
+                      Kirish
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openModal("signup")}
+                      className="rounded-full bg-slate-900 py-3 text-sm font-bold text-white"
+                    >
+                      Hisob yaratish
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.header>
 
       {/* Mount Modal */}

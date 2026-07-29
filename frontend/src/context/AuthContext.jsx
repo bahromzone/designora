@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
 
@@ -39,24 +39,18 @@ export function AuthProvider({ children }) {
     }
     let active = true;
     setLoading(true);
-    authApi
-      .profile(token)
-      .then((profile) => {
-        if (active) setUser(profile);
-      })
-      .catch(() => {
-        if (active) {
-          localStorage.removeItem(STORAGE_KEY);
-          setToken(null);
-          setUser(null);
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+    authApi.profile(token).then((profile) => {
+      if (active) setUser(profile);
+    }).catch(() => {
+      if (active) {
+        localStorage.removeItem(STORAGE_KEY);
+        setToken(null);
+        setUser(null);
+      }
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
   }, [token]);
 
   function handlePostAuthRedirect(response) {
@@ -88,9 +82,9 @@ export function AuthProvider({ children }) {
     return response;
   }
 
-  // Google OAuth callback uchun profilni shu token bilan kutib olamiz.
-  // setToken async bo'lgani uchun callback darhol user rolini o'qiy olmaydi.
-  async function loginWithToken(nextToken) {
+  // Stable identity prevents AuthCallbackPage from cancelling its effect
+  // when token/loading state changes cause this provider to re-render.
+  const loginWithToken = useCallback(async (nextToken) => {
     if (!nextToken) return null;
     localStorage.setItem(STORAGE_KEY, nextToken);
     setToken(nextToken);
@@ -108,7 +102,7 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   function logout() {
     if (token) authApi.logoutAll(token).catch(() => {});
@@ -125,19 +119,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        token,
-        user,
-        loading,
-        isAuthenticated: Boolean(token && user),
-        login,
-        register,
-        loginWithToken,
-        logout,
-        refreshProfile,
-      }}
-    >
+    <AuthContext.Provider value={{ token, user, loading, isAuthenticated: Boolean(token && user), login, register, loginWithToken, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

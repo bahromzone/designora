@@ -1,37 +1,9 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
 import WaveAnimation from "../components/WaveAnimation";
-import { authApi, discoveryApi } from "../lib/api";
-
-const FALLBACK_COURSES = [
-  {
-    id: "f1",
-    title: "UI/UX dizayn tizimlari",
-    subtitle: "Interfeys dizayni",
-    level: "O'rta daraja",
-    lessons: 24,
-    image_url: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
-  },
-  {
-    id: "f2",
-    title: "Moda kolleksiyasini yaratish",
-    subtitle: "Libos dizayni",
-    level: "Boshlang'ich",
-    lessons: 18,
-    image_url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&q=80",
-  },
-  {
-    id: "f3",
-    title: "Brending va vizual til",
-    subtitle: "Brend dizayni",
-    level: "Barcha darajalar",
-    lessons: 20,
-    image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
-  },
-];
+import { discoveryApi } from "../lib/api";
 
 const premiumEasing = [0.16, 1, 0.3, 1];
 
@@ -46,14 +18,6 @@ const fadeUp = {
 };
 
 export default function HomePage() {
-  const [courses, setCourses] = useState(FALLBACK_COURSES);
-
-  useEffect(() => {
-    authApi.courses().then((list) => {
-      if (Array.isArray(list) && list.length) setCourses(list.slice(0, 3));
-    }).catch(() => {});
-  }, []);
-
   return (
     <div className="w-full bg-[var(--bg-light)] relative">
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>

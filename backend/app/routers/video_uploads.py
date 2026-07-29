@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.core.config import settings
+from app.core.database import get_db
 from app.models.lesson import Lesson
 from app.models.user import User
 from app.routers.instructor import _owned_course, require_instructor

@@ -43,11 +43,11 @@ export default function ProfilePage() {
             <div className="flex justify-between text-sm"><span style={{ color: "var(--muted)" }}>Qo‘shilgan</span><span className="font-semibold text-ink">{user?.created_at ? formatDate(user.created_at) : "—"}</span></div>
           </div>
 
-          <Link to="/portfolio-studio" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
+          <Link to="/portfolio" className="flex min-h-12 items-center justify-between rounded-xl px-4 text-sm font-bold text-white" style={{ background: "var(--ink)" }}>
             Portfolio Studio <span aria-hidden>→</span>
           </Link>
 
-          {user?.id && <Link to={`/portfolio/${user.id}`} target="_blank" className="block text-center text-sm font-semibold" style={{ color: "var(--muted)" }}>Public portfolio ↗</Link>}
+          {user?.id && <Link to={`/portfolio/u/${user.id}`} target="_blank" className="block text-center text-sm font-semibold" style={{ color: "var(--muted)" }}>Public portfolio ↗</Link>}
           {error && <p className="rounded-xl px-4 py-2.5 text-xs" style={{ background: "#fff0ef", color: "#c0392b" }}>{error}</p>}
         </aside>
 
@@ -56,7 +56,7 @@ export default function ProfilePage() {
             <p className="label mb-2">Keyingi qadam</p>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div><h2 className="font-serif text-lg font-semibold text-ink">Eng yaxshi ishlaringizni ko‘rsating</h2><p className="mt-2 max-w-2xl text-sm leading-7" style={{ color: "var(--ink-60)" }}>Baholangan topshiriqlarni professional case study’ga aylantiring va bitta public havola bilan ulashing.</p></div>
-              <Link to="/portfolio-studio" className="btn-primary">Portfolio yaratish</Link>
+              <Link to="/portfolio" className="btn-primary">Portfolio yaratish</Link>
             </div>
           </div>
 

@@ -67,21 +67,27 @@ export default function LearnPage() {
 
   return (
     <section className="shell py-16">
-      <Link
-        to="/kurslarim"
-        aria-label="Kurslarim sahifasiga qaytish"
-        className="group inline-flex min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-6 sm:text-lg"
-      >
-        <span className="text-xl leading-none transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true">←</span>
-        <span>Kurslarimga qaytish</span>
-      </Link>
-      <p className="mt-3 ml-2 text-sm text-slate-500 sm:text-base">{data.title}</p>
+      <div className="mb-8 flex flex-col gap-4 sm:mb-10">
+        <Link
+          to="/kurslarim"
+          aria-label="Kurslarim sahifasiga qaytish"
+          className="group inline-flex w-fit min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-6 sm:text-lg"
+        >
+          <span className="text-xl leading-none transition-transform duration-200 group-hover:-translate-x-1" aria-hidden="true">←</span>
+          <span>Kurslarimga qaytish</span>
+        </Link>
+        <div className="max-w-4xl">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-600">Hozir o‘rganilmoqda</p>
+          <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">{data.title}</h1>
+          <div className="mt-4 h-1.5 w-20 rounded-full bg-violet-500" aria-hidden="true" />
+        </div>
+      </div>
       {error && <p role="alert">{error}</p>}
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <main>
           {activeLesson && <VideoPlayer lessonId={activeLesson.id} token={token} src={activeLesson.video_url} storageKey={`lesson-${activeLesson.id}-position`} poster={activeLesson.thumbnail_url} onEnded={() => activeLesson && !activeLesson.is_completed && toggleComplete(activeLesson)} />}
-          {activeLesson && <article className="mt-6"><h1 className="font-serif text-3xl">{activeLesson.title}</h1>{activeLesson.description && <p>{activeLesson.description}</p>}{activeLesson.content && <div>{activeLesson.content}</div>}
-            {(activeLesson.resources || []).length > 0 && <div><h2>Materiallar</h2>{activeLesson.resources.map((resource, index) => <a key={index} href={resource.url}>↓ {resource.title || resource.url}</a>)}</div>}
+          {activeLesson && <article className="mt-6"><h2 className="font-serif text-3xl">{activeLesson.title}</h2>{activeLesson.description && <p>{activeLesson.description}</p>}{activeLesson.content && <div>{activeLesson.content}</div>}
+            {(activeLesson.resources || []).length > 0 && <div><h3>Materiallar</h3>{activeLesson.resources.map((resource, index) => <a key={index} href={resource.url}>↓ {resource.title || resource.url}</a>)}</div>}
             <button className="mt-6" onClick={() => toggleComplete(activeLesson)} disabled={marking}>{activeLesson.is_completed ? "✓ Tugatilgan (bekor qilish)" : "Tugatilgan deb belgilash"}</button>
           </article>}
           {activeLesson && <><AssignmentSection courseId={Number(courseId)} lessonId={activeLesson.id} /><QASection lessonId={activeLesson.id} /><NotesSection lessonId={activeLesson.id} /></>}

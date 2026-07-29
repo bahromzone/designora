@@ -8,9 +8,7 @@ const STORAGE_KEY = "designora-auth-token";
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(STORAGE_KEY));
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(
-    Boolean(localStorage.getItem(STORAGE_KEY))
-  );
+  const [loading, setLoading] = useState(Boolean(localStorage.getItem(STORAGE_KEY)));
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -61,17 +59,13 @@ export function AuthProvider({ children }) {
     };
   }, [token]);
 
-  // Login/register dan keyin oldingi sahifaga qaytarish
   function handlePostAuthRedirect(response) {
     if (response.redirect) {
       window.location.assign(response.redirect);
       return;
     }
-    // location.state.from mavjud bo'lsa, o'sha sahifaga navigate qilish
     const returnTo = location.state?.from;
-    if (returnTo) {
-      navigate(returnTo, { replace: true });
-    }
+    if (returnTo) navigate(returnTo, { replace: true });
   }
 
   async function login(credentials) {
@@ -94,11 +88,26 @@ export function AuthProvider({ children }) {
     return response;
   }
 
-  function loginWithToken(nextToken) {
-    if (!nextToken) return;
+  // Google OAuth callback uchun profilni shu token bilan kutib olamiz.
+  // setToken async bo'lgani uchun callback darhol user rolini o'qiy olmaydi.
+  async function loginWithToken(nextToken) {
+    if (!nextToken) return null;
     localStorage.setItem(STORAGE_KEY, nextToken);
     setToken(nextToken);
+    setLoading(true);
     authApi.issueRefresh(nextToken).catch(() => {});
+    try {
+      const profile = await authApi.profile(nextToken);
+      setUser(profile);
+      return profile;
+    } catch (error) {
+      localStorage.removeItem(STORAGE_KEY);
+      setToken(null);
+      setUser(null);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   }
 
   function logout() {

@@ -3,13 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const CALLBACK_TIMEOUT_MS = 12000;
+const ALLOWED_REDIRECTS = new Set(["/", "/admin", "/superadmin", "/instruktor-panel"]);
 
-function dashboardPathForRole(role) {
-  const normalized = (role || "user").trim().toLowerCase();
-  if (normalized === "superadmin") return "/superadmin";
-  if (normalized === "admin") return "/admin";
-  if (normalized === "instructor") return "/instruktor-panel";
-  return "/";
+function safeRedirect(path) {
+  return ALLOWED_REDIRECTS.has(path) ? path : "/";
 }
 
 export default function AuthCallbackPage() {
@@ -22,10 +19,10 @@ export default function AuthCallbackPage() {
     if (handled.current) return;
     handled.current = true;
 
-    const rawHash = window.location.hash.startsWith("#")
-      ? window.location.hash.slice(1)
-      : window.location.hash;
-    const token = new URLSearchParams(rawHash).get("token");
+    const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
+    const redirectPath = safeRedirect(
+      new URLSearchParams(window.location.search).get("next") || "/"
+    );
 
     if (!token) {
       setError("Google orqali kirishda xatolik yuz berdi.");
@@ -46,14 +43,15 @@ export default function AuthCallbackPage() {
         1500
       );
     };
-    const callbackTimeout = setTimeout(fail, CALLBACK_TIMEOUT_MS);
 
+    const callbackTimeout = setTimeout(fail, CALLBACK_TIMEOUT_MS);
+    // Backend user rolini allaqachon tekshirgan va `next` ni imzolangan oqimdan
+    // yuborgan. Redirectni profil API javobini kutmasdan qilamiz, RoleRoute esa
+    // panelga kirishda serverdan kelgan rolni yana tekshiradi.
     loginWithToken(token)
-      .then((profile) => {
-        if (active) navigate(dashboardPathForRole(profile?.role), { replace: true });
-      })
       .catch(fail)
       .finally(() => clearTimeout(callbackTimeout));
+    navigate(redirectPath, { replace: true });
 
     return () => {
       active = false;

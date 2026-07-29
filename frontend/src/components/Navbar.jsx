@@ -16,7 +16,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
   const [mode, setMode] = useState(initialMode);
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ TUZATILDI: modal endi backend bilan ishlaydi
   const { login, register } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -26,7 +25,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
     setMode(initialMode);
   }, [initialMode, isOpen]);
 
-  // Modal ochilganda/rejim almashganda forma va xatoni tozalash
   useEffect(() => {
     setError("");
   }, [mode, isOpen]);
@@ -75,7 +73,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 font-sans text-gray-800">
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -84,7 +81,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
           />
 
-          {/* Global SVG Definitions */}
           <svg width="0" height="0" className="absolute">
             <defs>
               <linearGradient
@@ -100,7 +96,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
             </defs>
           </svg>
 
-          {/* Modal Container - KICHRAYTIRILGAN O'LCHAMLAR */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -108,7 +103,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
             className="relative z-10 w-full max-w-[860px] min-h-[520px] rounded-[2rem] overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_-15px_rgba(90,50,230,0.3)] bg-white md:bg-transparent"
           >
-            {/* Close Button */}
             <button
               onClick={onClose}
               className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white md:text-[#1E2335] md:hover:bg-gray-100 transition-colors"
@@ -127,7 +121,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
               </svg>
             </button>
 
-            {/* Desktop Background Layer */}
             <div className="hidden md:block absolute inset-0 z-0 bg-gradient-to-br from-[#A238FF] via-[#6525EA] to-[#255EE5]">
               <svg
                 className={`absolute inset-0 w-full h-full text-white drop-shadow-2xl transition-transform duration-700 ease-in-out ${mode === "signup" ? "-scale-x-100" : ""}`}
@@ -139,13 +132,11 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
               </svg>
             </div>
 
-            {/* Mobile Background Layers */}
             <div className="md:hidden absolute inset-0 z-0 flex flex-col">
               <div className="flex-1 bg-white"></div>
               <div className="flex-1 bg-gradient-to-br from-[#A238FF] via-[#6525EA] to-[#255EE5]"></div>
             </div>
 
-            {/* LEFT COLUMN: Form Section */}
             <div
               className={`relative z-10 w-full md:w-1/2 flex flex-col items-center justify-center p-8 lg:p-12 transition-all duration-500 ${mode === "signup" ? "md:order-last" : ""}`}
             >
@@ -160,7 +151,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                 </p>
 
                 <form className="w-full space-y-4" onSubmit={handleSubmit}>
-                  {/* Google orqali kirish/ro'yxatdan o'tish (ikkala rejimda ham) */}
                   <GoogleAuthButton
                     label={
                       mode === "login"
@@ -169,7 +159,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     }
                   />
 
-                  {/* Name Input (Signup Only) */}
                   <AnimatePresence mode="popLayout">
                     {mode === "signup" && (
                       <motion.div
@@ -208,7 +197,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     )}
                   </AnimatePresence>
 
-                  {/* Email Input */}
                   <div className="relative w-full">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <svg
@@ -232,7 +220,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     />
                   </div>
 
-                  {/* Password Input */}
                   <div className="relative w-full">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <svg
@@ -290,7 +277,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     </button>
                   </div>
 
-                  {/* Options Row (Login Only) */}
                   {mode === "login" && (
                     <div className="flex justify-between items-center px-1 pt-1">
                       <label className="flex items-center gap-2 cursor-pointer group">
@@ -329,14 +315,12 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     </div>
                   )}
 
-                  {/* Error Message */}
                   {error && (
                     <p className="text-center text-[13px] font-semibold text-red-500 px-2">
                       {error}
                     </p>
                   )}
 
-                  {/* Submit Button */}
                   <div className="flex justify-center pt-3">
                     <button
                       type="submit"
@@ -368,7 +352,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
               </div>
             </div>
 
-            {/* RIGHT COLUMN: Visual & Text Section */}
             <div
               className={`relative z-10 w-full md:w-1/2 flex flex-col items-center justify-center p-8 lg:p-12 text-center transition-all duration-500 ${mode === "signup" ? "md:order-first" : ""}`}
             >
@@ -395,7 +378,8 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
 export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
-  const [isHovered, setIsHovered] = useState(false); // YANGI: Sichqoncha holati uchun state
+  const [isHovered, setIsHovered] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -408,8 +392,16 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Google callback / ProtectedRoute / Hero "?modal=" orqali modalni ochadi,
-  // so'ng parametrni URL'dan tozalaydi (yangilashda qayta ochilmasin).
+  // Mobil menyu ochilganda scroll'ni bloklash
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => { document.body.style.overflow = "unset"; };
+  }, [mobileOpen]);
+
   useEffect(() => {
     const modal = searchParams.get("modal");
     if (modal === "login" || modal === "signup") {
@@ -425,6 +417,7 @@ export default function Navbar() {
   const openModal = (mode) => {
     setAuthModalMode(mode);
     setIsAuthModalOpen(true);
+    setMobileOpen(false);
   };
 
   return (
@@ -433,9 +426,8 @@ export default function Navbar() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        onMouseEnter={() => setIsHovered(true)} // YANGI: Sichqoncha ustiga kelganda
-        onMouseLeave={() => setIsHovered(false)} // YANGI: Sichqoncha ketganda
-        // YANGI: scrolled YOKI isHovered holatida Navbar oq fonga kiradi (Stripe uslubi)
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
           scrolled || isHovered
             ? "py-4 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm"
@@ -443,7 +435,7 @@ export default function Navbar() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          {/* Sleek Logo */}
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <svg
               width="28"
@@ -513,7 +505,7 @@ export default function Navbar() {
             )}
           </nav>
 
-          {/* Auth CTA */}
+          {/* Desktop Auth CTA */}
           <div className="hidden md:flex items-center gap-5">
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
@@ -548,8 +540,119 @@ export default function Navbar() {
               </>
             )}
           </div>
+
+          {/* Mobile Hamburger Button */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden relative z-50 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Menyu"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-6 h-6 text-slate-900"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {mobileOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </>
+              )}
+            </svg>
+          </button>
         </div>
       </motion.header>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm md:hidden"
+            />
+            <motion.nav
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="fixed top-0 right-0 bottom-0 z-30 w-[280px] bg-white shadow-xl p-6 pt-24 flex flex-col gap-2 md:hidden"
+            >
+              {links.map((l) => (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `block px-4 py-3 rounded-xl text-base font-medium transition-colors ${isActive ? "bg-violet-50 text-violet-700 font-bold" : "text-slate-700 hover:bg-gray-50"}`
+                  }
+                >
+                  {l.label}
+                </NavLink>
+              ))}
+              {isAuthenticated && (
+                <NavLink
+                  to="/kurslarim"
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `block px-4 py-3 rounded-xl text-base font-medium transition-colors ${isActive ? "bg-violet-50 text-violet-700 font-bold" : "text-slate-700 hover:bg-gray-50"}`
+                  }
+                >
+                  Mening kurslarim
+                </NavLink>
+              )}
+
+              <div className="mt-auto pt-6 border-t border-gray-100 space-y-3">
+                {isAuthenticated ? (
+                  <>
+                    <Link
+                      to="/profil"
+                      onClick={() => setMobileOpen(false)}
+                      className="block px-4 py-3 rounded-xl text-base font-medium text-slate-700 hover:bg-gray-50"
+                    >
+                      {user?.full_name || "Profil"}
+                    </Link>
+                    <button
+                      onClick={() => { logout(); setMobileOpen(false); }}
+                      className="w-full px-4 py-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50 text-left"
+                    >
+                      Chiqish
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => openModal("login")}
+                      className="w-full px-4 py-3 rounded-xl text-base font-medium text-slate-700 hover:bg-gray-50 text-left"
+                    >
+                      Kirish
+                    </button>
+                    <button
+                      onClick={() => openModal("signup")}
+                      className="w-full px-4 py-3 rounded-xl text-base font-bold bg-slate-900 text-white text-center"
+                    >
+                      Hisob yaratish
+                    </button>
+                  </>
+                )}
+              </div>
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Mount Modal */}
       <AuthModal

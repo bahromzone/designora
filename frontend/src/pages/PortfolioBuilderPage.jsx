@@ -69,7 +69,9 @@ export default function PortfolioBuilderPage() {
   if (error) return <section className="portfolio-builder"><div className="portfolio-error"><h1>Portfolio ochilmadi</h1><p>{error}</p><button onClick={load}>Qayta urinish</button></div></section>;
 
   return <section className="portfolio-builder">
-    <header className="portfolio-builder-head"><div><p>Portfolio studio</p><h1>Ishlaringiz gapirsin.</h1><span>Baholangan loyihalarni professional case study’ga aylantiring.</span></div>{userId && <Link to={`/portfolio/${userId}`} target="_blank">Public ko‘rinish <b>↗</b></Link>}</header>
+    {/* Public sahifa route'i /portfolio/u/:userId — avval /portfolio/:id
+        ishlatilgan va bu havola doim 404 sahifaga olib borardi. */}
+    <header className="portfolio-builder-head"><div><p>Portfolio studio</p><h1>Ishlaringiz gapirsin.</h1><span>Baholangan loyihalarni professional case study’ga aylantiring.</span></div>{userId && <Link to={`/portfolio/u/${userId}`} target="_blank">Public ko‘rinish <b>↗</b></Link>}</header>
 
     <div className="portfolio-builder-grid">
       <form className="portfolio-editor" onSubmit={save}>

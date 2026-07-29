@@ -158,7 +158,9 @@ export default function MyCoursesPage() {
     [assignments]
   );
   const feedbackItems = assignments.filter((item) => item.my_submission?.status === "graded");
-  const firstName = (user?.full_name || user?.username || "Talaba").trim().split(" ")[0];
+  // Profil javobida `name` keladi (full_name / username yo'q) — shuning uchun
+  // salomlashuv har doim "Talaba" bo'lib qolardi.
+  const firstName = (user?.name || user?.full_name || "Talaba").trim().split(" ")[0];
 
   if (loading) return <section className="student-dashboard"><DashboardSkeleton /></section>;
 
@@ -292,12 +294,22 @@ export default function MyCoursesPage() {
             <div className="section-heading compact"><div><p className="dashboard-eyebrow">Yangiliklar</p><h2 id="updates-title">So‘nggi xabarlar</h2></div></div>
             {notifications.length ? (
               <div className="updates-list">
-                {notifications.slice(0, 4).map((notice) => (
-                  <Link key={notice.id} to={notice.link || "#"} className={notice.is_read ? "" : "is-unread"}>
-                    <span><Icon name={notice.type === "feedback" ? "message" : "spark"} size={16} /></span>
-                    <p>{notice.message}</p>
-                  </Link>
-                ))}
+                {notifications.slice(0, 4).map((notice) => {
+                  const className = notice.is_read ? "" : "is-unread";
+                  const body = (
+                    <>
+                      <span><Icon name={notice.type === "feedback" ? "message" : "spark"} size={16} /></span>
+                      <p>{notice.message}</p>
+                    </>
+                  );
+                  // Havolasi yo'q xabarlar avval to="#" bilan render qilinardi —
+                  // bosilganda mavjud bo'lmagan route'ga o'tib ketardi.
+                  return notice.link ? (
+                    <Link key={notice.id} to={notice.link} className={className}>{body}</Link>
+                  ) : (
+                    <div key={notice.id} className={className}>{body}</div>
+                  );
+                })}
               </div>
             ) : (
               <p className="updates-empty">Yangi xabar yo‘q. Muhim yangiliklar shu yerda chiqadi.</p>

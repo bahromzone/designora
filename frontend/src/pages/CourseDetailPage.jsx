@@ -1,2 +1,97 @@
-import {useCallback,useEffect,useState} from "react";import{Link,useNavigate,useParams}from"react-router-dom";import{coursesApi,formatPrice,learningApi}from"../lib/api";import{useAuth}from"../context/AuthContext";
-export default function CourseDetailPage(){const{courseId}=useParams();const navigate=useNavigate();const{token,isAuthenticated}=useAuth();const[course,setCourse]=useState(null);const[loading,setLoading]=useState(true);const[error,setError]=useState("");const[enrolled,setEnrolled]=useState(false);const loadEnrollment=useCallback(async()=>{if(!token)return;try{const r=await learningApi.learn(courseId,token);setEnrolled(Boolean(r.is_enrolled))}catch{setEnrolled(false)}},[courseId,token]);useEffect(()=>{coursesApi.detail(courseId).then(setCourse).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[courseId]);useEffect(()=>{loadEnrollment()},[loadEnrollment]);if(loading)return <main className="shell py-20">Kurs yuklanmoqda...</main>;if(error||!course)return <main className="shell py-20">{error||"Kurs topilmadi"}</main>;const buy=()=>{if(!isAuthenticated){navigate("/kirish");return}if((course.price||0)>0)navigate(`/checkout/${courseId}`);else learningApi.enroll(courseId,token).then(()=>navigate(`/organish/${courseId}`)).catch(e=>setError(e.message))};return <main className="shell py-10"><Link to="/kurslar">← Kurslar</Link><div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]"><section><p className="label">{course.category||"Kurs"}</p><h1 className="mt-3 text-5xl font-extrabold">{course.title}</h1><p className="mt-5 text-lg text-gray-600">{course.description}</p><h2 className="mt-10 text-2xl font-bold">Kurs dasturi</h2>{(course.modules||[]).map(m=><article className="card mt-3 rounded-xl p-4" key={m.id}><strong>{m.title}</strong><p>{(m.lessons||[]).length} dars</p></article>)}</section><aside className="card h-fit rounded-2xl p-6 lg:sticky lg:top-24"><strong className="text-3xl">{formatPrice(course.price)}</strong>{enrolled?<Link className="btn-primary mt-5 w-full justify-center" to={`/organish/${courseId}`}>O‘qishni davom ettirish</Link>:<button className="btn-primary mt-5 w-full justify-center" onClick={buy}>Kursga yozilish</button>}<p className="mt-4 text-sm text-gray-500">Aniq narx, promo code, xavfsiz to‘lov va chek.</p></aside></div></main>}
+import { useCallback, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { coursesApi, formatPrice, learningApi } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
+
+export default function CourseDetailPage() {
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { token, isAuthenticated } = useAuth();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [enrolled, setEnrolled] = useState(false);
+
+  const loadEnrollment = useCallback(async () => {
+    if (!token) return;
+    try {
+      const r = await learningApi.learn(courseId, token);
+      setEnrolled(Boolean(r.is_enrolled));
+    } catch {
+      setEnrolled(false);
+    }
+  }, [courseId, token]);
+
+  useEffect(() => {
+    coursesApi
+      .detail(courseId)
+      .then(setCourse)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [courseId]);
+
+  useEffect(() => {
+    loadEnrollment();
+  }, [loadEnrollment]);
+
+  if (loading)
+    return <main className="shell py-20">Kurs yuklanmoqda...</main>;
+  if (error || !course)
+    return <main className="shell py-20">{error || "Kurs topilmadi"}</main>;
+
+  const buy = () => {
+    if (!isAuthenticated) {
+      // Login'dan keyin shu sahifaga qaytarish uchun redirect parametri
+      navigate(`/?modal=login`, { state: { from: location.pathname } });
+      return;
+    }
+    if ((course.price || 0) > 0) navigate(`/checkout/${courseId}`);
+    else
+      learningApi
+        .enroll(courseId, token)
+        .then(() => navigate(`/organish/${courseId}`))
+        .catch((e) => setError(e.message));
+  };
+
+  return (
+    <main className="shell py-10">
+      <Link to="/kurslar">&larr; Kurslar</Link>
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
+        <section>
+          <p className="label">{course.category || "Kurs"}</p>
+          <h1 className="mt-3 text-5xl font-extrabold">{course.title}</h1>
+          <p className="mt-5 text-lg text-gray-600">{course.description}</p>
+          <h2 className="mt-10 text-2xl font-bold">Kurs dasturi</h2>
+          {(course.modules || []).map((m) => (
+            <article className="card mt-3 rounded-xl p-4" key={m.id}>
+              <strong>{m.title}</strong>
+              <p>{(m.lessons || []).length} dars</p>
+            </article>
+          ))}
+        </section>
+        <aside className="card h-fit rounded-2xl p-6 lg:sticky lg:top-24">
+          <strong className="text-3xl">{formatPrice(course.price)}</strong>
+          {enrolled ? (
+            <Link
+              className="btn-primary mt-5 w-full justify-center"
+              to={`/organish/${courseId}`}
+            >
+              O'qishni davom ettirish
+            </Link>
+          ) : (
+            <button
+              className="btn-primary mt-5 w-full justify-center"
+              onClick={buy}
+            >
+              Kursga yozilish
+            </button>
+          )}
+          <p className="mt-4 text-sm text-gray-500">
+            Aniq narx, promo code, xavfsiz to'lov va chek.
+          </p>
+        </aside>
+      </div>
+    </main>
+  );
+}

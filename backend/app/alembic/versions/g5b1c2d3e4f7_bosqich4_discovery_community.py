@@ -38,8 +38,12 @@ def upgrade() -> None:
         ),
         sa.Column("rating", sa.Integer, nullable=False),
         sa.Column("comment", sa.Text, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
         sa.UniqueConstraint("user_id", "course_id", name="uq_review_user_course"),
     )
 
@@ -64,8 +68,12 @@ def upgrade() -> None:
         sa.Column("is_published", sa.Boolean, server_default=sa.false()),
         sa.Column("views", sa.Integer, server_default="0"),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
     )
     op.create_index("ix_blog_posts_slug", "blog_posts", ["slug"], unique=True)
 
@@ -91,8 +99,12 @@ def upgrade() -> None:
         sa.Column("is_pinned", sa.Boolean, server_default=sa.false()),
         sa.Column("is_locked", sa.Boolean, server_default=sa.false()),
         sa.Column("views", sa.Integer, server_default="0"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
     )
 
     # ── forum_posts ──
@@ -112,7 +124,9 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("body", sa.Text, nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
     )
 
     # ── referrals ──
@@ -134,7 +148,9 @@ def upgrade() -> None:
         sa.Column("code", sa.String, nullable=False),
         sa.Column("status", sa.String, server_default="pending"),
         sa.Column("reward_points", sa.Integer, server_default="0"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
         sa.Column("converted_at", sa.DateTime(timezone=True), nullable=True),
         sa.UniqueConstraint("referred_user_id", name="uq_referral_referred_user"),
     )
@@ -143,9 +159,7 @@ def upgrade() -> None:
     # ── users: referral ustunlari ──
     op.add_column("users", sa.Column("referral_code", sa.String, nullable=True))
     op.add_column("users", sa.Column("referred_by_id", sa.Integer, nullable=True))
-    op.create_index(
-        "ix_users_referral_code", "users", ["referral_code"], unique=True
-    )
+    op.create_index("ix_users_referral_code", "users", ["referral_code"], unique=True)
 
 
 def downgrade() -> None:

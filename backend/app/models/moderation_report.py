@@ -15,4 +15,6 @@ class ModerationReport(Base):
     reason = Column(Text, nullable=False)
     status = Column(String, default="open", nullable=False, index=True)
     reviewed_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
+    )

@@ -1,6 +1,6 @@
 from app.core.security import create_access_token
-from app.models.Course import Course
 from app.models.certificate import Certificate
+from app.models.Course import Course
 from app.models.enrollment import Enrollment
 from app.models.quiz import Quiz
 from app.models.user import User
@@ -38,7 +38,9 @@ def test_issue_certificate_for_completed_course(client, db_session):
     user = _user(db_session)
     course = _course(db_session)
     _enrollment(db_session, user, course)
-    response = client.post(f"/api/certificates/courses/{course.id}/issue", headers=_headers(user.email))
+    response = client.post(
+        f"/api/certificates/courses/{course.id}/issue", headers=_headers(user.email)
+    )
     assert response.status_code == 201
     body = response.json()
     assert body["course_id"] == course.id
@@ -51,7 +53,9 @@ def test_issue_certificate_requires_100_percent(client, db_session):
     user = _user(db_session)
     course = _course(db_session)
     _enrollment(db_session, user, course, progress=99)
-    response = client.post(f"/api/certificates/courses/{course.id}/issue", headers=_headers(user.email))
+    response = client.post(
+        f"/api/certificates/courses/{course.id}/issue", headers=_headers(user.email)
+    )
     assert response.status_code == 400
     assert "100%" in response.json()["detail"]
 
@@ -60,9 +64,13 @@ def test_issue_certificate_requires_active_quiz_pass(client, db_session):
     user = _user(db_session)
     course = _course(db_session)
     _enrollment(db_session, user, course)
-    db_session.add(Quiz(course_id=course.id, title="Final test", is_active=True, passing_score=70))
+    db_session.add(
+        Quiz(course_id=course.id, title="Final test", is_active=True, passing_score=70)
+    )
     db_session.commit()
-    response = client.post(f"/api/certificates/courses/{course.id}/issue", headers=_headers(user.email))
+    response = client.post(
+        f"/api/certificates/courses/{course.id}/issue", headers=_headers(user.email)
+    )
     assert response.status_code == 400
     assert "testlaridan" in response.json()["detail"]
 
@@ -73,7 +81,9 @@ def test_issue_certificate_is_idempotent(client, db_session):
     _enrollment(db_session, user, course)
     headers = _headers(user.email)
     first = client.post(f"/api/certificates/courses/{course.id}/issue", headers=headers)
-    second = client.post(f"/api/certificates/courses/{course.id}/issue", headers=headers)
+    second = client.post(
+        f"/api/certificates/courses/{course.id}/issue", headers=headers
+    )
     assert first.status_code == 201
     assert second.status_code == 201
     assert second.json()["id"] == first.json()["id"]

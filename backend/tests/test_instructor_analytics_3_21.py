@@ -25,10 +25,23 @@ def test_instructor_analytics_and_csv_are_scoped(client, db_session):
     quiz = Quiz(course_id=course.id, title="Quiz 321")
     db_session.add_all([lesson, quiz])
     db_session.commit()
-    db_session.add(Enrollment(user_id=student.id, course_id=course.id, progress_percent=100))
-    db_session.add(LessonProgress(user_id=student.id, lesson_id=lesson.id, course_id=course.id, is_completed=True))
-    db_session.add(QuizAttempt(quiz_id=quiz.id, user_id=student.id, score=90, passed=True))
-    db_session.add(Review(user_id=student.id, course_id=course.id, rating=5, comment="Great"))
+    db_session.add(
+        Enrollment(user_id=student.id, course_id=course.id, progress_percent=100)
+    )
+    db_session.add(
+        LessonProgress(
+            user_id=student.id,
+            lesson_id=lesson.id,
+            course_id=course.id,
+            is_completed=True,
+        )
+    )
+    db_session.add(
+        QuizAttempt(quiz_id=quiz.id, user_id=student.id, score=90, passed=True)
+    )
+    db_session.add(
+        Review(user_id=student.id, course_id=course.id, rating=5, comment="Great")
+    )
     db_session.add(AnalyticsEvent(name="course_viewed", props={"course_id": course.id}))
     db_session.commit()
 
@@ -39,7 +52,9 @@ def test_instructor_analytics_and_csv_are_scoped(client, db_session):
     assert data["quizzes"][0]["difficulty"] == "easy"
     assert data["sentiment"]["positive"] == 1
 
-    exported = client.get("/api/instructor/analytics/export.csv", headers=auth(teacher.email))
+    exported = client.get(
+        "/api/instructor/analytics/export.csv", headers=auth(teacher.email)
+    )
     assert exported.status_code == 200
     assert "Analytics 321" not in exported.text or "lesson" in exported.text
     assert "text/csv" in exported.headers["content-type"]

@@ -61,9 +61,5 @@ class Course(Base):
         lazy="dynamic",
         cascade="all, delete-orphan",
     )
-    progress_records = relationship(
-        "Progress", back_populates="course", lazy="dynamic"
-    )
-    certificates = relationship(
-        "Certificate", back_populates="course", lazy="dynamic"
-    )
+    progress_records = relationship("Progress", back_populates="course", lazy="dynamic")
+    certificates = relationship("Certificate", back_populates="course", lazy="dynamic")

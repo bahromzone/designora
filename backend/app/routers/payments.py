@@ -551,7 +551,9 @@ def _click_secret() -> str:
 
 def _click_signature(*parts) -> str:
     # md5 — Click Merchant API spetsifikatsiyasi talabi, tanlov yo'q.
-    return hashlib.md5("".join(str(p) for p in parts).encode()).hexdigest()  # noqa: S324
+    return hashlib.md5(
+        "".join(str(p) for p in parts).encode()
+    ).hexdigest()  # noqa: S324
 
 
 def _click_sign_ok(expected: str, received) -> bool:

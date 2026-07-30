@@ -20,7 +20,11 @@ def test_manifest_sources_subtitles_and_resume_roundtrip(client, db_session):
         title="Adaptive lesson",
         video_url="/video/master.m3u8",
         video_sources=[
-            {"label": "Auto", "url": "/video/master.m3u8", "type": "application/x-mpegURL"},
+            {
+                "label": "Auto",
+                "url": "/video/master.m3u8",
+                "type": "application/x-mpegURL",
+            },
             {"label": "720p", "url": "/video/720.mp4", "type": "video/mp4"},
         ],
         subtitles=[{"label": "O‘zbekcha", "src": "/subs/uz.vtt", "srclang": "uz"}],

@@ -1,6 +1,16 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 
 from app.core.database import Base
 
@@ -35,8 +45,14 @@ class SubscriptionPlan(Base):
 class Subscription(Base):
     __tablename__ = "subscriptions"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    plan_id = Column(Integer, ForeignKey("subscription_plans.id", ondelete="RESTRICT"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    plan_id = Column(
+        Integer,
+        ForeignKey("subscription_plans.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     status = Column(String, default="active")
     current_period_end = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=_now)
@@ -46,7 +62,9 @@ class TeamLicense(Base):
     __tablename__ = "team_licenses"
     id = Column(Integer, primary_key=True)
     company_name = Column(String, nullable=False)
-    owner_user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    owner_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     course_ids = Column(JSON, nullable=False, default=list)
     seats = Column(Integer, nullable=False, default=1)
     used_seats = Column(Integer, nullable=False, default=0)
@@ -56,19 +74,29 @@ class TeamLicense(Base):
 
 class TeamLicenseMember(Base):
     __tablename__ = "team_license_members"
-    __table_args__ = (UniqueConstraint("license_id", "email", name="uq_team_license_member_email"),)
+    __table_args__ = (
+        UniqueConstraint("license_id", "email", name="uq_team_license_member_email"),
+    )
     id = Column(Integer, primary_key=True)
-    license_id = Column(Integer, ForeignKey("team_licenses.id", ondelete="CASCADE"), nullable=False)
+    license_id = Column(
+        Integer, ForeignKey("team_licenses.id", ondelete="CASCADE"), nullable=False
+    )
     email = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     status = Column(String, default="invited")
 
 
 class FinancialAidApplication(Base):
     __tablename__ = "financial_aid_applications"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    course_id = Column(
+        Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False
+    )
     aid_type = Column(String, nullable=False)
     reason = Column(Text, nullable=False)
     requested_installments = Column(Integer, nullable=True)

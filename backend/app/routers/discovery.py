@@ -83,9 +83,7 @@ def _requested_types(types: str | None) -> set[str]:
     if not types:
         return set(_SEARCH_TYPES)
     return {
-        value.strip()
-        for value in types.split(",")
-        if value.strip() in _SEARCH_TYPES
+        value.strip() for value in types.split(",") if value.strip() in _SEARCH_TYPES
     }
 
 
@@ -297,11 +295,16 @@ def filter_options(db: Session = Depends(get_db)):
     instructor_ids = set()
     for course in courses:
         if course.category:
-            category_counts[course.category] = category_counts.get(course.category, 0) + 1
+            category_counts[course.category] = (
+                category_counts.get(course.category, 0) + 1
+            )
         if course.instructor_id:
             instructor_ids.add(course.instructor_id)
     instructors = (
-        db.query(User).filter(User.id.in_(instructor_ids)).order_by(User.name.asc()).all()
+        db.query(User)
+        .filter(User.id.in_(instructor_ids))
+        .order_by(User.name.asc())
+        .all()
         if instructor_ids
         else []
     )

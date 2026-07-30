@@ -43,11 +43,17 @@ def upgrade() -> None:
         sa.Column("tools", sa.Text(), nullable=True, server_default="[]"),
         sa.Column("is_public", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("position", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
     )
     op.create_index("ix_portfolio_projects_user_id", "portfolio_projects", ["user_id"])
-    op.create_index("ix_portfolio_projects_slug", "portfolio_projects", ["slug"], unique=True)
+    op.create_index(
+        "ix_portfolio_projects_slug", "portfolio_projects", ["slug"], unique=True
+    )
 
 
 def downgrade() -> None:

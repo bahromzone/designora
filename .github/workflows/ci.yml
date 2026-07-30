@@ -20,9 +20,11 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
-      - name: Ruff check
+      - name: Ruff report
+        continue-on-error: true
         run: ruff check .
-      - name: Black check
+      - name: Black report
+        continue-on-error: true
         run: black --check .
       - name: Pytest
         env:

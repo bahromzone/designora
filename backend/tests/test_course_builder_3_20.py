@@ -21,21 +21,32 @@ def _auth(email):
 
 def test_builder_supports_draft_tree_autosave_and_versions(client, db_session):
     instructor = _user(db_session, "builder@example.com")
-    course = Course(title="Draft", instructor_id=instructor.id, status="draft", is_active=False)
+    course = Course(
+        title="Draft", instructor_id=instructor.id, status="draft", is_active=False
+    )
     db_session.add(course)
     db_session.commit()
     db_session.refresh(course)
 
     response = client.patch(
         f"/api/instructor/builder/courses/{course.id}/autosave",
-        json={"title": "Updated draft", "description": "A" * 30, "learning_outcomes": ["Build a case study"]},
+        json={
+            "title": "Updated draft",
+            "description": "A" * 30,
+            "learning_outcomes": ["Build a case study"],
+        },
         headers=_auth(instructor.email),
     )
     assert response.status_code == 200
-    tree = client.get(f"/api/instructor/builder/courses/{course.id}", headers=_auth(instructor.email))
+    tree = client.get(
+        f"/api/instructor/builder/courses/{course.id}", headers=_auth(instructor.email)
+    )
     assert tree.status_code == 200
     assert tree.json()["course"]["title"] == "Updated draft"
-    versions = client.get(f"/api/instructor/builder/courses/{course.id}/versions", headers=_auth(instructor.email))
+    versions = client.get(
+        f"/api/instructor/builder/courses/{course.id}/versions",
+        headers=_auth(instructor.email),
+    )
     assert len(versions.json()) == 1
 
 
@@ -52,7 +63,21 @@ def test_builder_bulk_upload_reorder_and_processing(client, db_session):
 
     response = client.post(
         f"/api/instructor/builder/courses/{course.id}/bulk-lessons",
-        json={"lessons": [{"title": "Video one", "module_id": module.id, "video_url": "https://cdn/video.mp4"}, {"title": "Text one", "module_id": module.id, "type": "text", "content": "Lesson"}]},
+        json={
+            "lessons": [
+                {
+                    "title": "Video one",
+                    "module_id": module.id,
+                    "video_url": "https://cdn/video.mp4",
+                },
+                {
+                    "title": "Text one",
+                    "module_id": module.id,
+                    "type": "text",
+                    "content": "Lesson",
+                },
+            ]
+        },
         headers=_auth(instructor.email),
     )
     assert response.status_code == 201
@@ -61,7 +86,10 @@ def test_builder_bulk_upload_reorder_and_processing(client, db_session):
 
     reordered = client.post(
         f"/api/instructor/builder/courses/{course.id}/reorder",
-        json={"modules": [{"id": module.id, "order": 2}], "lessons": [{"id": lesson_ids[0], "order": 1, "module_id": module.id}]},
+        json={
+            "modules": [{"id": module.id, "order": 2}],
+            "lessons": [{"id": lesson_ids[0], "order": 1, "module_id": module.id}],
+        },
         headers=_auth(instructor.email),
     )
     assert reordered.status_code == 200
@@ -80,5 +108,7 @@ def test_builder_rejects_other_instructor(client, db_session):
     db_session.add(course)
     db_session.commit()
     db_session.refresh(course)
-    response = client.get(f"/api/instructor/builder/courses/{course.id}", headers=_auth(other.email))
+    response = client.get(
+        f"/api/instructor/builder/courses/{course.id}", headers=_auth(other.email)
+    )
     assert response.status_code == 403

@@ -19,9 +19,7 @@ def _now():
 
 class ReminderPreference(Base):
     __tablename__ = "reminder_preferences"
-    __table_args__ = (
-        UniqueConstraint("user_id", name="uq_reminder_preferences_user"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", name="uq_reminder_preferences_user"),)
 
     id = Column(Integer, primary_key=True)
     user_id = Column(

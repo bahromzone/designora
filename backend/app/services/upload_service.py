@@ -49,7 +49,9 @@ def sniff_matches(content: bytes, ext: str) -> bool:
     return any(content.startswith(sig) for sig in signatures)
 
 
-def validate_upload(filename: str, content: bytes, *, allowed_extensions: set[str], max_bytes: int) -> str:
+def validate_upload(
+    filename: str, content: bytes, *, allowed_extensions: set[str], max_bytes: int
+) -> str:
     ext = get_extension(filename)
     if not ext:
         raise UploadValidationError("Fayl kengaytmasi aniqlanmadi")
@@ -58,19 +60,36 @@ def validate_upload(filename: str, content: bytes, *, allowed_extensions: set[st
     if not content:
         raise UploadValidationError("Fayl bo'sh")
     if len(content) > max_bytes:
-        raise UploadValidationError(f"Fayl hajmi {max_bytes / (1024 * 1024):.0f} MB dan oshmasligi kerak")
+        raise UploadValidationError(
+            f"Fayl hajmi {max_bytes / (1024 * 1024):.0f} MB dan oshmasligi kerak"
+        )
     if not sniff_matches(content, ext):
         raise UploadValidationError("Fayl mazmuni kengaytmaga mos kelmaydi")
     return ext
 
 
 def validate_avatar(filename: str, content: bytes) -> str:
-    return validate_upload(filename, content, allowed_extensions=IMAGE_EXTENSIONS, max_bytes=MAX_AVATAR_BYTES)
+    return validate_upload(
+        filename,
+        content,
+        allowed_extensions=IMAGE_EXTENSIONS,
+        max_bytes=MAX_AVATAR_BYTES,
+    )
 
 
 def validate_assignment_file(filename: str, content: bytes) -> str:
-    return validate_upload(filename, content, allowed_extensions=IMAGE_EXTENSIONS | DOCUMENT_EXTENSIONS, max_bytes=MAX_ASSIGNMENT_BYTES)
+    return validate_upload(
+        filename,
+        content,
+        allowed_extensions=IMAGE_EXTENSIONS | DOCUMENT_EXTENSIONS,
+        max_bytes=MAX_ASSIGNMENT_BYTES,
+    )
 
 
 def validate_video(filename: str, content: bytes) -> str:
-    return validate_upload(filename, content, allowed_extensions=VIDEO_EXTENSIONS, max_bytes=MAX_VIDEO_BYTES)
+    return validate_upload(
+        filename,
+        content,
+        allowed_extensions=VIDEO_EXTENSIONS,
+        max_bytes=MAX_VIDEO_BYTES,
+    )

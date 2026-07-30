@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models.Course import Course
 from app.models.lesson import Lesson
 from app.models.user import User
 from app.routers.instructor import _owned_course, require_instructor
@@ -31,7 +30,11 @@ def _get_user(db: Session, email: str) -> User:
 
 
 @router.post("/avatar")
-async def upload_avatar(file: UploadFile = File(...), email: str = Depends(get_current_user), db: Session = Depends(get_db)):
+async def upload_avatar(
+    file: UploadFile = File(...),
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     user = _get_user(db, email)
     content = await file.read()
     try:
@@ -56,7 +59,11 @@ async def upload_lesson_video(
     user: User = Depends(require_instructor),
 ):
     course = _owned_course(db, course_id, user)
-    lesson = db.query(Lesson).filter(Lesson.id == lesson_id, Lesson.course_id == course.id).first()
+    lesson = (
+        db.query(Lesson)
+        .filter(Lesson.id == lesson_id, Lesson.course_id == course.id)
+        .first()
+    )
     if not lesson:
         raise HTTPException(status_code=404, detail="Dars topilmadi")
     content = await file.read()
@@ -71,7 +78,18 @@ async def upload_lesson_video(
     target.write_bytes(content)
     url = f"/static/videos/{safe_name}"
     lesson.video_url = url
-    lesson.video_sources = [{"label": "Original", "url": url, "type": f"video/{'webm' if ext == 'webm' else 'mp4'}"}]
+    lesson.video_sources = [
+        {
+            "label": "Original",
+            "url": url,
+            "type": f"video/{'webm' if ext == 'webm' else 'mp4'}",
+        }
+    ]
     lesson.processing_status = "ready"
     db.commit()
-    return {"message": "Video yuklandi", "video_url": url, "processing_status": "ready", "size": len(content)}
+    return {
+        "message": "Video yuklandi",
+        "video_url": url,
+        "processing_status": "ready",
+        "size": len(content),
+    }

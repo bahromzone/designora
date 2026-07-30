@@ -44,13 +44,17 @@ def _snapshot(course: Course) -> dict:
                 "order": module.order or 0,
                 "lessons": [
                     _lesson_dict(row)
-                    for row in module.lessons.order_by(Lesson.order.asc(), Lesson.id.asc()).all()
+                    for row in module.lessons.order_by(
+                        Lesson.order.asc(), Lesson.id.asc()
+                    ).all()
                 ],
             }
         )
     loose = [
         _lesson_dict(row)
-        for row in course.lessons.filter(Lesson.module_id.is_(None)).order_by(Lesson.order.asc(), Lesson.id.asc()).all()
+        for row in course.lessons.filter(Lesson.module_id.is_(None))
+        .order_by(Lesson.order.asc(), Lesson.id.asc())
+        .all()
     ]
     return {
         "course": {
@@ -68,7 +72,11 @@ def _snapshot(course: Course) -> dict:
             "requirements": course.requirements or [],
             "prerequisite_course_ids": course.prerequisite_course_ids or [],
             "status": course.status,
-            "builder_updated_at": course.builder_updated_at.isoformat() if course.builder_updated_at else None,
+            "builder_updated_at": (
+                course.builder_updated_at.isoformat()
+                if course.builder_updated_at
+                else None
+            ),
         },
         "modules": modules,
         "unassigned_lessons": loose,
@@ -79,18 +87,35 @@ def _checklist(course: Course) -> list[dict]:
     lessons = course.lessons.all()
     checks = [
         ("title", "Kurs nomi", bool(course.title and len(course.title.strip()) >= 3)),
-        ("description", "Kurs tavsifi", bool(course.description and len(course.description.strip()) >= 20)),
+        (
+            "description",
+            "Kurs tavsifi",
+            bool(course.description and len(course.description.strip()) >= 20),
+        ),
         ("thumbnail", "Muqova rasmi", bool(course.thumbnail_url)),
         ("outcomes", "O'quv natijalari", bool(course.learning_outcomes)),
         ("lesson", "Kamida bitta dars", bool(lessons)),
-        ("content", "Barcha darslarda kontent", bool(lessons) and all(row.video_url or row.content for row in lessons)),
-        ("processing", "Media processing tugagan", all((row.processing_status or "ready") == "ready" for row in lessons)),
+        (
+            "content",
+            "Barcha darslarda kontent",
+            bool(lessons) and all(row.video_url or row.content for row in lessons),
+        ),
+        (
+            "processing",
+            "Media processing tugagan",
+            all((row.processing_status or "ready") == "ready" for row in lessons),
+        ),
     ]
-    return [{"key": key, "label": label, "complete": complete} for key, label, complete in checks]
+    return [
+        {"key": key, "label": label, "complete": complete}
+        for key, label, complete in checks
+    ]
 
 
 def _save_version(db: Session, course: Course, user: User, label: str) -> CourseVersion:
-    version = CourseVersion(course_id=course.id, created_by=user.id, label=label, snapshot=_snapshot(course))
+    version = CourseVersion(
+        course_id=course.id, created_by=user.id, label=label, snapshot=_snapshot(course)
+    )
     db.add(version)
     return version
 
@@ -143,7 +168,11 @@ class VersionIn(BaseModel):
 
 
 @router.get("/courses/{course_id}")
-def get_builder(course_id: int, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def get_builder(
+    course_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
     payload = _snapshot(course)
     payload["checklist"] = _checklist(course)
@@ -152,39 +181,66 @@ def get_builder(course_id: int, db: Session = Depends(get_db), user: User = Depe
 
 
 @router.patch("/courses/{course_id}/autosave")
-def autosave(course_id: int, data: AutosaveIn, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def autosave(
+    course_id: int,
+    data: AutosaveIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
     fields = data.model_dump(exclude_unset=True)
-    if "prerequisite_course_ids" in fields and course.id in fields["prerequisite_course_ids"]:
-        raise HTTPException(status_code=400, detail="Kurs o'ziga prerequisite bo'la olmaydi")
+    if (
+        "prerequisite_course_ids" in fields
+        and course.id in fields["prerequisite_course_ids"]
+    ):
+        raise HTTPException(
+            status_code=400, detail="Kurs o'ziga prerequisite bo'la olmaydi"
+        )
     for key, value in fields.items():
         setattr(course, key, value)
     course.builder_updated_at = datetime.now(UTC)
     _save_version(db, course, user, "Autosave")
     db.commit()
-    return {"message": "Avtomatik saqlandi", "saved_at": course.builder_updated_at.isoformat()}
+    return {
+        "message": "Avtomatik saqlandi",
+        "saved_at": course.builder_updated_at.isoformat(),
+    }
 
 
 @router.post("/courses/{course_id}/reorder")
-def reorder(course_id: int, data: ReorderIn, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def reorder(
+    course_id: int,
+    data: ReorderIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
     module_ids = {row.id for row in course.modules.all()}
     lesson_ids = {row.id for row in course.lessons.all()}
-    if any(item.id not in module_ids for item in data.modules) or any(item.id not in lesson_ids for item in data.lessons):
+    if any(item.id not in module_ids for item in data.modules) or any(
+        item.id not in lesson_ids for item in data.lessons
+    ):
         raise HTTPException(status_code=400, detail="Boshqa kurs elementi yuborildi")
     for item in data.modules:
         db.query(Module).filter(Module.id == item.id).update({"order": item.order})
     for item in data.lessons:
         if item.module_id is not None and item.module_id not in module_ids:
             raise HTTPException(status_code=400, detail="Modul bu kursga tegishli emas")
-        db.query(Lesson).filter(Lesson.id == item.id).update({"order": item.order, "module_id": item.module_id})
+        db.query(Lesson).filter(Lesson.id == item.id).update(
+            {"order": item.order, "module_id": item.module_id}
+        )
     course.builder_updated_at = datetime.now(UTC)
     db.commit()
     return {"message": "Tartib saqlandi"}
 
 
 @router.post("/courses/{course_id}/bulk-lessons", status_code=201)
-def bulk_lessons(course_id: int, data: BulkIn, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def bulk_lessons(
+    course_id: int,
+    data: BulkIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
     module_ids = {row.id for row in course.modules.all()}
     created = []
@@ -211,7 +267,12 @@ def bulk_lessons(course_id: int, data: BulkIn, db: Session = Depends(get_db), us
 
 
 @router.patch("/lessons/{lesson_id}/processing")
-def processing(lesson_id: int, data: ProcessingIn, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def processing(
+    lesson_id: int,
+    data: ProcessingIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     if data.status not in {"queued", "processing", "ready", "failed"}:
         raise HTTPException(status_code=400, detail="Noto'g'ri processing holati")
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
@@ -220,11 +281,18 @@ def processing(lesson_id: int, data: ProcessingIn, db: Session = Depends(get_db)
     _owned_course(db, lesson.course_id, user)
     lesson.processing_status = data.status
     db.commit()
-    return {"message": "Processing holati yangilandi", "status": lesson.processing_status}
+    return {
+        "message": "Processing holati yangilandi",
+        "status": lesson.processing_status,
+    }
 
 
 @router.get("/courses/{course_id}/preview")
-def preview(course_id: int, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def preview(
+    course_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
     payload = _snapshot(course)
     payload["preview_mode"] = True
@@ -232,21 +300,43 @@ def preview(course_id: int, db: Session = Depends(get_db), user: User = Depends(
 
 
 @router.get("/courses/{course_id}/checklist")
-def checklist(course_id: int, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def checklist(
+    course_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
     items = _checklist(course)
     return {"items": items, "can_publish": all(item["complete"] for item in items)}
 
 
 @router.get("/courses/{course_id}/versions")
-def versions(course_id: int, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def versions(
+    course_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
-    rows = db.query(CourseVersion).filter(CourseVersion.course_id == course.id).order_by(CourseVersion.id.desc()).limit(30).all()
-    return [{"id": row.id, "label": row.label, "created_at": row.created_at.isoformat()} for row in rows]
+    rows = (
+        db.query(CourseVersion)
+        .filter(CourseVersion.course_id == course.id)
+        .order_by(CourseVersion.id.desc())
+        .limit(30)
+        .all()
+    )
+    return [
+        {"id": row.id, "label": row.label, "created_at": row.created_at.isoformat()}
+        for row in rows
+    ]
 
 
 @router.post("/courses/{course_id}/versions", status_code=201)
-def create_version(course_id: int, data: VersionIn, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def create_version(
+    course_id: int,
+    data: VersionIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
     row = _save_version(db, course, user, data.label)
     db.commit()
@@ -255,14 +345,36 @@ def create_version(course_id: int, data: VersionIn, db: Session = Depends(get_db
 
 
 @router.post("/courses/{course_id}/versions/{version_id}/restore")
-def restore(course_id: int, version_id: int, db: Session = Depends(get_db), user: User = Depends(require_instructor)):
+def restore(
+    course_id: int,
+    version_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_instructor),
+):
     course = _owned_course(db, course_id, user)
-    row = db.query(CourseVersion).filter(CourseVersion.id == version_id, CourseVersion.course_id == course.id).first()
+    row = (
+        db.query(CourseVersion)
+        .filter(CourseVersion.id == version_id, CourseVersion.course_id == course.id)
+        .first()
+    )
     if not row:
         raise HTTPException(status_code=404, detail="Versiya topilmadi")
     _save_version(db, course, user, "Restore oldidan")
     values = row.snapshot.get("course", {})
-    for key in ("title", "subtitle", "description", "category", "price", "level", "language", "thumbnail_url", "preview_video_url", "learning_outcomes", "requirements", "prerequisite_course_ids"):
+    for key in (
+        "title",
+        "subtitle",
+        "description",
+        "category",
+        "price",
+        "level",
+        "language",
+        "thumbnail_url",
+        "preview_video_url",
+        "learning_outcomes",
+        "requirements",
+        "prerequisite_course_ids",
+    ):
         if key in values:
             setattr(course, key, values[key])
     course.builder_updated_at = datetime.now(UTC)

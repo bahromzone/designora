@@ -208,6 +208,18 @@ def update_status(
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
     old = {"is_active": user.is_active}
     user.is_active = data.is_active
-    _audit(db, request, actor, "user.status_updated", user.id, old, {"is_active": user.is_active})
+    _audit(
+        db,
+        request,
+        actor,
+        "user.status_updated",
+        user.id,
+        old,
+        {"is_active": user.is_active},
+    )
     db.commit()
-    return {"message": "Hisob holati yangilandi", "id": user.id, "is_active": user.is_active}
+    return {
+        "message": "Hisob holati yangilandi",
+        "id": user.id,
+        "is_active": user.is_active,
+    }

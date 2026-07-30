@@ -16,17 +16,42 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("courses", sa.Column("prerequisite_course_ids", sa.JSON(), nullable=True))
-    op.add_column("courses", sa.Column("builder_updated_at", sa.DateTime(timezone=True), nullable=True))
-    op.add_column("lessons", sa.Column("processing_status", sa.String(), nullable=True, server_default="ready"))
+    op.add_column(
+        "courses", sa.Column("prerequisite_course_ids", sa.JSON(), nullable=True)
+    )
+    op.add_column(
+        "courses",
+        sa.Column("builder_updated_at", sa.DateTime(timezone=True), nullable=True),
+    )
+    op.add_column(
+        "lessons",
+        sa.Column(
+            "processing_status", sa.String(), nullable=True, server_default="ready"
+        ),
+    )
     op.create_table(
         "course_versions",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("course_id", sa.Integer(), sa.ForeignKey("courses.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("created_by", sa.Integer(), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "course_id",
+            sa.Integer(),
+            sa.ForeignKey("courses.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "created_by",
+            sa.Integer(),
+            sa.ForeignKey("users.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("label", sa.String(), nullable=False),
         sa.Column("snapshot", sa.JSON(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
     )
     op.create_index("ix_course_versions_course_id", "course_versions", ["course_id"])
 

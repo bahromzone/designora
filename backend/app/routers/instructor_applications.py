@@ -24,7 +24,9 @@ class ReviewIn(BaseModel):
     status: str
 
 
-def current_user(email: str = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
+def current_user(
+    email: str = Depends(get_current_user), db: Session = Depends(get_db)
+) -> User:
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
@@ -40,34 +42,88 @@ def require_admin(user: User = Depends(current_user)) -> User:
 
 
 @router.post("/instructor/apply")
-def apply(data: ApplicationIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
+def apply(
+    data: ApplicationIn,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
     if user.role in {"instructor", "admin", "superadmin"}:
         return {"message": "Siz allaqachon instruktorsiz", "role": user.role}
-    existing = db.query(InstructorApplication).filter(InstructorApplication.user_id == user.id, InstructorApplication.status == "pending").first()
+    existing = (
+        db.query(InstructorApplication)
+        .filter(
+            InstructorApplication.user_id == user.id,
+            InstructorApplication.status == "pending",
+        )
+        .first()
+    )
     if existing:
-        return {"message": "Arizangiz ko'rib chiqilmoqda", "status": existing.status, "id": existing.id}
-    application = InstructorApplication(user_id=user.id, name=data.name, bio=data.bio, portfolio_url=data.portfolio_url)
+        return {
+            "message": "Arizangiz ko'rib chiqilmoqda",
+            "status": existing.status,
+            "id": existing.id,
+        }
+    application = InstructorApplication(
+        user_id=user.id, name=data.name, bio=data.bio, portfolio_url=data.portfolio_url
+    )
     db.add(application)
     db.commit()
     db.refresh(application)
-    return {"message": "Ariza yuborildi. Admin tasdiqlashini kuting.", "status": application.status, "id": application.id}
+    return {
+        "message": "Ariza yuborildi. Admin tasdiqlashini kuting.",
+        "status": application.status,
+        "id": application.id,
+    }
 
 
 @router.get("/admin/instructor-applications")
-def list_applications(status: str = "pending", db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    rows = db.query(InstructorApplication).filter(InstructorApplication.status == status).order_by(InstructorApplication.created_at.asc()).all()
-    return [{"id": row.id, "user_id": row.user_id, "name": row.name, "bio": row.bio, "portfolio_url": row.portfolio_url, "status": row.status, "created_at": row.created_at.isoformat() if row.created_at else None} for row in rows]
+def list_applications(
+    status: str = "pending",
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    rows = (
+        db.query(InstructorApplication)
+        .filter(InstructorApplication.status == status)
+        .order_by(InstructorApplication.created_at.asc())
+        .all()
+    )
+    return [
+        {
+            "id": row.id,
+            "user_id": row.user_id,
+            "name": row.name,
+            "bio": row.bio,
+            "portfolio_url": row.portfolio_url,
+            "status": row.status,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+        for row in rows
+    ]
 
 
 @router.patch("/admin/instructor-applications/{application_id}")
-def review_application(application_id: int, data: ReviewIn, db: Session = Depends(get_db), reviewer: User = Depends(require_admin)):
+def review_application(
+    application_id: int,
+    data: ReviewIn,
+    db: Session = Depends(get_db),
+    reviewer: User = Depends(require_admin),
+):
     if data.status not in {"approved", "rejected"}:
-        raise HTTPException(status_code=400, detail="Status approved yoki rejected bo'lishi kerak")
-    application = db.query(InstructorApplication).filter(InstructorApplication.id == application_id).first()
+        raise HTTPException(
+            status_code=400, detail="Status approved yoki rejected bo'lishi kerak"
+        )
+    application = (
+        db.query(InstructorApplication)
+        .filter(InstructorApplication.id == application_id)
+        .first()
+    )
     if not application:
         raise HTTPException(status_code=404, detail="Ariza topilmadi")
     if application.status != "pending":
-        raise HTTPException(status_code=400, detail="Bu ariza allaqachon ko'rib chiqilgan")
+        raise HTTPException(
+            status_code=400, detail="Bu ariza allaqachon ko'rib chiqilgan"
+        )
     user = db.query(User).filter(User.id == application.user_id).first()
     if not user:
         raise HTTPException(status_code=409, detail="Ariza egasi topilmadi")
@@ -80,4 +136,8 @@ def review_application(application_id: int, data: ReviewIn, db: Session = Depend
         user.website = application.portfolio_url
         user.role = "instructor"
     db.commit()
-    return {"message": "Ariza yangilandi", "id": application.id, "status": application.status}
+    return {
+        "message": "Ariza yangilandi",
+        "id": application.id,
+        "status": application.status,
+    }

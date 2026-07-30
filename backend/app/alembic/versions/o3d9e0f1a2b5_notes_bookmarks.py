@@ -19,13 +19,36 @@ def upgrade() -> None:
     op.create_table(
         "lesson_bookmarks",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("lesson_id", sa.Integer(), sa.ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("course_id", sa.Integer(), sa.ForeignKey("courses.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("is_bookmarked", sa.Boolean(), nullable=False, server_default=sa.true()),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
-        sa.UniqueConstraint("user_id", "lesson_id", name="uq_lesson_bookmark_user_lesson"),
+        sa.Column(
+            "lesson_id",
+            sa.Integer(),
+            sa.ForeignKey("lessons.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "course_id",
+            sa.Integer(),
+            sa.ForeignKey("courses.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "user_id",
+            sa.Integer(),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "is_bookmarked", sa.Boolean(), nullable=False, server_default=sa.true()
+        ),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
+        sa.UniqueConstraint(
+            "user_id", "lesson_id", name="uq_lesson_bookmark_user_lesson"
+        ),
     )
 
 

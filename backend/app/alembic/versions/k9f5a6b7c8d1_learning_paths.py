@@ -26,7 +26,9 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("path_slug", sa.String(length=80), nullable=False),
-        sa.Column("started_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column(
+            "started_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
         sa.UniqueConstraint("user_id", "path_slug", name="uq_user_learning_path"),
     )

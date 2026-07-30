@@ -9,12 +9,19 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 
-INACTIVE_ACCOUNT_DETAIL = "Hisobingiz bloklangan. Qo'llab-quvvatlash xizmatiga murojaat qiling."
+INACTIVE_ACCOUNT_DETAIL = (
+    "Hisobingiz bloklangan. Qo'llab-quvvatlash xizmatiga murojaat qiling."
+)
 
 
 def create_access_token(sub: str) -> str:
-    payload = {"sub": sub, "exp": datetime.now(UTC) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)}
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    payload = {
+        "sub": sub,
+        "exp": datetime.now(UTC) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES),
+    }
+    return jwt.encode(
+        payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
 
 
 def _normalize_token(token: str | None) -> str:
@@ -34,7 +41,11 @@ def _session_email(request: Request) -> str | None:
 def get_request_token(request: Request) -> str:
     if _session_email(request):
         return ""
-    for value in (request.cookies.get("access_token"), request.headers.get("Authorization"), request.headers.get("X-Access-Token")):
+    for value in (
+        request.cookies.get("access_token"),
+        request.headers.get("Authorization"),
+        request.headers.get("X-Access-Token"),
+    ):
         token = _normalize_token(value)
         if token:
             return token
@@ -46,6 +57,7 @@ def _ensure_active_account(db: Any, email: str) -> None:
     if not hasattr(db, "query"):
         return
     from app.models.user import User
+
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
@@ -65,7 +77,9 @@ def get_current_user(
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        payload = jwt.decode(
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
         email = payload.get("sub")
         if not email:
             raise HTTPException(status_code=401, detail="Unauthorized")

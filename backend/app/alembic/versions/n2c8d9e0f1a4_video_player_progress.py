@@ -20,11 +20,15 @@ def upgrade() -> None:
     op.add_column("lessons", sa.Column("subtitles", sa.JSON(), nullable=True))
     op.add_column(
         "lesson_progress",
-        sa.Column("video_position_seconds", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "video_position_seconds", sa.Integer(), nullable=False, server_default="0"
+        ),
     )
     op.add_column(
         "lesson_progress",
-        sa.Column("video_duration_seconds", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "video_duration_seconds", sa.Integer(), nullable=False, server_default="0"
+        ),
     )
     op.add_column(
         "lesson_progress",

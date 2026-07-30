@@ -16,8 +16,15 @@ class CourseVersion(Base):
     __tablename__ = "course_versions"
 
     id = Column(Integer, primary_key=True)
-    course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
-    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    course_id = Column(
+        Integer,
+        ForeignKey("courses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_by = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     label = Column(String, nullable=False, default="Autosave")
     snapshot = Column(JSON, nullable=False)
     created_at = Column(DateTime(timezone=True), default=_now, nullable=False)

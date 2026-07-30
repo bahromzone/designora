@@ -12,12 +12,20 @@ def _now():
 
 class LessonProgress(Base):
     __tablename__ = "lesson_progress"
-    __table_args__ = (UniqueConstraint("user_id", "lesson_id", name="uq_lesson_progress_user_lesson"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "lesson_id", name="uq_lesson_progress_user_lesson"),
+    )
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    lesson_id = Column(Integer, ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False)
-    course_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    lesson_id = Column(
+        Integer, ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False
+    )
+    course_id = Column(
+        Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False
+    )
     is_completed = Column(Boolean, default=False)
     position_seconds = Column(Integer, default=0)
     duration_seconds = Column(Integer, default=0)

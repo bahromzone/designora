@@ -24,7 +24,7 @@ def compute_rating_aggregate(ratings: list[int]) -> tuple[float, int]:
 
 def rating_distribution(ratings: list[int]) -> dict[int, int]:
     """1..5 yulduzlar bo'yicha nechtadan berilganini qaytaradi."""
-    dist = {star: 0 for star in range(1, 6)}
+    dist = dict.fromkeys(range(1, 6), 0)
     for r in ratings:
         if r in dist:
             dist[r] += 1

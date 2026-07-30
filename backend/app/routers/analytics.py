@@ -53,21 +53,55 @@ def _iso(value) -> str | None:
     return value.isoformat() if value else None
 
 
-def _content_alerts(course: Course, enrollments: list[Enrollment], dropout_rate: float) -> list[dict]:
+def _content_alerts(
+    course: Course, enrollments: list[Enrollment], dropout_rate: float
+) -> list[dict]:
     alerts = []
     lesson_count = course.lessons.count()
     if lesson_count == 0:
-        alerts.append({"code": "no_lessons", "severity": "high", "message": "Kursda hali dars yo'q"})
+        alerts.append(
+            {
+                "code": "no_lessons",
+                "severity": "high",
+                "message": "Kursda hali dars yo'q",
+            }
+        )
     if not course.description:
-        alerts.append({"code": "no_description", "severity": "medium", "message": "Kurs tavsifi to'ldirilmagan"})
+        alerts.append(
+            {
+                "code": "no_description",
+                "severity": "medium",
+                "message": "Kurs tavsifi to'ldirilmagan",
+            }
+        )
     if not course.thumbnail_url:
-        alerts.append({"code": "no_thumbnail", "severity": "low", "message": "Kurs muqovasi qo'yilmagan"})
+        alerts.append(
+            {
+                "code": "no_thumbnail",
+                "severity": "low",
+                "message": "Kurs muqovasi qo'yilmagan",
+            }
+        )
     if course.status == "draft":
-        alerts.append({"code": "draft", "severity": "medium", "message": "Kurs qoralama holatida"})
+        alerts.append(
+            {"code": "draft", "severity": "medium", "message": "Kurs qoralama holatida"}
+        )
     if (course.rating_count or 0) >= 3 and (course.rating_avg or 0) < 3.5:
-        alerts.append({"code": "low_rating", "severity": "high", "message": "Kurs reytingi 3.5 dan past"})
+        alerts.append(
+            {
+                "code": "low_rating",
+                "severity": "high",
+                "message": "Kurs reytingi 3.5 dan past",
+            }
+        )
     if len(enrollments) >= 5 and dropout_rate >= 30:
-        alerts.append({"code": "dropout", "severity": "high", "message": "Tark etish xavfi 30% dan yuqori"})
+        alerts.append(
+            {
+                "code": "dropout",
+                "severity": "high",
+                "message": "Tark etish xavfi 30% dan yuqori",
+            }
+        )
     return alerts
 
 
@@ -78,7 +112,12 @@ def instructor_dashboard(
 ):
     """Roadmap 3.19: instructor's operational home, queues and course health."""
     user = _require_instructor(db, email)
-    courses = db.query(Course).filter(Course.instructor_id == user.id).order_by(Course.id.desc()).all()
+    courses = (
+        db.query(Course)
+        .filter(Course.instructor_id == user.id)
+        .order_by(Course.id.desc())
+        .all()
+    )
     course_ids = [course.id for course in courses]
 
     if not course_ids:
@@ -97,9 +136,15 @@ def instructor_dashboard(
         }
 
     all_orders = db.query(Order).filter(Order.course_id.in_(course_ids)).all()
-    all_enrollments = db.query(Enrollment).filter(Enrollment.course_id.in_(course_ids)).all()
+    all_enrollments = (
+        db.query(Enrollment).filter(Enrollment.course_id.in_(course_ids)).all()
+    )
     order_payload = [
-        {"amount": row.amount, "discount_amount": row.discount_amount, "status": row.status}
+        {
+            "amount": row.amount,
+            "discount_amount": row.discount_amount,
+            "status": row.status,
+        }
         for row in all_orders
     ]
     progress_values = [row.progress_percent or 0 for row in all_enrollments]
@@ -110,7 +155,9 @@ def instructor_dashboard(
     all_alerts = []
     for course in courses:
         course_orders = [row for row in all_orders if row.course_id == course.id]
-        course_enrollments = [row for row in all_enrollments if row.course_id == course.id]
+        course_enrollments = [
+            row for row in all_enrollments if row.course_id == course.id
+        ]
         at_risk = [
             row
             for row in course_enrollments
@@ -119,10 +166,18 @@ def instructor_dashboard(
             and row.enrolled_at
             and row.enrolled_at <= dropout_cutoff
         ]
-        dropout_rate = round((len(at_risk) / len(course_enrollments)) * 100, 1) if course_enrollments else 0
+        dropout_rate = (
+            round((len(at_risk) / len(course_enrollments)) * 100, 1)
+            if course_enrollments
+            else 0
+        )
         revenue = analytics_service.revenue_summary(
             [
-                {"amount": row.amount, "discount_amount": row.discount_amount, "status": row.status}
+                {
+                    "amount": row.amount,
+                    "discount_amount": row.discount_amount,
+                    "status": row.status,
+                }
                 for row in course_orders
             ]
         )
@@ -142,7 +197,9 @@ def instructor_dashboard(
                 "title": course.title,
                 "status": course.status,
                 "students_count": len(course_enrollments),
-                "active_students": sum(1 for row in course_enrollments if row.completed_at is None),
+                "active_students": sum(
+                    1 for row in course_enrollments if row.completed_at is None
+                ),
                 "net_revenue": revenue["net_revenue"],
                 "paid_orders": revenue["paid_orders"],
                 "completion_rate": analytics_service.completion_rate(
@@ -172,7 +229,9 @@ def instructor_dashboard(
             "assignment_id": assignment.id,
             "assignment_title": assignment.title or f"Topshiriq #{assignment.id}",
             "course_id": assignment.course_id,
-            "course_title": next((c.title for c in courses if c.id == assignment.course_id), ""),
+            "course_title": next(
+                (c.title for c in courses if c.id == assignment.course_id), ""
+            ),
             "student_id": student.id,
             "student_name": student.name or student.email,
             "submitted_at": _iso(submission.submitted_at),
@@ -200,7 +259,9 @@ def instructor_dashboard(
             {
                 "question_id": question.id,
                 "body": question.body,
-                "student_name": (student.name or student.email) if student else "Talaba",
+                "student_name": (
+                    (student.name or student.email) if student else "Talaba"
+                ),
                 "course_id": question.course_id,
                 "course_title": course.title if course else "",
                 "lesson_id": question.lesson_id,
@@ -236,7 +297,11 @@ def admin_dashboard(
 ):
     _require_admin(db, email)
     orders = [
-        {"amount": row.amount, "discount_amount": row.discount_amount, "status": row.status}
+        {
+            "amount": row.amount,
+            "discount_amount": row.discount_amount,
+            "status": row.status,
+        }
         for row in db.query(Order).all()
     ]
     revenue = analytics_service.revenue_summary(orders)
@@ -247,16 +312,33 @@ def admin_dashboard(
     total_enrollments = db.query(Enrollment).count()
     since = datetime.now(UTC) - timedelta(days=30)
     new_users_30d = db.query(User).filter(User.created_at >= since).count()
-    views = db.query(AnalyticsEvent).filter(AnalyticsEvent.name == "course_view").count()
-    funnel_counts = {"course_view": views, "enroll": total_enrollments, "paid": revenue["paid_orders"]}
+    views = (
+        db.query(AnalyticsEvent).filter(AnalyticsEvent.name == "course_view").count()
+    )
+    funnel_counts = {
+        "course_view": views,
+        "enroll": total_enrollments,
+        "paid": revenue["paid_orders"],
+    }
     top_courses = [
-        {"course_id": course.id, "title": course.title, "students_count": course.students_count or 0}
-        for course in db.query(Course).order_by(Course.students_count.desc()).limit(5).all()
+        {
+            "course_id": course.id,
+            "title": course.title,
+            "students_count": course.students_count or 0,
+        }
+        for course in db.query(Course)
+        .order_by(Course.students_count.desc())
+        .limit(5)
+        .all()
     ]
     events = [{"name": event.name} for event in db.query(AnalyticsEvent).all()]
     return {
         "revenue": revenue,
-        "users": {"total": total_users, "active": active_users, "new_30d": new_users_30d},
+        "users": {
+            "total": total_users,
+            "active": active_users,
+            "new_30d": new_users_30d,
+        },
         "courses": {"total": total_courses, "published": published_courses},
         "enrollments": total_enrollments,
         "funnel": analytics_service.funnel(funnel_counts),

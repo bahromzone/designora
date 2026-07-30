@@ -4,7 +4,8 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json ./
+# Keep npm's peer-dependency policy identical to CI and local development.
+COPY package*.json .npmrc ./
 RUN npm ci
 
 COPY . .

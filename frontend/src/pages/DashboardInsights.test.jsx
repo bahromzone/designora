@@ -19,6 +19,9 @@ it("builds deadline and progress KPIs", () => {
 
 describe("dashboard empty state", () => {
   it("returns stable zero metrics", () => {
-    expect(buildDashboardMetrics([], [])).toMatchObject({ average: 0, open: [] });
+    expect(buildDashboardMetrics([], [])).toMatchObject({
+      average: 0,
+      open: [],
+    });
   });
 });

@@ -30,7 +30,12 @@ it("normalizes timecodes and image coordinates", () => {
     clientX: 60,
     clientY: 70,
     currentTarget: {
-      getBoundingClientRect: () => ({ left: 10, top: 20, width: 100, height: 100 }),
+      getBoundingClientRect: () => ({
+        left: 10,
+        top: 20,
+        width: 100,
+        height: 100,
+      }),
     },
   };
   expect(createImageAnnotation(event, "  contrast  ")).toMatchObject({

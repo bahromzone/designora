@@ -191,10 +191,7 @@ export default function InstructorManagePage() {
                 >
                   {c.status === "published" ? "Qoralamaga" : "Chop etish"}
                 </Button>
-                <Link
-                  to={`/instruktor/kurs/${c.id}`}
-                  className="btn-primary"
-                >
+                <Link to={`/instruktor/kurs/${c.id}`} className="btn-primary">
                   Tahrirlash
                 </Link>
               </div>

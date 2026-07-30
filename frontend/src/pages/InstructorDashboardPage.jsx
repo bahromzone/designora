@@ -31,9 +31,15 @@ function QueueSection({ title, count, empty, children }) {
     <section className="instructor-panel">
       <div className="instructor-panel__head">
         <h2>{title}</h2>
-        <span className="instructor-count" aria-label={`${count} ta`}>{count}</span>
+        <span className="instructor-count" aria-label={`${count} ta`}>
+          {count}
+        </span>
       </div>
-      {count ? <div className="instructor-queue">{children}</div> : <p className="instructor-empty">{empty}</p>}
+      {count ? (
+        <div className="instructor-queue">{children}</div>
+      ) : (
+        <p className="instructor-empty">{empty}</p>
+      )}
     </section>
   );
 }
@@ -63,13 +69,23 @@ export default function InstructorDashboardPage() {
     return cleanup;
   }, [load]);
 
-  if (loading) return <div className="instructor-state"><Spinner /></div>;
+  if (loading)
+    return (
+      <div className="instructor-state">
+        <Spinner />
+      </div>
+    );
 
   if (error || !data) {
     return (
       <div className="instructor-state">
-        <EmptyState title="Dashboard yuklanmadi" description={error || "Qayta urinib ko'ring."} />
-        <button className="instructor-button" type="button" onClick={load}>Qayta urinish</button>
+        <EmptyState
+          title="Dashboard yuklanmadi"
+          description={error || "Qayta urinib ko'ring."}
+        />
+        <button className="instructor-button" type="button" onClick={load}>
+          Qayta urinish
+        </button>
       </div>
     );
   }
@@ -86,51 +102,109 @@ export default function InstructorDashboardPage() {
         <div>
           <p className="instructor-eyebrow">Instructor Home</p>
           <h1>Bugun nimaga e'tibor beramiz?</h1>
-          <p>Tekshiruvlar, savollar va kurs salomatligi bitta operatsion markazda.</p>
+          <p>
+            Tekshiruvlar, savollar va kurs salomatligi bitta operatsion
+            markazda.
+          </p>
         </div>
         <div className="instructor-actions">
-          <Link className="instructor-button instructor-button--ghost" to="/instruktor-boshqaruv">Kurslar</Link>
-          <Link className="instructor-button" to="/instruktor-boshqaruv">+ Yangi kurs</Link>
+          <Link
+            className="instructor-button instructor-button--ghost"
+            to="/instruktor-boshqaruv"
+          >
+            Kurslar
+          </Link>
+          <Link className="instructor-button" to="/instruktor-boshqaruv">
+            + Yangi kurs
+          </Link>
         </div>
       </header>
 
       <section className="instructor-kpis" aria-label="Asosiy ko'rsatkichlar">
-        <KpiCard label="Tekshiriladigan ishlar" value={data.pending_submissions ?? 0} hint="eng eski ish birinchi" tone="orange" />
-        <KpiCard label="Javobsiz savollar" value={data.unanswered_questions ?? 0} hint="talabalar kutmoqda" tone="blue" />
-        <KpiCard label="Faol talabalar" value={data.active_students ?? 0} hint={`${data.courses_count ?? 0} kurs bo'yicha`} tone="green" />
-        <KpiCard label="Daromad" value={formatPrice(data.revenue?.net_revenue ?? 0)} hint={`${data.revenue?.paid_orders ?? 0} muvaffaqiyatli to'lov`} />
+        <KpiCard
+          label="Tekshiriladigan ishlar"
+          value={data.pending_submissions ?? 0}
+          hint="eng eski ish birinchi"
+          tone="orange"
+        />
+        <KpiCard
+          label="Javobsiz savollar"
+          value={data.unanswered_questions ?? 0}
+          hint="talabalar kutmoqda"
+          tone="blue"
+        />
+        <KpiCard
+          label="Faol talabalar"
+          value={data.active_students ?? 0}
+          hint={`${data.courses_count ?? 0} kurs bo'yicha`}
+          tone="green"
+        />
+        <KpiCard
+          label="Daromad"
+          value={formatPrice(data.revenue?.net_revenue ?? 0)}
+          hint={`${data.revenue?.paid_orders ?? 0} muvaffaqiyatli to'lov`}
+        />
       </section>
 
       {courses.length === 0 ? (
         <section className="instructor-panel">
-          <EmptyState title="Hali kurs yo'q" description="Birinchi kursni yarating, dashboard shu yerda jonlanadi." />
-          <Link className="instructor-button" to="/instruktor-boshqaruv">Kurs yaratish</Link>
+          <EmptyState
+            title="Hali kurs yo'q"
+            description="Birinchi kursni yarating, dashboard shu yerda jonlanadi."
+          />
+          <Link className="instructor-button" to="/instruktor-boshqaruv">
+            Kurs yaratish
+          </Link>
         </section>
       ) : (
         <>
           <div className="instructor-grid">
-            <QueueSection title="Tekshiruv navbati" count={submissions.length} empty="Zo'r, tekshiriladigan ish qolmadi.">
+            <QueueSection
+              title="Tekshiruv navbati"
+              count={submissions.length}
+              empty="Zo'r, tekshiriladigan ish qolmadi."
+            >
               {submissions.map((item) => (
-                <article className="instructor-queue__item" key={item.submission_id}>
+                <article
+                  className="instructor-queue__item"
+                  key={item.submission_id}
+                >
                   <div>
                     <strong>{item.assignment_title}</strong>
-                    <p>{item.student_name} · {item.course_title}</p>
+                    <p>
+                      {item.student_name} · {item.course_title}
+                    </p>
                     <small>{formatDate(item.submitted_at)}</small>
                   </div>
-                  <Link to={`/instruktor/review/${item.assignment_id}`}>Tekshirish</Link>
+                  <Link to={`/instruktor/review/${item.assignment_id}`}>
+                    Tekshirish
+                  </Link>
                 </article>
               ))}
             </QueueSection>
 
-            <QueueSection title="Javobsiz Q&A" count={questions.length} empty="Barcha savollarga javob berilgan.">
+            <QueueSection
+              title="Javobsiz Q&A"
+              count={questions.length}
+              empty="Barcha savollarga javob berilgan."
+            >
               {questions.map((item) => (
-                <article className="instructor-queue__item" key={item.question_id}>
+                <article
+                  className="instructor-queue__item"
+                  key={item.question_id}
+                >
                   <div>
                     <strong>{item.body}</strong>
-                    <p>{item.student_name} · {item.lesson_title}</p>
+                    <p>
+                      {item.student_name} · {item.lesson_title}
+                    </p>
                     <small>{formatDate(item.created_at)}</small>
                   </div>
-                  <Link to={`/organish/${item.course_id}?lesson=${item.lesson_id}&question=${item.question_id}`}>Javob berish</Link>
+                  <Link
+                    to={`/organish/${item.course_id}?lesson=${item.lesson_id}&question=${item.question_id}`}
+                  >
+                    Javob berish
+                  </Link>
                 </article>
               ))}
             </QueueSection>
@@ -149,31 +223,69 @@ export default function InstructorDashboardPage() {
                 <article className="instructor-course" key={course.course_id}>
                   <div className="instructor-course__title">
                     <div>
-                      <span className={`instructor-status instructor-status--${course.status}`}>{course.status === "published" ? "Chop etilgan" : "Qoralama"}</span>
+                      <span
+                        className={`instructor-status instructor-status--${course.status}`}
+                      >
+                        {course.status === "published"
+                          ? "Chop etilgan"
+                          : "Qoralama"}
+                      </span>
                       <h3>{course.title}</h3>
                     </div>
-                    <Link to={`/instruktor/kurs/${course.course_id}`}>Boshqarish</Link>
+                    <Link to={`/instruktor/kurs/${course.course_id}`}>
+                      Boshqarish
+                    </Link>
                   </div>
                   <div className="instructor-course__stats">
-                    <span><strong>{course.active_students}</strong> faol</span>
-                    <span><strong>{course.completion_rate}%</strong> tugatish</span>
-                    <span><strong>{course.dropout_rate}%</strong> dropout</span>
-                    <span><strong>{formatPrice(course.net_revenue)}</strong> daromad</span>
+                    <span>
+                      <strong>{course.active_students}</strong> faol
+                    </span>
+                    <span>
+                      <strong>{course.completion_rate}%</strong> tugatish
+                    </span>
+                    <span>
+                      <strong>{course.dropout_rate}%</strong> dropout
+                    </span>
+                    <span>
+                      <strong>{formatPrice(course.net_revenue)}</strong> daromad
+                    </span>
                   </div>
-                  <div className="instructor-progress" aria-label={`Tugatish ${course.completion_rate}%`}>
-                    <span style={{ width: `${Math.min(100, course.completion_rate || 0)}%` }} />
+                  <div
+                    className="instructor-progress"
+                    aria-label={`Tugatish ${course.completion_rate}%`}
+                  >
+                    <span
+                      style={{
+                        width: `${Math.min(100, course.completion_rate || 0)}%`,
+                      }}
+                    />
                   </div>
-                  {course.alerts_count > 0 && <p className="instructor-warning">{course.alerts_count} ta kontent ogohlantirishi</p>}
+                  {course.alerts_count > 0 && (
+                    <p className="instructor-warning">
+                      {course.alerts_count} ta kontent ogohlantirishi
+                    </p>
+                  )}
                 </article>
               ))}
             </div>
           </section>
 
-          <QueueSection title="Kontent sifati" count={alerts.length} empty="Kurslarda kritik kontent muammosi yo'q.">
+          <QueueSection
+            title="Kontent sifati"
+            count={alerts.length}
+            empty="Kurslarda kritik kontent muammosi yo'q."
+          >
             {alerts.map((alert, index) => (
-              <article className="instructor-queue__item" key={`${alert.course_id}-${alert.code}-${index}`}>
+              <article
+                className="instructor-queue__item"
+                key={`${alert.course_id}-${alert.code}-${index}`}
+              >
                 <div>
-                  <span className={`instructor-severity instructor-severity--${alert.severity}`}>{alert.severity}</span>
+                  <span
+                    className={`instructor-severity instructor-severity--${alert.severity}`}
+                  >
+                    {alert.severity}
+                  </span>
                   <strong>{alert.message}</strong>
                   <p>{alert.course_title}</p>
                 </div>

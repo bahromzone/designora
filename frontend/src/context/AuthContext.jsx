@@ -1,4 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
 
@@ -8,7 +14,9 @@ const STORAGE_KEY = "designora-auth-token";
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(STORAGE_KEY));
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(Boolean(localStorage.getItem(STORAGE_KEY)));
+  const [loading, setLoading] = useState(
+    Boolean(localStorage.getItem(STORAGE_KEY))
+  );
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -39,18 +47,24 @@ export function AuthProvider({ children }) {
     }
     let active = true;
     setLoading(true);
-    authApi.profile(token).then((profile) => {
-      if (active) setUser(profile);
-    }).catch(() => {
-      if (active) {
-        localStorage.removeItem(STORAGE_KEY);
-        setToken(null);
-        setUser(null);
-      }
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
+    authApi
+      .profile(token)
+      .then((profile) => {
+        if (active) setUser(profile);
+      })
+      .catch(() => {
+        if (active) {
+          localStorage.removeItem(STORAGE_KEY);
+          setToken(null);
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [token]);
 
   function handlePostAuthRedirect(response) {
@@ -119,7 +133,19 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, isAuthenticated: Boolean(token && user), login, register, loginWithToken, logout, refreshProfile }}>
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        loading,
+        isAuthenticated: Boolean(token && user),
+        login,
+        register,
+        loginWithToken,
+        logout,
+        refreshProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

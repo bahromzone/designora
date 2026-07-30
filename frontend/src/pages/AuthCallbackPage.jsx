@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const CALLBACK_TIMEOUT_MS = 12000;
-const ALLOWED_REDIRECTS = new Set(["/", "/admin", "/superadmin", "/instruktor-panel"]);
+const ALLOWED_REDIRECTS = new Set([
+  "/",
+  "/admin",
+  "/superadmin",
+  "/instruktor-panel",
+]);
 
 function safeRedirect(path) {
   return ALLOWED_REDIRECTS.has(path) ? path : "/";
@@ -19,7 +24,9 @@ export default function AuthCallbackPage() {
     if (handled.current) return;
     handled.current = true;
 
-    const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
+    const token = new URLSearchParams(window.location.hash.slice(1)).get(
+      "token"
+    );
     const redirectPath = safeRedirect(
       new URLSearchParams(window.location.search).get("next") || "/"
     );

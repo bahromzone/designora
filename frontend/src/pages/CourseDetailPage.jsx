@@ -35,8 +35,7 @@ export default function CourseDetailPage() {
     loadEnrollment();
   }, [loadEnrollment]);
 
-  if (loading)
-    return <main className="shell py-20">Kurs yuklanmoqda...</main>;
+  if (loading) return <main className="shell py-20">Kurs yuklanmoqda...</main>;
   if (error || !course)
     return <main className="shell py-20">{error || "Kurs topilmadi"}</main>;
 

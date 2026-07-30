@@ -38,8 +38,12 @@ export default function AdminUsersPage() {
     if (status !== "all") params.set("status", status);
 
     try {
-      const endpoint = isSuperadmin ? "/api/superadmin/users" : "/api/admin/users";
-      const result = await request(`${endpoint}?${params.toString()}`, { token });
+      const endpoint = isSuperadmin
+        ? "/api/superadmin/users"
+        : "/api/admin/users";
+      const result = await request(`${endpoint}?${params.toString()}`, {
+        token,
+      });
       setUsers(result.items || []);
       setMeta({ total: result.total || 0, pages: result.pages || 0 });
     } catch (err) {
@@ -62,9 +66,10 @@ export default function AdminUsersPage() {
     setBusy(id);
     setError("");
     try {
-      const path = "role" in patch
-        ? `/api/superadmin/users/${id}/role`
-        : `/api/superadmin/users/${id}/status`;
+      const path =
+        "role" in patch
+          ? `/api/superadmin/users/${id}/role`
+          : `/api/superadmin/users/${id}/status`;
       await request(path, {
         method: "PATCH",
         body: JSON.stringify(patch),
@@ -191,7 +196,7 @@ export default function AdminUsersPage() {
                         <small>
                           {item.created_at
                             ? new Date(item.created_at).toLocaleDateString(
-                                "uz-UZ",
+                                "uz-UZ"
                               )
                             : "-"}
                         </small>

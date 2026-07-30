@@ -4,7 +4,7 @@ export function flattenLessons(modules = []) {
       ...lesson,
       moduleId: module.id,
       moduleTitle: module.title,
-    })),
+    }))
   );
 }
 
@@ -12,8 +12,12 @@ export function adjacentLessons(modules, activeId) {
   const lessons = flattenLessons(modules);
   const index = lessons.findIndex((lesson) => lesson.id === activeId);
   if (index < 0) return { previous: null, next: null };
-  const previous = [...lessons.slice(0, index)].reverse().find((lesson) => !lesson.is_locked) || null;
-  const next = lessons.slice(index + 1).find((lesson) => !lesson.is_locked) || null;
+  const previous =
+    [...lessons.slice(0, index)]
+      .reverse()
+      .find((lesson) => !lesson.is_locked) || null;
+  const next =
+    lessons.slice(index + 1).find((lesson) => !lesson.is_locked) || null;
   return { previous, next };
 }
 

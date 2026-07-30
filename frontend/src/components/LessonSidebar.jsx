@@ -12,7 +12,10 @@ function LessonList({ modules, activeId, assignments, quizzes, onSelect }) {
   return (
     <div className="lesson-outline">
       {modules.map((module, moduleIndex) => (
-        <section className="lesson-module" key={module.id ?? `module-${moduleIndex}`}>
+        <section
+          className="lesson-module"
+          key={module.id ?? `module-${moduleIndex}`}
+        >
           <header>
             <span>{String(moduleIndex + 1).padStart(2, "0")}</span>
             <div>
@@ -34,15 +37,24 @@ function LessonList({ modules, activeId, assignments, quizzes, onSelect }) {
                   aria-current={status === "current" ? "step" : undefined}
                 >
                   <span className="lesson-state" aria-hidden="true">
-                    {status === "completed" ? "✓" : status === "locked" ? "⌁" : lessonIndex + 1}
+                    {status === "completed"
+                      ? "✓"
+                      : status === "locked"
+                        ? "⌁"
+                        : lessonIndex + 1}
                   </span>
                   <span className="lesson-outline-copy">
                     <strong>{lesson.title}</strong>
                     <small>
-                      {lesson.duration_seconds ? formatSeconds(lesson.duration_seconds) : "Davomiylik yo‘q"}
+                      {lesson.duration_seconds
+                        ? formatSeconds(lesson.duration_seconds)
+                        : "Davomiylik yo‘q"}
                     </small>
                   </span>
-                  <span className="lesson-feature-badges" aria-label="Dars tarkibi">
+                  <span
+                    className="lesson-feature-badges"
+                    aria-label="Dars tarkibi"
+                  >
                     {features.assignment && <i title="Topshiriq">A</i>}
                     {features.quiz && <i title="Quiz">Q</i>}
                   </span>
@@ -67,7 +79,10 @@ export default function LessonSidebar({
   onSelect,
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const adjacent = useMemo(() => adjacentLessons(modules, activeId), [modules, activeId]);
+  const adjacent = useMemo(
+    () => adjacentLessons(modules, activeId),
+    [modules, activeId]
+  );
   const choose = (id) => {
     onSelect(id);
     setMobileOpen(false);
@@ -82,26 +97,84 @@ export default function LessonSidebar({
             <span>Kurs progressi</span>
             <strong>{progressPercent}%</strong>
           </div>
-          <div className="lesson-sidebar-progress" aria-label={`Progress ${progressPercent}%`}>
+          <div
+            className="lesson-sidebar-progress"
+            aria-label={`Progress ${progressPercent}%`}
+          >
             <i style={{ width: `${progressPercent}%` }} />
           </div>
-          <small>{completedLessons} / {totalLessons} dars tugatildi</small>
+          <small>
+            {completedLessons} / {totalLessons} dars tugatildi
+          </small>
         </div>
-        <LessonList modules={modules} activeId={activeId} assignments={assignments} quizzes={quizzes} onSelect={choose} />
+        <LessonList
+          modules={modules}
+          activeId={activeId}
+          assignments={assignments}
+          quizzes={quizzes}
+          onSelect={choose}
+        />
         <nav className="lesson-adjacent" aria-label="Oldingi va keyingi dars">
-          <button type="button" disabled={!adjacent.previous} onClick={() => adjacent.previous && choose(adjacent.previous.id)}>← Oldingi</button>
-          <button type="button" disabled={!adjacent.next} onClick={() => adjacent.next && choose(adjacent.next.id)}>Keyingi →</button>
+          <button
+            type="button"
+            disabled={!adjacent.previous}
+            onClick={() => adjacent.previous && choose(adjacent.previous.id)}
+          >
+            ← Oldingi
+          </button>
+          <button
+            type="button"
+            disabled={!adjacent.next}
+            onClick={() => adjacent.next && choose(adjacent.next.id)}
+          >
+            Keyingi →
+          </button>
         </nav>
       </aside>
 
-      <button className="lesson-mobile-trigger" type="button" onClick={() => setMobileOpen(true)}>
-        <span>Darslar</span><b>{completedLessons}/{totalLessons}</b>
+      <button
+        className="lesson-mobile-trigger"
+        type="button"
+        onClick={() => setMobileOpen(true)}
+      >
+        <span>Darslar</span>
+        <b>
+          {completedLessons}/{totalLessons}
+        </b>
       </button>
       {mobileOpen && (
-        <div className="lesson-sheet-backdrop" role="presentation" onClick={() => setMobileOpen(false)}>
-          <section className="lesson-bottom-sheet" role="dialog" aria-modal="true" aria-label="Darslar ro‘yxati" onClick={(event) => event.stopPropagation()}>
-            <header><div><span>Kurs tarkibi</span><b>{progressPercent}% bajarildi</b></div><button type="button" onClick={() => setMobileOpen(false)} aria-label="Yopish">×</button></header>
-            <LessonList modules={modules} activeId={activeId} assignments={assignments} quizzes={quizzes} onSelect={choose} />
+        <div
+          className="lesson-sheet-backdrop"
+          role="presentation"
+          onClick={() => setMobileOpen(false)}
+        >
+          <section
+            className="lesson-bottom-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Darslar ro‘yxati"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header>
+              <div>
+                <span>Kurs tarkibi</span>
+                <b>{progressPercent}% bajarildi</b>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Yopish"
+              >
+                ×
+              </button>
+            </header>
+            <LessonList
+              modules={modules}
+              activeId={activeId}
+              assignments={assignments}
+              quizzes={quizzes}
+              onSelect={choose}
+            />
           </section>
         </div>
       )}

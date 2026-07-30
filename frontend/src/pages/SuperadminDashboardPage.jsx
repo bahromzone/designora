@@ -21,7 +21,11 @@ export default function SuperadminDashboardPage() {
         superadminApi.users(token),
       ]);
       setOverview(overviewResponse);
-      setUsers(Array.isArray(usersResponse) ? usersResponse : usersResponse.items ?? []);
+      setUsers(
+        Array.isArray(usersResponse)
+          ? usersResponse
+          : (usersResponse.items ?? [])
+      );
     } catch (err) {
       setError(err.message);
     }
@@ -81,24 +85,74 @@ export default function SuperadminDashboardPage() {
       </header>
       {error && <div className="admin-section">{error}</div>}
       <section className="admin-stat-grid">
-        <article className="admin-stat"><small>Jami user</small><strong>{overview?.users_total ?? 0}</strong></article>
-        <article className="admin-stat"><small>Faol</small><strong>{overview?.users_active ?? 0}</strong></article>
-        <article className="admin-stat"><small>Student</small><strong>{overview?.students ?? 0}</strong></article>
-        <article className="admin-stat"><small>Instructor</small><strong>{overview?.instructors ?? 0}</strong></article>
-        <article className="admin-stat"><small>Admin</small><strong>{overview?.admins ?? 0}</strong></article>
-        <article className="admin-stat"><small>Kurslar</small><strong>{overview?.courses ?? 0}</strong></article>
+        <article className="admin-stat">
+          <small>Jami user</small>
+          <strong>{overview?.users_total ?? 0}</strong>
+        </article>
+        <article className="admin-stat">
+          <small>Faol</small>
+          <strong>{overview?.users_active ?? 0}</strong>
+        </article>
+        <article className="admin-stat">
+          <small>Student</small>
+          <strong>{overview?.students ?? 0}</strong>
+        </article>
+        <article className="admin-stat">
+          <small>Instructor</small>
+          <strong>{overview?.instructors ?? 0}</strong>
+        </article>
+        <article className="admin-stat">
+          <small>Admin</small>
+          <strong>{overview?.admins ?? 0}</strong>
+        </article>
+        <article className="admin-stat">
+          <small>Kurslar</small>
+          <strong>{overview?.courses ?? 0}</strong>
+        </article>
       </section>
       <section className="admin-section">
         <h2>Foydalanuvchilar va permissionlar</h2>
         <div style={{ overflowX: "auto" }}>
           <table className="admin-table">
-            <thead><tr><th>User</th><th>Role</th><th>Status</th></tr></thead>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+              </tr>
+            </thead>
             <tbody>
               {users.map((item) => (
                 <tr key={item.id}>
-                  <td><strong>{item.name || "-"}</strong><br /><small>{item.email}</small></td>
-                  <td><select value={item.role} disabled={busyId === item.id || item.id === user.id} onChange={(e) => changeRole(item.id, e.target.value)}>{ROLES.map((role) => <option key={role}>{role}</option>)}</select></td>
-                  <td><label><input type="checkbox" checked={item.is_active} disabled={busyId === item.id || item.id === user.id} onChange={(e) => changeStatus(item.id, e.target.checked)} /> {item.is_active ? "Faol" : "Bloklangan"}</label></td>
+                  <td>
+                    <strong>{item.name || "-"}</strong>
+                    <br />
+                    <small>{item.email}</small>
+                  </td>
+                  <td>
+                    <select
+                      value={item.role}
+                      disabled={busyId === item.id || item.id === user.id}
+                      onChange={(e) => changeRole(item.id, e.target.value)}
+                    >
+                      {ROLES.map((role) => (
+                        <option key={role}>{role}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={item.is_active}
+                        disabled={busyId === item.id || item.id === user.id}
+                        onChange={(e) =>
+                          changeStatus(item.id, e.target.checked)
+                        }
+                      />{" "}
+                      {item.is_active ? "Faol" : "Bloklangan"}
+                    </label>
+                  </td>
                 </tr>
               ))}
             </tbody>

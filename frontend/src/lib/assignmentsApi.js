@@ -2,10 +2,14 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
 async function parse(response) {
   const type = response.headers.get("content-type") || "";
-  const payload = type.includes("application/json") ? await response.json() : null;
+  const payload = type.includes("application/json")
+    ? await response.json()
+    : null;
   if (!response.ok) {
     const detail = payload?.detail;
-    throw new Error(typeof detail === "string" ? detail : "So'rovni bajarib bo'lmadi");
+    throw new Error(
+      typeof detail === "string" ? detail : "So'rovni bajarib bo'lmadi"
+    );
   }
   return payload;
 }

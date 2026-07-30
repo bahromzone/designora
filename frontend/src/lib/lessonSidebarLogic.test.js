@@ -8,8 +8,16 @@ import {
 } from "./lessonSidebarLogic";
 
 const modules = [
-  { id: 1, title: "Asoslar", lessons: [{ id: 1, is_completed: true }, { id: 2 }] },
-  { id: 2, title: "Amaliyot", lessons: [{ id: 3, is_locked: true }, { id: 4 }] },
+  {
+    id: 1,
+    title: "Asoslar",
+    lessons: [{ id: 1, is_completed: true }, { id: 2 }],
+  },
+  {
+    id: 2,
+    title: "Amaliyot",
+    lessons: [{ id: 3, is_locked: true }, { id: 4 }],
+  },
 ];
 
 it("flattens modules and finds unlocked adjacent lessons", () => {

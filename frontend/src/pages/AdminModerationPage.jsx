@@ -46,23 +46,51 @@ export default function AdminModerationPage() {
         {error && <div className="admin-inline-error">{error}</div>}
         <div className="admin-table-wrap">
           <table className="admin-table">
-            <thead><tr><th>Kontent</th><th>Sabab</th><th>Reporter</th><th>Yuborilgan</th><th>Amal</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Kontent</th>
+                <th>Sabab</th>
+                <th>Reporter</th>
+                <th>Yuborilgan</th>
+                <th>Amal</th>
+              </tr>
+            </thead>
             <tbody>
               {items.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.content_type} #{item.content_id}</td>
+                  <td>
+                    {item.content_type} #{item.content_id}
+                  </td>
                   <td>{item.reason}</td>
                   <td>User #{item.reporter_id}</td>
-                  <td><small>{item.created_at ? new Date(item.created_at).toLocaleDateString("uz-UZ") : "-"}</small></td>
                   <td>
-                    <button className="admin-btn primary" onClick={() => review(item.id, "resolved")}>Yopish</button>{" "}
-                    <button className="admin-btn" onClick={() => review(item.id, "dismissed")}>Rad etish</button>
+                    <small>
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleDateString("uz-UZ")
+                        : "-"}
+                    </small>
+                  </td>
+                  <td>
+                    <button
+                      className="admin-btn primary"
+                      onClick={() => review(item.id, "resolved")}
+                    >
+                      Yopish
+                    </button>{" "}
+                    <button
+                      className="admin-btn"
+                      onClick={() => review(item.id, "dismissed")}
+                    >
+                      Rad etish
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!items.length && <p className="admin-empty">Ochiq reportlar yo'q.</p>}
+          {!items.length && (
+            <p className="admin-empty">Ochiq reportlar yo'q.</p>
+          )}
         </div>
       </section>
     </AdminWorkspaceShell>

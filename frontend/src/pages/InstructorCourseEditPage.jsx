@@ -1,9 +1,212 @@
-import { useCallback,useEffect,useMemo,useRef,useState } from "react";
-import { Link,useParams } from "react-router-dom";
-import { EmptyState,Spinner } from "../components/ui";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { EmptyState, Spinner } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { instructorApi } from "../lib/api";
 import { courseBuilderApi } from "../lib/courseBuilderApi";
 import "./InstructorCourseEditPage.css";
-export default function InstructorCourseEditPage(){const{courseId}=useParams();const{token}=useAuth();const toast=useToast();const[data,setData]=useState(null);const[form,setForm]=useState(null);const[loading,setLoading]=useState(true);const[error,setError]=useState("");const[saveState,setSaveState]=useState("saved");const[preview,setPreview]=useState(false);const[uploadingLesson,setUploadingLesson]=useState(null);const[videoProgress,setVideoProgress]=useState(0);const hydrated=useRef(false);const load=useCallback(async()=>{setLoading(true);setError("");try{const builder=await courseBuilderApi.get(courseId,token);setData(builder);setForm(builder.course);setError("");hydrated.current=true;}catch(e){setError(e.message)}finally{setLoading(false)}},[courseId,token]);useEffect(()=>{load()},[load]);useEffect(()=>{if(!hydrated.current||!form)return;setSaveState("saving");const t=setTimeout(async()=>{try{await courseBuilderApi.autosave(courseId,form,token);setSaveState("saved")}catch{setSaveState("error")}},900);return()=>clearTimeout(t)},[courseId,form,token]);const allLessons=useMemo(()=>data?.modules?.flatMap(m=>m.lessons||[])||[],[data]);async function uploadVideo(lesson,file){if(!file)return;if(file.size>3*1024*1024*1024){toast.error("Video hajmi 3 GB dan oshmasligi kerak");return}setUploadingLesson(lesson.id);setVideoProgress(0);try{await courseBuilderApi.uploadVideo(courseId,lesson.id,file,token,setVideoProgress);toast.success("Video yuklandi");await load()}catch(e){toast.error(e.message)}finally{setUploadingLesson(null);setVideoProgress(0)}}async function createModule(){const title=prompt("Yangi modul nomi");if(title?.trim())try{await instructorApi.createModule(courseId,{title:title.trim(),order:data.modules.length},token);await load()}catch(e){toast.error(e.message)}}async function createLesson(moduleId){const title=prompt("Yangi dars nomi");if(title?.trim())try{await instructorApi.createLesson(courseId,{title:title.trim(),module_id:moduleId,type:"video"},token);await load()}catch(e){toast.error(e.message)}}if(loading)return <div className="builder-state"><Spinner/></div>;if(error||!data||!form)return <div className="builder-state"><EmptyState title="Builder ochilmadi" description={error}/><button onClick={load}>Qayta urinish</button><Link to="/instruktor-boshqaruv">Kurslarga qaytish</Link></div>;if(preview)return <main className="builder-preview"><button onClick={()=>setPreview(false)}>Builderga qaytish</button>{data.modules.map(m=><article key={m.id}><h2>{m.title}</h2>{m.lessons.map(l=><div key={l.id}>{l.video_url?<video src={l.video_url} controls/>:<p>{l.title}: video yuklanmagan</p>}</div>)}</article>)}</main>;return <main className="course-builder"><header className="builder-header"><div><Link to="/instruktor-boshqaruv">← Kurslar</Link><h1>{form.title}</h1><p>{saveState==="saving"?"Saqlanmoqda...":"Barcha o'zgarishlar saqlandi"}</p></div><button onClick={()=>setPreview(true)}>Talaba preview</button></header><article className="builder-card"><div className="builder-card__head"><h2>Modullar va darslar</h2><button onClick={createModule}>+ Modul</button></div>{data.modules.map(m=><div className="builder-module" key={m.id}><div className="builder-module__head"><strong>{m.title}</strong><button onClick={()=>createLesson(m.id)}>+ Dars</button></div><div className="builder-lessons">{m.lessons.map(l=><div className="builder-lesson" key={l.id}><div><strong>{l.title}</strong><small>{l.processing_status||"ready"}</small></div><label className="video-upload"><input type="file" accept="video/mp4,video/webm,video/quicktime,.m4v" disabled={uploadingLesson===l.id} onChange={e=>{const f=e.target.files?.[0];e.target.value="";uploadVideo(l,f)}}/><span>{uploadingLesson===l.id?`Yuklanmoqda ${videoProgress}%`:l.video_url?"Videoni almashtirish":"Video yuklash"}</span></label>{uploadingLesson===l.id&&<progress max="100" value={videoProgress}/>} {l.video_url&&<a href={l.video_url} target="_blank" rel="noreferrer">Ko'rish</a>}</div>)}</div></div>)}</article><p>{allLessons.length} ta dars</p></main>}
+export default function InstructorCourseEditPage() {
+  const { courseId } = useParams();
+  const { token } = useAuth();
+  const toast = useToast();
+  const [data, setData] = useState(null);
+  const [form, setForm] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saveState, setSaveState] = useState("saved");
+  const [preview, setPreview] = useState(false);
+  const [uploadingLesson, setUploadingLesson] = useState(null);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const hydrated = useRef(false);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const builder = await courseBuilderApi.get(courseId, token);
+      setData(builder);
+      setForm(builder.course);
+      setError("");
+      hydrated.current = true;
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId, token]);
+  useEffect(() => {
+    load();
+  }, [load]);
+  useEffect(() => {
+    if (!hydrated.current || !form) return;
+    setSaveState("saving");
+    const t = setTimeout(async () => {
+      try {
+        await courseBuilderApi.autosave(courseId, form, token);
+        setSaveState("saved");
+      } catch {
+        setSaveState("error");
+      }
+    }, 900);
+    return () => clearTimeout(t);
+  }, [courseId, form, token]);
+  const allLessons = useMemo(
+    () => data?.modules?.flatMap((m) => m.lessons || []) || [],
+    [data]
+  );
+  async function uploadVideo(lesson, file) {
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024 * 1024) {
+      toast.error("Video hajmi 3 GB dan oshmasligi kerak");
+      return;
+    }
+    setUploadingLesson(lesson.id);
+    setVideoProgress(0);
+    try {
+      await courseBuilderApi.uploadVideo(
+        courseId,
+        lesson.id,
+        file,
+        token,
+        setVideoProgress
+      );
+      toast.success("Video yuklandi");
+      await load();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setUploadingLesson(null);
+      setVideoProgress(0);
+    }
+  }
+  async function createModule() {
+    const title = prompt("Yangi modul nomi");
+    if (title?.trim())
+      try {
+        await instructorApi.createModule(
+          courseId,
+          { title: title.trim(), order: data.modules.length },
+          token
+        );
+        await load();
+      } catch (e) {
+        toast.error(e.message);
+      }
+  }
+  async function createLesson(moduleId) {
+    const title = prompt("Yangi dars nomi");
+    if (title?.trim())
+      try {
+        await instructorApi.createLesson(
+          courseId,
+          { title: title.trim(), module_id: moduleId, type: "video" },
+          token
+        );
+        await load();
+      } catch (e) {
+        toast.error(e.message);
+      }
+  }
+  if (loading)
+    return (
+      <div className="builder-state">
+        <Spinner />
+      </div>
+    );
+  if (error || !data || !form)
+    return (
+      <div className="builder-state">
+        <EmptyState title="Builder ochilmadi" description={error} />
+        <button onClick={load}>Qayta urinish</button>
+        <Link to="/instruktor-boshqaruv">Kurslarga qaytish</Link>
+      </div>
+    );
+  if (preview)
+    return (
+      <main className="builder-preview">
+        <button onClick={() => setPreview(false)}>Builderga qaytish</button>
+        {data.modules.map((m) => (
+          <article key={m.id}>
+            <h2>{m.title}</h2>
+            {m.lessons.map((l) => (
+              <div key={l.id}>
+                {l.video_url ? (
+                  <video src={l.video_url} controls />
+                ) : (
+                  <p>{l.title}: video yuklanmagan</p>
+                )}
+              </div>
+            ))}
+          </article>
+        ))}
+      </main>
+    );
+  return (
+    <main className="course-builder">
+      <header className="builder-header">
+        <div>
+          <Link to="/instruktor-boshqaruv">← Kurslar</Link>
+          <h1>{form.title}</h1>
+          <p>
+            {saveState === "saving"
+              ? "Saqlanmoqda..."
+              : "Barcha o'zgarishlar saqlandi"}
+          </p>
+        </div>
+        <button onClick={() => setPreview(true)}>Talaba preview</button>
+      </header>
+      <article className="builder-card">
+        <div className="builder-card__head">
+          <h2>Modullar va darslar</h2>
+          <button onClick={createModule}>+ Modul</button>
+        </div>
+        {data.modules.map((m) => (
+          <div className="builder-module" key={m.id}>
+            <div className="builder-module__head">
+              <strong>{m.title}</strong>
+              <button onClick={() => createLesson(m.id)}>+ Dars</button>
+            </div>
+            <div className="builder-lessons">
+              {m.lessons.map((l) => (
+                <div className="builder-lesson" key={l.id}>
+                  <div>
+                    <strong>{l.title}</strong>
+                    <small>{l.processing_status || "ready"}</small>
+                  </div>
+                  <label className="video-upload">
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime,.m4v"
+                      disabled={uploadingLesson === l.id}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        e.target.value = "";
+                        uploadVideo(l, f);
+                      }}
+                    />
+                    <span>
+                      {uploadingLesson === l.id
+                        ? `Yuklanmoqda ${videoProgress}%`
+                        : l.video_url
+                          ? "Videoni almashtirish"
+                          : "Video yuklash"}
+                    </span>
+                  </label>
+                  {uploadingLesson === l.id && (
+                    <progress max="100" value={videoProgress} />
+                  )}{" "}
+                  {l.video_url && (
+                    <a href={l.video_url} target="_blank" rel="noreferrer">
+                      Ko'rish
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </article>
+      <p>{allLessons.length} ta dars</p>
+    </main>
+  );
+}

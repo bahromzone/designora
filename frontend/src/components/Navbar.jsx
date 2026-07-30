@@ -399,7 +399,9 @@ export default function Navbar() {
     } else {
       document.body.style.overflow = "unset";
     }
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [mobileOpen]);
 
   useEffect(() => {
@@ -626,7 +628,10 @@ export default function Navbar() {
                       {user?.full_name || "Profil"}
                     </Link>
                     <button
-                      onClick={() => { logout(); setMobileOpen(false); }}
+                      onClick={() => {
+                        logout();
+                        setMobileOpen(false);
+                      }}
                       className="w-full px-4 py-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50 text-left"
                     >
                       Chiqish

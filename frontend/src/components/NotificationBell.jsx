@@ -35,9 +35,17 @@ export default function NotificationBell() {
   useEffect(() => {
     if (!open) return undefined;
     const onPointerDown = (event) => {
-      if (wrapRef.current && !wrapRef.current.contains(event.target)) setOpen(false);
+      if (wrapRef.current && !wrapRef.current.contains(event.target)) {
+        setOpen(false);
+        setSettings(false);
+      }
     };
-    const onKeyDown = (event) => { if (event.key === "Escape") setOpen(false); };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        setSettings(false);
+      }
+    };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {

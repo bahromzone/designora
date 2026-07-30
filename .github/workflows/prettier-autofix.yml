@@ -1,0 +1,51 @@
+name: Prettier auto-fix
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to format
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    name: Format frontend with Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Apply Prettier fixes
+        working-directory: frontend
+        run: npm run format
+
+      - name: Commit formatted files
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src
+          git commit -m "style(frontend): apply Prettier formatting"
+          git push origin "HEAD:${{ inputs.branch }}"

@@ -1,4 +1,5 @@
-# Dependabot — bog'liqliklarni avtomatik yangilash (XAVFSIZLIK bloki)
+# Dependabot — bog'liqliklarni avtomatik yangilash
+# Major versiyalar alohida PR bo'lib, har biri mustaqil CI'dan o'tadi.
 # https://docs.github.com/code-security/dependabot
 version: 2
 updates:
@@ -12,7 +13,10 @@ updates:
       - "dependencies"
       - "backend"
     groups:
-      backend-deps:
+      backend-patch-minor:
+        update-types:
+          - "patch"
+          - "minor"
         patterns:
           - "*"
 
@@ -26,7 +30,10 @@ updates:
       - "dependencies"
       - "frontend"
     groups:
-      frontend-deps:
+      frontend-patch-minor:
+        update-types:
+          - "patch"
+          - "minor"
         patterns:
           - "*"
 

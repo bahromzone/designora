@@ -30,7 +30,9 @@ def _lesson_access(db: Session, user: User, lesson: Lesson) -> None:
         return
     enrolled = (
         db.query(Enrollment)
-        .filter(Enrollment.user_id == user.id, Enrollment.course_id == lesson.course_id)
+        .filter(
+            Enrollment.user_id == user.id, Enrollment.course_id == lesson.course_id
+        )
         .first()
     )
     if not enrolled:
@@ -89,9 +91,17 @@ def get_drm_manifest(
     if not lesson:
         raise HTTPException(status_code=404, detail="Dars topilmadi")
     _lesson_access(db, user, lesson)
-    manifest_url = lesson.video_url if lesson.video_url and (".m3u8" in lesson.video_url or ".mpd" in lesson.video_url) else ""
+    manifest_url = (
+        lesson.video_url
+        if lesson.video_url
+        and (".m3u8" in lesson.video_url or ".mpd" in lesson.video_url)
+        else ""
+    )
     if not manifest_url:
-        raise HTTPException(status_code=409, detail="Bu video hali DRM formatiga package qilinmagan")
+        raise HTTPException(
+            status_code=409,
+            detail="Bu video hali DRM formatiga package qilinmagan",
+        )
     progress = (
         db.query(LessonProgress)
         .filter(
@@ -128,7 +138,10 @@ def sign_lesson_video(
     response.headers["Pragma"] = "no-cache"
     response.headers["Referrer-Policy"] = "no-referrer"
     if settings.DRM_ENABLED:
-        raise HTTPException(status_code=410, detail="Raw video playback o‘chirildi, DRM manifest ishlatiladi")
+        raise HTTPException(
+            status_code=410,
+            detail="Raw video playback o‘chirildi, DRM manifest ishlatiladi",
+        )
     user = _get_user(db, email)
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:

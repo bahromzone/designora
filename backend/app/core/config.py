@@ -5,7 +5,9 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 limiter = Limiter(
-    key_func=get_remote_address, default_limits=["200/minute"], storage_uri="memory://"
+    key_func=get_remote_address,
+    default_limits=["200/minute"],
+    storage_uri="memory://",
 )
 DEFAULT_MEDIA_SIGNING_KEY = "dev-media-signing-key-change-in-prod"
 
@@ -27,7 +29,8 @@ class Settings(BaseSettings):
     MAIL_SERVER: str
     RECAPTCHA_SECRET_KEY: str
     ALLOWED_ORIGINS: str = (
-        "http://localhost:8000,http://127.0.0.1:8000,http://localhost:5173,http://127.0.0.1:5173"
+        "http://localhost:8000,http://127.0.0.1:8000,http://localhost:5173,"
+        "http://127.0.0.1:5173"
     )
     FRONTEND_URL: str = "http://localhost:5173"
     media_signing_key: str = DEFAULT_MEDIA_SIGNING_KEY
@@ -98,7 +101,9 @@ class Settings(BaseSettings):
                     "Production secrets/config missing: " + ", ".join(missing)
                 )
         if not 5 <= self.VIDEO_UPLOAD_PART_SIZE_MB <= 100:
-            raise ValueError("VIDEO_UPLOAD_PART_SIZE_MB 5..100 oralig'ida bo'lishi kerak")
+            raise ValueError(
+                "VIDEO_UPLOAD_PART_SIZE_MB 5..100 oralig'ida bo'lishi kerak"
+            )
         if not 1 <= self.VIDEO_UPLOAD_MAX_GB <= 5:
             raise ValueError("VIDEO_UPLOAD_MAX_GB 1..5 oralig'ida bo'lishi kerak")
         return self

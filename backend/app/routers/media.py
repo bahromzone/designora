@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -11,10 +11,11 @@ from app.models.enrollment import Enrollment
 from app.models.lesson import Lesson
 from app.models.lesson_progress import LessonProgress
 from app.models.user import User
-from app.services import video_service
+from app.services import drm_service, video_service
 
 router = APIRouter(prefix="/api/media", tags=["Media"])
 _STAFF_ROLES = {"admin", "superadmin"}
+_VIDEO_URL_TTL_SECONDS = 300
 
 
 def _get_user(db: Session, email: str) -> User:
@@ -71,13 +72,63 @@ def save_video_progress(
     return {"message": "Progress saqlandi", "position_seconds": row.position_seconds}
 
 
-@router.post("/lessons/{lesson_id}/sign")
-def sign_lesson_video(
+@router.post("/lessons/{lesson_id}/drm-manifest")
+def get_drm_manifest(
     lesson_id: int,
-    ttl: int = Query(3600, ge=60, le=86400),
+    response: Response,
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    response.headers["Cache-Control"] = "no-store, private, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    if not settings.DRM_ENABLED:
+        raise HTTPException(status_code=503, detail="DRM hali yoqilmagan")
+    user = _get_user(db, email)
+    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Dars topilmadi")
+    _lesson_access(db, user, lesson)
+    manifest_url = lesson.video_url if lesson.video_url and (".m3u8" in lesson.video_url or ".mpd" in lesson.video_url) else ""
+    if not manifest_url:
+        raise HTTPException(status_code=409, detail="Bu video hali DRM formatiga package qilinmagan")
+    progress = (
+        db.query(LessonProgress)
+        .filter(
+            LessonProgress.user_id == user.id, LessonProgress.lesson_id == lesson.id
+        )
+        .first()
+    )
+    config = drm_service.build_playback_config(
+        manifest_url=manifest_url,
+        provider=settings.DRM_PROVIDER,
+        base_url=settings.DRM_MANIFEST_BASE_URL,
+        widevine_license_url=settings.DRM_WIDEVINE_LICENSE_URL,
+        fairplay_license_url=settings.DRM_FAIRPLAY_LICENSE_URL,
+        fairplay_certificate_url=settings.DRM_FAIRPLAY_CERTIFICATE_URL,
+        playready_license_url=settings.DRM_PLAYREADY_LICENSE_URL,
+    )
+    return {
+        "lesson_id": lesson.id,
+        "resume_seconds": progress.position_seconds if progress else 0,
+        "subtitles": lesson.subtitles or [],
+        **config,
+    }
+
+
+@router.post("/lessons/{lesson_id}/sign")
+def sign_lesson_video(
+    lesson_id: int,
+    response: Response,
+    ttl: int = Query(300, ge=60, le=300),
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    response.headers["Cache-Control"] = "no-store, private, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    if settings.DRM_ENABLED:
+        raise HTTPException(status_code=410, detail="Raw video playback o‘chirildi, DRM manifest ishlatiladi")
     user = _get_user(db, email)
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:
@@ -91,6 +142,7 @@ def sign_lesson_video(
         raise HTTPException(status_code=404, detail="Videoning manzili yo'q")
     _lesson_access(db, user, lesson)
     signed_sources = []
+    primary = None
     for source in sources:
         signed = video_service.build_signed_url(
             source["url"],
@@ -98,6 +150,8 @@ def sign_lesson_video(
             base_url=settings.MEDIA_CDN_BASE_URL,
             ttl_seconds=ttl,
         )
+        if primary is None:
+            primary = signed
         signed_sources.append({**source, "url": signed["url"]})
     progress = (
         db.query(LessonProgress)
@@ -105,12 +159,6 @@ def sign_lesson_video(
             LessonProgress.user_id == user.id, LessonProgress.lesson_id == lesson.id
         )
         .first()
-    )
-    primary = video_service.build_signed_url(
-        sources[0]["url"],
-        settings.media_signing_key,
-        base_url=settings.MEDIA_CDN_BASE_URL,
-        ttl_seconds=ttl,
     )
     return {
         "lesson_id": lesson.id,

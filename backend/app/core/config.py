@@ -41,6 +41,13 @@ class Settings(BaseSettings):
     VIDEO_UPLOAD_PART_SIZE_MB: int = 16
     VIDEO_UPLOAD_MAX_GB: int = 3
     VIDEO_UPLOAD_URL_TTL_SECONDS: int = 900
+    DRM_ENABLED: bool = False
+    DRM_PROVIDER: str = "pallycon"
+    DRM_MANIFEST_BASE_URL: str = ""
+    DRM_WIDEVINE_LICENSE_URL: str = ""
+    DRM_FAIRPLAY_LICENSE_URL: str = ""
+    DRM_FAIRPLAY_CERTIFICATE_URL: str = ""
+    DRM_PLAYREADY_LICENSE_URL: str = ""
     PAYME_KEY: str = ""
     PAYME_MERCHANT_ID: str = ""
     PAYME_CHECKOUT_URL: str = "https://checkout.paycom.uz"
@@ -75,14 +82,23 @@ class Settings(BaseSettings):
                 ]
             ):
                 missing.append("VIDEO_STORAGE_ACCESS_KEY/SECRET_KEY/PUBLIC_BASE_URL")
+            if self.DRM_ENABLED and not all(
+                v.strip()
+                for v in [
+                    self.DRM_MANIFEST_BASE_URL,
+                    self.DRM_WIDEVINE_LICENSE_URL,
+                    self.DRM_FAIRPLAY_LICENSE_URL,
+                    self.DRM_FAIRPLAY_CERTIFICATE_URL,
+                    self.DRM_PLAYREADY_LICENSE_URL,
+                ]
+            ):
+                missing.append("DRM_MANIFEST_BASE_URL/license endpoints")
             if missing:
                 raise ValueError(
                     "Production secrets/config missing: " + ", ".join(missing)
                 )
         if not 5 <= self.VIDEO_UPLOAD_PART_SIZE_MB <= 100:
-            raise ValueError(
-                "VIDEO_UPLOAD_PART_SIZE_MB 5..100 oralig'ida bo'lishi kerak"
-            )
+            raise ValueError("VIDEO_UPLOAD_PART_SIZE_MB 5..100 oralig'ida bo'lishi kerak")
         if not 1 <= self.VIDEO_UPLOAD_MAX_GB <= 5:
             raise ValueError("VIDEO_UPLOAD_MAX_GB 1..5 oralig'ida bo'lishi kerak")
         return self

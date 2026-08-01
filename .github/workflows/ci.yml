@@ -38,7 +38,7 @@ jobs:
         run: ruff check .
       - name: Black check
         run: black --check .
-      - name: Apply migrations against PostgreSQL
+      - name: Prepare and apply migrations against PostgreSQL
         env:
           ENVIRONMENT: development
           DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora"
@@ -51,7 +51,9 @@ jobs:
           MAIL_PORT: "587"
           MAIL_SERVER: smtp.example.com
           RECAPTCHA_SECRET_KEY: ci-recaptcha
-        run: alembic upgrade head
+        run: |
+          python scripts/prepare_migrations.py
+          alembic upgrade head
       - name: Pytest
         env:
           ENVIRONMENT: development

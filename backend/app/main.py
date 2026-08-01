@@ -13,7 +13,6 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
 from app.admin.admin_panel import setup_admin
 from app.core.config import limiter, settings
-from app.core.database import Base
 from app.core.middleware import (
     IPBlockingMiddleware,
     RequestLoggingMiddleware,

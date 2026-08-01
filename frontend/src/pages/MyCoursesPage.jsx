@@ -72,11 +72,7 @@ export default function MyCoursesPage() {
   const pendingAssignments = useMemo(
     () =>
       assignments
-        .filter(
-          (item) =>
-            item.my_submission?.status !== "graded" &&
-            item.my_submission?.status !== "submitted"
-        )
+        .filter((item) => item.my_submission?.status !== "graded")
         .slice(0, 4),
     [assignments]
   );
@@ -152,7 +148,8 @@ export default function MyCoursesPage() {
               {dashboard?.next_lesson?.title || "Keyingi darsga o'ting"}
             </h2>
             <p>
-              {continueCourse?.progress_percent || 0}% bajarildi, {continueCourse?.lessons_count || 0} ta dars.
+              {continueCourse?.progress_percent || 0}% bajarildi, {" "}
+              {continueCourse?.lessons_count || 0} ta dars.
             </p>
             <Link
               to={`/organish/${continueCourse?.course_id}`}
@@ -208,7 +205,9 @@ export default function MyCoursesPage() {
                 <p className="dashboard-eyebrow">Navbatdagi ishlar</p>
                 <h2>Rejangiz</h2>
               </div>
-              <span>{summary.open_assignments ?? pendingAssignments.length} ta ochiq</span>
+              <span>
+                {summary.open_assignments ?? pendingAssignments.length} ta ochiq
+              </span>
             </div>
             {pendingAssignments.length ? (
               <div className="task-list">

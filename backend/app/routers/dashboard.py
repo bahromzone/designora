@@ -7,7 +7,7 @@ learning state.
 
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -29,8 +29,6 @@ router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 def _get_user(db: Session, email: str) -> User:
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        from fastapi import HTTPException
-
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
     return user
 
@@ -114,10 +112,11 @@ def student_dashboard(
         for enrollment, course in enrollments
     ]
     courses_by_id = {course["course_id"]: course for course in courses}
-    active_course_ids = [course["course_id"] for course in courses if not course["is_completed"]]
+    active_course_ids = [
+        course["course_id"] for course in courses if not course["is_completed"]
+    ]
 
     assignments = []
-    assignment_ids = []
     if active_course_ids:
         rows = (
             db.query(Assignment)
@@ -155,7 +154,10 @@ def student_dashboard(
     now = datetime.now(UTC)
     due_soon_limit = now + timedelta(days=3)
     open_assignments = [
-        item for item in assignments if item["my_submission"] is None or item["my_submission"]["status"] != "graded"
+        item
+        for item in assignments
+        if item["my_submission"] is None
+        or item["my_submission"]["status"] != "graded"
     ]
     overdue = []
     due_soon = []
@@ -173,7 +175,7 @@ def student_dashboard(
     completed_lesson_ids = set()
     if course_ids:
         completed_lesson_ids = {
-            row.lesson_id
+            row[0]
             for row in db.query(LessonProgress.lesson_id)
             .filter(
                 LessonProgress.user_id == user.id,
@@ -224,9 +226,11 @@ def student_dashboard(
         "points_to_next_level": points_per_level - (points % points_per_level),
     }
     completed_courses = len(courses) - len(active_course_ids)
-    average_progress = round(
-        sum(course["progress_percent"] for course in courses) / len(courses)
-    ) if courses else 0
+    average_progress = (
+        round(sum(course["progress_percent"] for course in courses) / len(courses))
+        if courses
+        else 0
+    )
     return {
         "courses": courses,
         "assignments": assignments,

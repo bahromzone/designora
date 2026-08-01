@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,7 @@ from app.services import video_service
 
 router = APIRouter(prefix="/api/media", tags=["Media"])
 _STAFF_ROLES = {"admin", "superadmin"}
+_VIDEO_URL_TTL_SECONDS = 300
 
 
 def _get_user(db: Session, email: str) -> User:
@@ -74,10 +75,13 @@ def save_video_progress(
 @router.post("/lessons/{lesson_id}/sign")
 def sign_lesson_video(
     lesson_id: int,
-    ttl: int = Query(3600, ge=60, le=86400),
+    response: Response,
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    response.headers["Cache-Control"] = "no-store, private, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Referrer-Policy"] = "no-referrer"
     user = _get_user(db, email)
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:
@@ -91,13 +95,16 @@ def sign_lesson_video(
         raise HTTPException(status_code=404, detail="Videoning manzili yo'q")
     _lesson_access(db, user, lesson)
     signed_sources = []
+    primary = None
     for source in sources:
         signed = video_service.build_signed_url(
             source["url"],
             settings.media_signing_key,
             base_url=settings.MEDIA_CDN_BASE_URL,
-            ttl_seconds=ttl,
+            ttl_seconds=_VIDEO_URL_TTL_SECONDS,
         )
+        if primary is None:
+            primary = signed
         signed_sources.append({**source, "url": signed["url"]})
     progress = (
         db.query(LessonProgress)
@@ -105,12 +112,6 @@ def sign_lesson_video(
             LessonProgress.user_id == user.id, LessonProgress.lesson_id == lesson.id
         )
         .first()
-    )
-    primary = video_service.build_signed_url(
-        sources[0]["url"],
-        settings.media_signing_key,
-        base_url=settings.MEDIA_CDN_BASE_URL,
-        ttl_seconds=ttl,
     )
     return {
         "lesson_id": lesson.id,

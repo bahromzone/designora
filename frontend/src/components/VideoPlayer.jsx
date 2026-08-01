@@ -27,7 +27,13 @@ export default function VideoPlayer({
   const [loading, setLoading] = useState(Boolean(lessonId));
 
   useEffect(() => {
-    if (!lessonId || !token) {
+    if (lessonId && !token) {
+      setManifest(null);
+      setError("Videoni ko‘rish uchun avtorizatsiya talab etiladi.");
+      setLoading(false);
+      return;
+    }
+    if (!lessonId) {
       setManifest(
         src
           ? {
@@ -102,8 +108,6 @@ export default function VideoPlayer({
   };
 
   const fullscreen = () => shellRef.current?.requestFullscreen?.();
-  const pip = () =>
-    videoRef.current?.requestPictureInPicture?.().catch(() => null);
 
   const onKeyDown = (event) => {
     const action = keyboardAction(event.key);
@@ -120,13 +124,14 @@ export default function VideoPlayer({
         video.currentTime + 10
       );
     if (action === "fullscreen") fullscreen();
-    if (action === "pip") pip();
     if (action === "mute") video.muted = !video.muted;
     if (action === "captions" && video.textTracks[0]) {
       video.textTracks[0].mode =
         video.textTracks[0].mode === "showing" ? "hidden" : "showing";
     }
   };
+
+  const blockMediaAction = (event) => event.preventDefault();
 
   if (loading)
     return <div className="video-player-state">Video tayyorlanmoqda...</div>;
@@ -152,6 +157,7 @@ export default function VideoPlayer({
       ref={shellRef}
       tabIndex="0"
       onKeyDown={onKeyDown}
+      onContextMenu={blockMediaAction}
       aria-label="Video player"
     >
       <video
@@ -160,8 +166,13 @@ export default function VideoPlayer({
         src={selected.url}
         poster={poster}
         controls
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture
+        disableRemotePlayback
         playsInline
         preload="metadata"
+        onContextMenu={blockMediaAction}
+        onDragStart={blockMediaAction}
         onEnded={() => {
           saveProgress();
           onEnded?.();
@@ -217,15 +228,10 @@ export default function VideoPlayer({
             ))}
           </select>
         </label>
-        <button type="button" onClick={pip}>
-          PiP
-        </button>
         <button type="button" onClick={fullscreen}>
           To‘liq ekran
         </button>
-        <span>
-          Space/K: play · ←/→: 10s · F: fullscreen · P: PiP · C: subtitr
-        </span>
+        <span>Space/K: play · ←/→: 10s · F: fullscreen · C: subtitr</span>
       </div>
     </section>
   );

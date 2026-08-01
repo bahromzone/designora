@@ -1,3 +1,5 @@
+import time
+
 from app.core.security import create_access_token
 from app.models.Course import Course
 from app.models.enrollment import Enrollment
@@ -40,6 +42,7 @@ def test_manifest_sources_subtitles_and_resume_roundtrip(client, db_session):
         json={"position_seconds": 73, "duration_seconds": 600},
     )
     assert saved.status_code == 200
+    before = int(time.time())
     manifest = client.post(
         f"/api/media/lessons/{lesson.id}/sign", headers=_headers(user.email)
     )
@@ -48,7 +51,30 @@ def test_manifest_sources_subtitles_and_resume_roundtrip(client, db_session):
     assert [item["label"] for item in payload["sources"]] == ["Auto", "720p"]
     assert payload["subtitles"][0]["srclang"] == "uz"
     assert payload["resume_seconds"] == 73
+    assert before + 295 <= payload["expires"] <= before + 305
+    assert manifest.headers["cache-control"] == "no-store, private, max-age=0"
+    assert manifest.headers["referrer-policy"] == "no-referrer"
     assert db_session.query(LessonProgress).count() == 1
+
+
+def test_manifest_ttl_cannot_be_extended_by_client(client, db_session):
+    user = User(email="ttl-viewer@example.com", name="Viewer", is_active=True)
+    course = Course(title="TTL course", is_active=True, status="published")
+    db_session.add_all([user, course])
+    db_session.commit()
+    lesson = Lesson(course_id=course.id, title="Protected", video_url="/protected.mp4")
+    db_session.add(lesson)
+    db_session.commit()
+    db_session.add(Enrollment(user_id=user.id, course_id=course.id))
+    db_session.commit()
+
+    before = int(time.time())
+    response = client.post(
+        f"/api/media/lessons/{lesson.id}/sign?ttl=86400",
+        headers=_headers(user.email),
+    )
+    assert response.status_code == 200
+    assert before + 295 <= response.json()["expires"] <= before + 305
 
 
 def test_video_progress_requires_enrollment(client, db_session):

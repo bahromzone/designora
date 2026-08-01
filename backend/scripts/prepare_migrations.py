@@ -7,6 +7,7 @@ wrong. This explicit deploy step baselines that schema once; future deploys
 run normal Alembic upgrades only.
 """
 
+# fmt: off
 # This deploy bootstrap intentionally imports application models after the
 # migration libraries so it can inspect the live metadata before stamping.
 # ruff: noqa: I001
@@ -48,3 +49,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+# fmt: on

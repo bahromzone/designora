@@ -1,3 +1,4 @@
+# fmt: off
 # ruff: noqa: I001
 from datetime import UTC, datetime, timedelta
 
@@ -93,3 +94,4 @@ def test_dashboard_aggregate_returns_student_workspace(client, db_session):
 def test_dashboard_aggregate_requires_auth(client):
     response = client.get("/api/dashboard")
     assert response.status_code == 401
+# fmt: on

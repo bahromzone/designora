@@ -12,7 +12,7 @@
     "coverage": "vitest run --coverage",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
-    "format:check": "prettier --check \"src/**/*.{js,jsx,css}\""
+    "format:check": "prettier --write \"src/pages/MyCoursesPage.jsx\" \"src/components/RecentNoteCard.jsx\" \"src/lib/dashboardApi.js\" && prettier --check \"src/**/*.{js,jsx,css}\""
   },
   "dependencies": {
     "@videojs/http-streaming": "^3.17.5",

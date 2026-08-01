@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 from datetime import UTC, datetime, timedelta
 
 from app.core.security import create_access_token

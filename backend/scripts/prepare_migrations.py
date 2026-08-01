@@ -7,12 +7,17 @@ wrong. This explicit deploy step baselines that schema once; future deploys
 run normal Alembic upgrades only.
 """
 
-import subprocess
-
-from sqlalchemy import inspect
+from alembic.config import Config
+from alembic.script import ScriptDirectory
+from sqlalchemy import inspect, text
 
 import app.models  # noqa: F401
 from app.core.database import Base, engine
+
+
+def _migration_heads() -> list[str]:
+    config = Config("alembic.ini")
+    return ScriptDirectory.from_config(config).get_heads()
 
 
 def main() -> None:
@@ -22,8 +27,19 @@ def main() -> None:
         return
 
     print("No Alembic version table found; creating a one-time schema baseline.")
-    Base.metadata.create_all(bind=engine)
-    subprocess.run(["alembic", "stamp", "head"], check=True)
+    with engine.begin() as connection:
+        Base.metadata.create_all(bind=connection)
+        connection.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS alembic_version "
+                "(version_num VARCHAR(32) NOT NULL)"
+            )
+        )
+        for head in _migration_heads():
+            connection.execute(
+                text("INSERT INTO alembic_version (version_num) VALUES (:head)"),
+                {"head": head},
+            )
     print("Legacy schema baselined at Alembic head.")
 
 

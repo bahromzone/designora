@@ -149,7 +149,7 @@ export default function MyCoursesPage() {
               {dashboard?.next_lesson?.title || "Keyingi darsga o'ting"}
             </h2>
             <p>
-              {continueCourse?.progress_percent || 0}% bajarildi, {" "}
+              {continueCourse?.progress_percent || 0}% bajarildi,{" "}
               {continueCourse?.lessons_count || 0} ta dars.
             </p>
             <Link

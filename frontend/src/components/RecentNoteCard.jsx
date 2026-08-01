@@ -26,7 +26,8 @@ export default function RecentNoteCard({ note: providedNote }) {
       <div>
         <p className="label">So‘nggi note</p>
         <strong>
-          {note.lesson_title || "Dars"} · {formatSeconds(note.timestamp_seconds)}
+          {note.lesson_title || "Dars"} ·{" "}
+          {formatSeconds(note.timestamp_seconds)}
         </strong>
         <p className="text-sm text-ink-60">{note.body}</p>
       </div>

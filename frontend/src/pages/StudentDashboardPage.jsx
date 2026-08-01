@@ -1,5 +1,4 @@
 import RecentNoteCard from "../components/RecentNoteCard";
-import DashboardInsights from "./DashboardInsights";
 import MyCoursesPage from "./MyCoursesPage";
 
 export default function StudentDashboardPage() {
@@ -7,7 +6,6 @@ export default function StudentDashboardPage() {
     <>
       <MyCoursesPage />
       <RecentNoteCard />
-      <DashboardInsights />
     </>
   );
 }

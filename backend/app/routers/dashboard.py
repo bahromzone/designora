@@ -1,3 +1,4 @@
+# fmt: off
 # ruff: noqa: I001
 """Student dashboard aggregate endpoint.
 
@@ -276,3 +277,4 @@ def student_dashboard(
             ),
         },
     }
+# fmt: on

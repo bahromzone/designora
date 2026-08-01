@@ -6,8 +6,22 @@ on:
     branches: [main]
 jobs:
   backend:
-    name: Backend (lint + test)
+    name: Backend (lint + migration + test)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: designora
+          POSTGRES_PASSWORD: designora
+          POSTGRES_DB: designora
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U designora -d designora"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: backend
@@ -24,6 +38,20 @@ jobs:
         run: ruff check .
       - name: Black check
         run: black --check .
+      - name: Apply migrations against PostgreSQL
+        env:
+          ENVIRONMENT: development
+          DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora"
+          SECRET_KEY: ci-secret
+          SESSION_SECRET_KEY: ci-session
+          JWT_SECRET_KEY: ci-jwt
+          MAIL_USERNAME: ci@example.com
+          MAIL_PASSWORD: ci-pass
+          MAIL_FROM: ci@example.com
+          MAIL_PORT: "587"
+          MAIL_SERVER: smtp.example.com
+          RECAPTCHA_SECRET_KEY: ci-recaptcha
+        run: alembic upgrade head
       - name: Pytest
         env:
           ENVIRONMENT: development

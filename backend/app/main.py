@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
 from app.admin.admin_panel import setup_admin
 from app.core.config import limiter, settings
-from app.core.database import Base, engine
+from app.core.database import Base
 from app.core.middleware import (
     IPBlockingMiddleware,
     RequestLoggingMiddleware,
@@ -34,6 +34,7 @@ from app.routers import (
     course_builder,
     course_forum,
     courses_api,
+    dashboard,
     discovery,
     forum,
     gamification,
@@ -80,7 +81,6 @@ app = FastAPI(
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
 )
-Base.metadata.create_all(bind=engine)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.SESSION_SECRET_KEY,
@@ -122,6 +122,7 @@ for r in (
     course_builder.router,
     course_forum.router,
     courses_api.router,
+    dashboard.router,
     discovery.router,
     forum.router,
     gamification.router,

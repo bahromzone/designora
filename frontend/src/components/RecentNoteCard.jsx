@@ -5,15 +5,18 @@ import { useAuth } from "../context/AuthContext";
 import { formatSeconds } from "../lib/api";
 import { notesWorkspaceApi } from "../lib/notesWorkspaceApi";
 
-export default function RecentNoteCard() {
+export default function RecentNoteCard({ note: providedNote }) {
   const { token } = useAuth();
-  const [note, setNote] = useState(null);
+  const [loadedNote, setLoadedNote] = useState(null);
+  const hasProvidedNote = providedNote !== undefined;
   useEffect(() => {
+    if (hasProvidedNote) return;
     notesWorkspaceApi
       .recent(token)
-      .then(setNote)
+      .then(setLoadedNote)
       .catch(() => null);
-  }, [token]);
+  }, [hasProvidedNote, token]);
+  const note = hasProvidedNote ? providedNote : loadedNote;
   if (!note) return null;
   return (
     <aside
@@ -23,8 +26,7 @@ export default function RecentNoteCard() {
       <div>
         <p className="label">So‘nggi note</p>
         <strong>
-          {note.lesson_title || "Dars"} ·{" "}
-          {formatSeconds(note.timestamp_seconds)}
+          {note.lesson_title || "Dars"} · {formatSeconds(note.timestamp_seconds)}
         </strong>
         <p className="text-sm text-ink-60">{note.body}</p>
       </div>

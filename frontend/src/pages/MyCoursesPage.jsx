@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import RecentNoteCard from "../components/RecentNoteCard";
 import { useAuth } from "../context/AuthContext";
 import { dashboardApi } from "../lib/dashboardApi";
 import "./StudentDashboard.css";
@@ -321,6 +322,7 @@ export default function MyCoursesPage() {
           </section>
         </aside>
       </div>
+      <RecentNoteCard note={dashboard?.recent_note} />
     </section>
   );
 }

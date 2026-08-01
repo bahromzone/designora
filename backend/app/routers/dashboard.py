@@ -19,6 +19,7 @@ from app.models.assignment_submission import AssignmentSubmission
 from app.models.enrollment import Enrollment
 from app.models.lesson import Lesson
 from app.models.lesson_progress import LessonProgress
+from app.models.note import LessonNote
 from app.models.notification import Notification
 from app.models.user import User
 from app.services import gamification_service
@@ -217,6 +218,27 @@ def student_dashboard(
         )
     ]
 
+    recent_note_row = (
+        db.query(LessonNote, Lesson)
+        .join(Lesson, LessonNote.lesson_id == Lesson.id)
+        .filter(LessonNote.user_id == user.id)
+        .order_by(LessonNote.updated_at.desc())
+        .first()
+    )
+    recent_note = None
+    if recent_note_row:
+        note, lesson = recent_note_row
+        recent_note = {
+            "id": note.id,
+            "lesson_id": note.lesson_id,
+            "course_id": note.course_id,
+            "lesson_title": lesson.title,
+            "body": note.body,
+            "timestamp_seconds": note.timestamp_seconds or 0,
+            "created_at": _iso(note.created_at),
+            "updated_at": _iso(note.updated_at),
+        }
+
     points_per_level = gamification_service.POINTS_PER_LEVEL
     points = user.points or 0
     gamification = {
@@ -235,6 +257,7 @@ def student_dashboard(
         "courses": courses,
         "assignments": assignments,
         "notifications": notifications,
+        "recent_note": recent_note,
         "gamification": gamification,
         "next_lesson": next_lesson,
         "summary": {

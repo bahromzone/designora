@@ -6,6 +6,7 @@ from app.models.assignment import Assignment
 from app.models.assignment_submission import AssignmentSubmission
 from app.models.enrollment import Enrollment
 from app.models.lesson import Lesson
+from app.models.note import LessonNote
 from app.models.notification import Notification
 from app.models.user import User
 
@@ -53,6 +54,15 @@ def test_dashboard_aggregate_returns_student_workspace(client, db_session):
         )
     )
     db_session.add(
+        LessonNote(
+            lesson_id=lesson.id,
+            course_id=course.id,
+            user_id=user.id,
+            body="Remember the spacing scale",
+            timestamp_seconds=42,
+        )
+    )
+    db_session.add(
         Notification(
             user_id=user.id,
             message="Assignment deadline is near",
@@ -71,6 +81,8 @@ def test_dashboard_aggregate_returns_student_workspace(client, db_session):
     assert payload["assignments"][0]["course"]["course_id"] == course.id
     assert payload["assignments"][0]["my_submission"]["status"] == "submitted"
     assert payload["notifications"][0]["message"] == "Assignment deadline is near"
+    assert payload["recent_note"]["lesson_title"] == "First lesson"
+    assert payload["recent_note"]["timestamp_seconds"] == 42
     assert payload["gamification"]["streak_days"] == 4
     assert payload["summary"]["open_assignments"] == 1
     assert payload["summary"]["due_soon_assignments"] == 1

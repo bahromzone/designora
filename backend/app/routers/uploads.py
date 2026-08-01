@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.lesson import Lesson
@@ -58,6 +59,11 @@ async def upload_lesson_video(
     db: Session = Depends(get_db),
     user: User = Depends(require_instructor),
 ):
+    if settings.DRM_ENABLED:
+        raise HTTPException(
+            status_code=410,
+            detail="DRM rejimida raw local video upload o‘chirildi; encrypted pipeline ishlatiladi",
+        )
     course = _owned_course(db, course_id, user)
     lesson = (
         db.query(Lesson)

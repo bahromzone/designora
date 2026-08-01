@@ -5,15 +5,18 @@ import { useAuth } from "../context/AuthContext";
 import { formatSeconds } from "../lib/api";
 import { notesWorkspaceApi } from "../lib/notesWorkspaceApi";
 
-export default function RecentNoteCard() {
+export default function RecentNoteCard({ note: providedNote }) {
   const { token } = useAuth();
-  const [note, setNote] = useState(null);
+  const [loadedNote, setLoadedNote] = useState(null);
+  const hasProvidedNote = providedNote !== undefined;
   useEffect(() => {
+    if (hasProvidedNote) return;
     notesWorkspaceApi
       .recent(token)
-      .then(setNote)
+      .then(setLoadedNote)
       .catch(() => null);
-  }, [token]);
+  }, [hasProvidedNote, token]);
+  const note = hasProvidedNote ? providedNote : loadedNote;
   if (!note) return null;
   return (
     <aside

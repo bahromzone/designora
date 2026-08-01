@@ -1,17 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import RecentNoteCard from "../components/RecentNoteCard";
 import { useAuth } from "../context/AuthContext";
-import { learningApi } from "../lib/api";
+import { dashboardApi } from "../lib/dashboardApi";
 import "./StudentDashboard.css";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-async function apiGet(path, token) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) throw new Error("Ma'lumotlarni yuklab bo'lmadi");
-  return response.json();
-}
 function formatDueDate(value) {
   if (!value) return "Muddat belgilanmagan";
   const days = Math.ceil((new Date(value) - new Date()) / 86400000);
@@ -47,11 +40,7 @@ function ProgressRing({ value }) {
 
 export default function MyCoursesPage() {
   const { token, user } = useAuth();
-  const [courses, setCourses] = useState([]);
-  const [assignments, setAssignments] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [gamification, setGamification] = useState(null);
-  const [nextLesson, setNextLesson] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const loadDashboard = useCallback(async () => {
@@ -59,34 +48,7 @@ export default function MyCoursesPage() {
     setLoading(true);
     setError("");
     try {
-      const rows = await learningApi.myCourses(token);
-      setCourses(rows);
-      const active = rows.find((course) => !course.is_completed) ?? rows[0];
-      const [noticeRows, game, assignmentGroups, learning] = await Promise.all([
-        apiGet("/api/notifications?limit=5", token).catch(() => []),
-        apiGet("/api/gamification/me", token).catch(() => null),
-        Promise.all(
-          rows
-            .filter((course) => !course.is_completed)
-            .map((course) =>
-              apiGet(`/api/assignments/courses/${course.course_id}`, token)
-                .then((items) => items.map((item) => ({ ...item, course })))
-                .catch(() => [])
-            )
-        ).then((groups) => groups.flat()),
-        active
-          ? learningApi.learn(active.course_id, token).catch(() => null)
-          : Promise.resolve(null),
-      ]);
-      setNotifications(noticeRows);
-      setGamification(game);
-      setAssignments(assignmentGroups);
-      if (learning) {
-        const lesson = (learning.modules ?? [])
-          .flatMap((module) => module.lessons ?? [])
-          .find((item) => !item.is_completed && !item.is_locked);
-        setNextLesson(lesson ? { ...lesson, course: active } : null);
-      } else setNextLesson(null);
+      setDashboard(await dashboardApi.get(token));
     } catch (err) {
       setError(err.message || "Dashboardni yuklab bo'lmadi");
     } finally {
@@ -96,38 +58,34 @@ export default function MyCoursesPage() {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  const courses = dashboard?.courses ?? [];
+  const assignments = dashboard?.assignments ?? [];
+  const notifications = dashboard?.notifications ?? [];
+  const gamification = dashboard?.gamification;
+  const summary = dashboard?.summary ?? {};
   const activeCourses = useMemo(
     () => courses.filter((course) => !course.is_completed),
     [courses]
   );
-  const completedCount = courses.length - activeCourses.length;
-  const averageProgress = courses.length
-    ? Math.round(
-        courses.reduce(
-          (sum, course) => sum + (course.progress_percent || 0),
-          0
-        ) / courses.length
-      )
-    : 0;
+  const completedCount = summary.completed_courses ?? 0;
+  const averageProgress = summary.average_progress ?? 0;
   const pendingAssignments = useMemo(
     () =>
       assignments
         .filter((item) => item.my_submission?.status !== "graded")
-        .sort(
-          (a, b) =>
-            new Date(a.due_date || 8640000000000000) -
-            new Date(b.due_date || 8640000000000000)
-        )
         .slice(0, 4),
     [assignments]
   );
   const feedbackItems = assignments.filter(
     (item) => item.my_submission?.status === "graded"
   );
-  const continueCourse = nextLesson?.course ?? activeCourses[0] ?? courses[0];
+  const continueCourse =
+    dashboard?.next_lesson?.course ?? activeCourses[0] ?? courses[0];
   const firstName = (user?.name || user?.full_name || "Talaba")
     .trim()
     .split(" ")[0];
+
   if (loading)
     return (
       <section className="student-dashboard">
@@ -187,7 +145,9 @@ export default function MyCoursesPage() {
           <div className="continue-copy">
             <span className="continue-label">Davom ettirish</span>
             <p className="continue-course">{continueCourse?.title}</p>
-            <h2>{nextLesson?.title || "Keyingi darsga o'ting"}</h2>
+            <h2>
+              {dashboard?.next_lesson?.title || "Keyingi darsga o'ting"}
+            </h2>
             <p>
               {continueCourse?.progress_percent || 0}% bajarildi,{" "}
               {continueCourse?.lessons_count || 0} ta dars.
@@ -246,7 +206,9 @@ export default function MyCoursesPage() {
                 <p className="dashboard-eyebrow">Navbatdagi ishlar</p>
                 <h2>Rejangiz</h2>
               </div>
-              <span>{pendingAssignments.length} ta ochiq</span>
+              <span>
+                {summary.open_assignments ?? pendingAssignments.length} ta ochiq
+              </span>
             </div>
             {pendingAssignments.length ? (
               <div className="task-list">
@@ -360,6 +322,7 @@ export default function MyCoursesPage() {
           </section>
         </aside>
       </div>
+      <RecentNoteCard note={dashboard?.recent_note} />
     </section>
   );
 }

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.models.Course import Course
 from app.models.course_version import CourseVersion
@@ -85,6 +86,23 @@ def _snapshot(course: Course) -> dict:
 
 def _checklist(course: Course) -> list[dict]:
     lessons = course.lessons.all()
+    content_ready = bool(lessons) and all(
+        row.video_url or row.content for row in lessons
+    )
+    processing_ready = all(
+        (row.processing_status or "ready") == "ready" for row in lessons
+    )
+    if settings.DRM_ENABLED:
+        content_ready = bool(lessons) and all(
+            row.content or (row.video_url and ".m3u8" in row.video_url)
+            or (row.video_url and ".mpd" in row.video_url)
+            for row in lessons
+        )
+        processing_ready = processing_ready and all(
+            row.content
+            or (row.video_url and (".m3u8" in row.video_url or ".mpd" in row.video_url))
+            for row in lessons
+        )
     checks = [
         ("title", "Kurs nomi", bool(course.title and len(course.title.strip()) >= 3)),
         (
@@ -95,16 +113,8 @@ def _checklist(course: Course) -> list[dict]:
         ("thumbnail", "Muqova rasmi", bool(course.thumbnail_url)),
         ("outcomes", "O'quv natijalari", bool(course.learning_outcomes)),
         ("lesson", "Kamida bitta dars", bool(lessons)),
-        (
-            "content",
-            "Barcha darslarda kontent",
-            bool(lessons) and all(row.video_url or row.content for row in lessons),
-        ),
-        (
-            "processing",
-            "Media processing tugagan",
-            all((row.processing_status or "ready") == "ready" for row in lessons),
-        ),
+        ("content", "Barcha darslarda kontent", content_ready),
+        ("processing", "Media processing tugagan", processing_ready),
     ]
     return [
         {"key": key, "label": label, "complete": complete}
@@ -247,6 +257,11 @@ def bulk_lessons(
     for index, item in enumerate(data.lessons):
         if item.module_id is not None and item.module_id not in module_ids:
             raise HTTPException(status_code=400, detail="Modul bu kursga tegishli emas")
+        if settings.DRM_ENABLED and item.video_url:
+            raise HTTPException(
+                status_code=409,
+                detail="DRM rejimida raw video_url bilan dars yaratib bo'lmaydi",
+            )
         row = Lesson(
             course_id=course.id,
             module_id=item.module_id,
@@ -273,12 +288,20 @@ def processing(
     db: Session = Depends(get_db),
     user: User = Depends(require_instructor),
 ):
-    if data.status not in {"queued", "processing", "ready", "failed"}:
+    if data.status not in {"uploaded", "queued", "processing", "ready", "failed"}:
         raise HTTPException(status_code=400, detail="Noto'g'ri processing holati")
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:
         raise HTTPException(status_code=404, detail="Dars topilmadi")
     _owned_course(db, lesson.course_id, user)
+    if settings.DRM_ENABLED and data.status == "ready":
+        if not lesson.video_url or not (
+            ".m3u8" in lesson.video_url or ".mpd" in lesson.video_url
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="DRM ready uchun encrypted HLS yoki DASH manifest kerak",
+            )
     lesson.processing_status = data.status
     db.commit()
     return {

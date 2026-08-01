@@ -169,6 +169,16 @@ def complete(
     public_url = (
         f"{settings.VIDEO_STORAGE_PUBLIC_BASE_URL.rstrip('/')}/{quote(data.key)}"
     )
+    if settings.DRM_ENABLED:
+        lesson.video_url = None
+        lesson.video_sources = None
+        lesson.processing_status = "uploaded"
+        db.commit()
+        return {
+            "message": "Video qabul qilindi; DRM packaging navbatiga qo'yildi",
+            "processing_status": "uploaded",
+            "drm_required": True,
+        }
     lesson.video_url = public_url
     lesson.video_sources = [
         {

@@ -4,7 +4,7 @@ set -euo pipefail
 max_attempts="${MIGRATION_MAX_ATTEMPTS:-30}"
 attempt=1
 while [ "$attempt" -le "$max_attempts" ]; do
-  if python scripts/prepare_migrations.py && alembic upgrade head; then
+  if python scripts/prepare_migrations.py && alembic upgrade heads; then
     exec "$@"
   fi
   echo "Database migration attempt ${attempt}/${max_attempts} failed; retrying..." >&2

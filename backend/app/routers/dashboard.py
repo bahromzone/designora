@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 """Student dashboard aggregate endpoint.
 
 The dashboard is intentionally assembled server-side so the client does not

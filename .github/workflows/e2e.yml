@@ -6,7 +6,6 @@ on:
 jobs:
   critical-journey:
     name: Critical student journey
-    if: ${{ secrets.E2E_BASE_URL != '' && secrets.E2E_EMAIL != '' && secrets.E2E_PASSWORD != '' && secrets.E2E_COURSE_ID != '' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -18,6 +17,17 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/e2e/package.json
+      - name: Validate E2E configuration
+        run: |
+          test -n "$E2E_BASE_URL"
+          test -n "$E2E_EMAIL"
+          test -n "$E2E_PASSWORD"
+          test -n "$E2E_COURSE_ID"
+        env:
+          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          E2E_COURSE_ID: ${{ secrets.E2E_COURSE_ID }}
       - run: npm install
       - run: npx playwright install --with-deps chromium
       - run: npm test

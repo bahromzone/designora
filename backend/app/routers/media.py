@@ -93,7 +93,10 @@ def get_drm_manifest(
     _lesson_access(db, user, lesson)
     manifest_url = (
         lesson.video_url
-        if lesson.video_url and (".m3u8" in lesson.video_url or ".mpd" in lesson.video_url)
+        if lesson.video_url
+        and (
+            ".m3u8" in lesson.video_url or ".mpd" in lesson.video_url
+        )
         else ""
     )
     if not manifest_url:

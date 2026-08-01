@@ -53,7 +53,7 @@ jobs:
           RECAPTCHA_SECRET_KEY: ci-recaptcha
         run: |
           set -o pipefail
-          if ! output=$(python scripts/prepare_migrations.py 2>&1 && alembic upgrade heads 2>&1); then
+          if ! output=$(python -m scripts.prepare_migrations 2>&1 && alembic upgrade heads 2>&1); then
             echo "$output"
             compact=$(printf '%s' "$output" | tr '\n' ' ' | cut -c1-900)
             echo "::error title=Migration failure::$compact"

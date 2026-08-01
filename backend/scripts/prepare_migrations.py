@@ -7,6 +7,9 @@ wrong. This explicit deploy step baselines that schema once; future deploys
 run normal Alembic upgrades only.
 """
 
+# This deploy bootstrap intentionally imports application models after the
+# migration libraries so it can inspect the live metadata before stamping.
+# ruff: noqa: I001
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from sqlalchemy import inspect, text

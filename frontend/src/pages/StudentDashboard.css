@@ -7,7 +7,12 @@
   --dash-accent: #7c3aed;
   --dash-violet: #4f46e5;
   --dash-pink: #ec4899;
-  --dash-gradient: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #4f46e5 100%);
+  --dash-gradient: linear-gradient(
+    135deg,
+    #ec4899 0%,
+    #a855f7 50%,
+    #4f46e5 100%
+  );
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
   padding: 48px 0 96px;
@@ -156,7 +161,9 @@
   font-weight: 700;
   text-decoration: none;
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
-  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms;
+  transition:
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 200ms;
 }
 .continue-action:hover {
   transform: translateY(-2px);
@@ -239,7 +246,9 @@
   border-bottom: 1px solid var(--dash-line);
   color: var(--dash-ink);
   text-decoration: none;
-  transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms;
+  transition:
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms;
 }
 .task-row:hover {
   transform: translateX(4px);
@@ -305,7 +314,9 @@
   border-bottom: 1px solid var(--dash-line);
   color: var(--dash-ink);
   text-decoration: none;
-  transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1), color 150ms;
+  transition:
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 150ms;
 }
 .course-row:hover {
   transform: translateX(4px);
@@ -684,7 +695,9 @@
   cursor: pointer;
   text-decoration: none;
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
-  transition: transform 200ms, box-shadow 200ms;
+  transition:
+    transform 200ms,
+    box-shadow 200ms;
 }
 .dashboard-primary:hover,
 .dashboard-error button:hover {
@@ -708,7 +721,12 @@
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.04), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(124, 58, 237, 0.04),
+    transparent
+  );
   animation: dashboard-shimmer 1.4s infinite;
 }
 .sk-title {

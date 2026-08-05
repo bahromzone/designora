@@ -39,14 +39,26 @@ function ErrorState({ message, onRetry }) {
     <div className="student-dashboard">
       <div className="dashboard-error">
         <span>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
         </span>
         <h1>Xatolik yuz berdi</h1>
-        <p>{message || "Dashboard ma'lumotlarini yuklashda xato. Iltimos, qayta urinib ko'ring."}</p>
+        <p>
+          {message ||
+            "Dashboard ma'lumotlarini yuklashda xato. Iltimos, qayta urinib ko'ring."}
+        </p>
         <button onClick={onRetry}>Qayta urinish</button>
       </div>
     </div>
@@ -58,7 +70,16 @@ function EmptyState() {
     <div className="student-dashboard">
       <div className="dashboard-empty">
         <div className="empty-mark">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
           </svg>
@@ -71,7 +92,16 @@ function EmptyState() {
         </p>
         <Link to="/kurslar" className="dashboard-primary">
           Katalogni ko'rish
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
@@ -89,8 +119,10 @@ function formatDueDate(dateStr) {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   if (diffMs < 0) return "Muddati o'tgan";
-  if (diffHours < 24) return `Bugun, ${due.getHours().toString().padStart(2, "0")}:${due.getMinutes().toString().padStart(2, "0")}`;
-  if (diffDays === 1) return `Ertaga, ${due.getHours().toString().padStart(2, "0")}:${due.getMinutes().toString().padStart(2, "0")}`;
+  if (diffHours < 24)
+    return `Bugun, ${due.getHours().toString().padStart(2, "0")}:${due.getMinutes().toString().padStart(2, "0")}`;
+  if (diffDays === 1)
+    return `Ertaga, ${due.getHours().toString().padStart(2, "0")}:${due.getMinutes().toString().padStart(2, "0")}`;
   return `${due.getDate()}-${["yan", "fev", "mar", "apr", "may", "iyn", "iyl", "avg", "sen", "okt", "noy", "dek"][due.getMonth()]}`;
 }
 
@@ -137,9 +169,17 @@ export default function StudentDashboardPage() {
 
   if (loading) return <Skeleton />;
   if (error) return <ErrorState message={error} onRetry={fetchData} />;
-  if (!data || !data.courses || data.courses.length === 0) return <EmptyState />;
+  if (!data || !data.courses || data.courses.length === 0)
+    return <EmptyState />;
 
-  const { courses, assignments, notifications, gamification, next_lesson, summary } = data;
+  const {
+    courses,
+    assignments,
+    notifications,
+    gamification,
+    next_lesson,
+    summary,
+  } = data;
   const activeCourses = courses.filter((c) => !c.is_completed);
   const firstName = user?.full_name?.split(" ")[0] || user?.username || "";
 
@@ -175,14 +215,32 @@ export default function StudentDashboardPage() {
         <div className="dashboard-badges">
           {gamification.streak_days > 0 && (
             <span className="dash-badge streak">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
               </svg>
               {gamification.streak_days} kun
             </span>
           )}
           <span className="dash-badge xp">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
             {gamification.points?.toLocaleString()} XP
@@ -201,7 +259,16 @@ export default function StudentDashboardPage() {
         >
           <div className="continue-copy">
             <span className="continue-label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
               Davom ettirish
@@ -219,7 +286,16 @@ export default function StudentDashboardPage() {
               className="continue-action"
             >
               Darsni davom ettirish
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
               </svg>
@@ -249,33 +325,76 @@ export default function StudentDashboardPage() {
                   <p className="dashboard-eyebrow">Yaqinlashayotgan</p>
                   <h2>Topshiriqlar</h2>
                 </div>
-                <Link to="/calendar" className="section-heading-link">Kalendar</Link>
+                <Link to="/calendar" className="section-heading-link">
+                  Kalendar
+                </Link>
               </div>
               <div className="task-list">
                 {dueSoon.map((item) => {
                   const urgency = getDeadlineUrgency(item.due_date);
-                  const isSubmitted = item.my_submission && item.my_submission.status !== "graded";
+                  const isSubmitted =
+                    item.my_submission &&
+                    item.my_submission.status !== "graded";
                   return (
                     <Link
                       key={item.id}
                       to={`/organish/${item.course_id}`}
                       className="task-row"
                     >
-                      <span className={`task-status ${isSubmitted ? "is-submitted" : ""}`}>
+                      <span
+                        className={`task-status ${isSubmitted ? "is-submitted" : ""}`}
+                      >
                         {isSubmitted ? (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
                         ) : (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
                         )}
                       </span>
                       <span className="task-copy">
                         <strong>{item.title}</strong>
                         <small>{item.course?.title}</small>
                       </span>
-                      <span className={`task-due ${urgency === "urgent" ? "is-urgent" : ""}`}>
+                      <span
+                        className={`task-due ${urgency === "urgent" ? "is-urgent" : ""}`}
+                      >
                         {formatDueDate(item.due_date)}
                       </span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="task-arrow"><polyline points="9 18 15 12 9 6" /></svg>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="task-arrow"
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
                     </Link>
                   );
                 })}
@@ -309,7 +428,9 @@ export default function StudentDashboardPage() {
                     {course.thumbnail_url ? (
                       <img src={course.thumbnail_url} alt="" />
                     ) : (
-                      <span>{course.category?.[0]?.toUpperCase() || "\ud83c\udfa8"}</span>
+                      <span>
+                        {course.category?.[0]?.toUpperCase() || "\ud83c\udfa8"}
+                      </span>
                     )}
                   </span>
                   <span className="course-row-copy">
@@ -323,7 +444,19 @@ export default function StudentDashboardPage() {
                       <i style={{ width: `${course.progress_percent}%` }} />
                     </div>
                   </span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="task-arrow"><polyline points="9 18 15 12 9 6" /></svg>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="task-arrow"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
                 </Link>
               ))}
             </div>
@@ -343,7 +476,9 @@ export default function StudentDashboardPage() {
                   <p className="dashboard-eyebrow">Tavsiya</p>
                   <h2>Sizga mos kurslar</h2>
                 </div>
-                <Link to="/kurslar" className="section-heading-link">Barchasi</Link>
+                <Link to="/kurslar" className="section-heading-link">
+                  Barchasi
+                </Link>
               </div>
               <div className="rec-scroll">
                 {recommendations.slice(0, 5).map((rec) => (
@@ -356,14 +491,18 @@ export default function StudentDashboardPage() {
                       {rec.thumbnail_url ? (
                         <img src={rec.thumbnail_url} alt="" />
                       ) : (
-                        <span>{rec.category?.[0]?.toUpperCase() || "\ud83c\udfa8"}</span>
+                        <span>
+                          {rec.category?.[0]?.toUpperCase() || "\ud83c\udfa8"}
+                        </span>
                       )}
                     </span>
                     <span className="rec-card-body">
                       <strong>{rec.title}</strong>
                       <span className="rec-card-meta">
                         {rec.level || ""}
-                        {rec.average_rating ? ` \u2605 ${rec.average_rating.toFixed(1)}` : ""}
+                        {rec.average_rating
+                          ? ` \u2605 ${rec.average_rating.toFixed(1)}`
+                          : ""}
                       </span>
                     </span>
                   </Link>
@@ -391,7 +530,12 @@ export default function StudentDashboardPage() {
             </div>
             <div className="progress-ring">
               <svg viewBox="0 0 120 120">
-                <circle className="progress-ring-track" cx="60" cy="60" r="52" />
+                <circle
+                  className="progress-ring-track"
+                  cx="60"
+                  cy="60"
+                  r="52"
+                />
                 <circle
                   className="progress-ring-value"
                   cx="60"
@@ -399,19 +543,35 @@ export default function StudentDashboardPage() {
                   r="52"
                   strokeDasharray={2 * Math.PI * 52}
                   strokeDashoffset={
-                    2 * Math.PI * 52 * (1 - (summary.average_progress || 0) / 100)
+                    2 *
+                    Math.PI *
+                    52 *
+                    (1 - (summary.average_progress || 0) / 100)
                   }
                 />
               </svg>
               <strong>{summary.average_progress}%</strong>
             </div>
             <p>
-              {summary.active_courses} ta faol kurs, {summary.completed_courses} ta yakunlangan
+              {summary.active_courses} ta faol kurs, {summary.completed_courses}{" "}
+              ta yakunlangan
             </p>
             {summary.active_courses > 0 && (
               <Link to={`/organish/${activeCourses[0]?.course_id}`}>
                 O'qishni davom ettirish
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
               </Link>
             )}
           </motion.div>
@@ -432,7 +592,8 @@ export default function StudentDashboardPage() {
             </div>
             {feedbackNotifs.length === 0 ? (
               <p className="updates-empty">
-                Hozircha yangi xabar yo'q. Darslarni davom ettiring, instructor feedback'i shu yerda paydo bo'ladi.
+                Hozircha yangi xabar yo'q. Darslarni davom ettiring, instructor
+                feedback'i shu yerda paydo bo'ladi.
               </p>
             ) : (
               <div className="updates-list">
@@ -443,7 +604,16 @@ export default function StudentDashboardPage() {
                     className={notif.is_read ? "" : "is-unread"}
                   >
                     <span>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                       </svg>
                     </span>
@@ -464,7 +634,16 @@ export default function StudentDashboardPage() {
           >
             <div className="momentum-title">
               <span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
                 </svg>
               </span>

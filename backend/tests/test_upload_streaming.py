@@ -2,10 +2,7 @@
 
 import pytest
 
-from app.services.upload_service import (
-    UploadValidationError,
-    validate_upload_metadata,
-)
+from app.services.upload_service import UploadValidationError, validate_upload_metadata
 
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 56

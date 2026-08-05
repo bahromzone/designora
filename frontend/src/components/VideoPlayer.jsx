@@ -11,7 +11,6 @@ import "./VideoPlayer.css";
 export default function VideoPlayer({
   src,
   lessonId,
-  token,
   storageKey,
   onEnded,
   poster,
@@ -27,12 +26,6 @@ export default function VideoPlayer({
   const [loading, setLoading] = useState(Boolean(lessonId));
 
   useEffect(() => {
-    if (lessonId && !token) {
-      setManifest(null);
-      setError("Videoni ko‘rish uchun avtorizatsiya talab etiladi.");
-      setLoading(false);
-      return;
-    }
     if (!lessonId) {
       setManifest(
         src
@@ -49,14 +42,14 @@ export default function VideoPlayer({
     setLoading(true);
     setError("");
     videoPlayerApi
-      .manifest(lessonId, token)
+      .manifest(lessonId)
       .then((data) => active && setManifest(data))
       .catch((reason) => active && setError(reason.message))
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
     };
-  }, [lessonId, token, src, retry]);
+  }, [lessonId, src, retry]);
 
   const saveProgress = useCallback(() => {
     const video = videoRef.current;
@@ -69,9 +62,8 @@ export default function VideoPlayer({
     };
     if (storageKey)
       localStorage.setItem(storageKey, String(body.position_seconds));
-    if (lessonId && token)
-      videoPlayerApi.save(lessonId, body, token).catch(() => null);
-  }, [lessonId, storageKey, token]);
+    if (lessonId) videoPlayerApi.save(lessonId, body).catch(() => null);
+  }, [lessonId, storageKey]);
 
   useEffect(() => {
     const video = videoRef.current;

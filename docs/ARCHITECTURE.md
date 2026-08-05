@@ -2,97 +2,65 @@
 
 ## Umumiy ko'rinish
 
-Designora ikki qismli (decoupled) arxitekturaga ega:
-
 ```
 ┌─────────────────┐        HTTPS/JSON        ┌──────────────────┐
 │   React SPA     │  ───────────────────▶    │   FastAPI API    │
-│ (Vite, Tailwind)│  ◀───────────────────    │  (Python 3.12)   │
+│ React 19/Vite   │  ◀───────────────────    │   Python 3.12    │
 └─────────────────┘                          └────────┬─────────┘
                                                       │
                                        ┌──────────────┼──────────────┐
                                        ▼              ▼              ▼
                                  ┌──────────┐   ┌──────────┐   ┌──────────┐
-                                 │PostgreSQL│   │  Redis   │   │  SMTP /  │
-                                 │          │   │ (kesh)   │   │ Telegram │
+                                 │PostgreSQL│   │  Redis   │   │ Object   │
+                                 │          │   │          │   │ storage  │
                                  └──────────┘   └──────────┘   └──────────┘
 ```
 
----
-
-## Backend (FastAPI)
-
-### Qatlamlar
+## Backend qatlamlari
 
 | Qatlam | Papka | Vazifa |
 |--------|-------|--------|
-| **Core** | `app/core/` | `config` (sozlamalar), `database` (SQLAlchemy engine/session), `security` (JWT), `password` (bcrypt), `middleware` (xavfsizlik) |
-| **Models** | `app/models/` | SQLAlchemy ORM modellari: `User`, `Course`, `Lesson`, `Progress`, `Certificate`, `Assignment`, `Notification`, `Payment`, `PasswordReset` |
-| **Routers** | `app/routers/` | API endpointlari: `auth`, `google`, `users`, `profile`, `courses_api`, `admin_courses` |
-| **Admin** | `app/admin/` | sqladmin boshqaruv paneli |
-| **Utils** | `app/utils/` | rol/marshrut yordamchilari, email |
+| Core | `app/core/` | config, database, JWT/cookie security, middleware, metrics |
+| Models | `app/models/` | SQLAlchemy domen modellari |
+| Routers | `app/routers/` | auth, learning, payments, media, instructor, admin va community API |
+| Services | `app/services/` | token, upload, video va biznes yordamchilari |
+| Admin | `app/admin/` | sqladmin boshqaruv paneli |
 
-### Autentifikatsiya
+## Autentifikatsiya
 
-- **Local** — email + parol (bcrypt, 13 raund).
-- **Google OAuth** — Authlib orqali.
-- **Token** — JWT (python-jose, HS256). Token quyidagilardan o'qiladi (tartib bilan):
-  1. Session (`request.session["user"]`)
-  2. `access_token` cookie (httpOnly)
-  3. `Authorization: Bearer` header
-  4. `X-Access-Token` header
+Local login, register, password reset va OAuth muvaffaqiyatli bo'lganda access va refresh tokenlar `httpOnly`, `SameSite=Strict` cookie sifatida beriladi. Frontend tokenni `localStorage`'ga saqlamaydi. Refresh token har ishlatilganda rotation qilinadi; bekor qilingan tokenni qayta ishlatish barcha sessiyalarni yopadi.
 
-### Xavfsizlik
+Backend eski Bearer headerlarni ayrim migration/integration oqimlari uchun qabul qilishi mumkin, lekin asosiy browser oqimi cookie-based. CORS `allow_credentials=True` bilan aniq originlar ro'yxatiga cheklangan.
 
-- **CSRF** himoyasi (fastapi-csrf-protect) — production'da login uchun.
-- **Rate limiting** (slowapi) — `5/minute` auth endpointlarida, `200/minute` default.
-- **Security headers** middleware — `X-Frame-Options`, `X-Content-Type-Options`, CSP, HSTS (prod).
-- **IP-blocking** middleware.
-- **CORS** — `ALLOWED_ORIGINS` orqali sozlanadi.
+## Xavfsizlik
 
-### Ma'lumotlar bazasi
+- production'da umumiy Redis rate-limit storage majburiy;
+- security headers, HSTS va CSP;
+- payment webhook secret va signature validation;
+- checkout idempotency key uchun unique database constraint;
+- protected video uchun 5 daqiqalik signed URL;
+- uploadlar diskka stream qilinadi, magic bytes va max size bounded tekshiriladi;
+- PostgreSQL migration CI va real browser E2E gate.
 
-- **Prod:** PostgreSQL (`psycopg2`).
-- **Lokal/test:** SQLite.
-- **Migratsiyalar:** Alembic (`app/alembic/versions/`).
-- Ishga tushganda `Base.metadata.create_all()` jadvallarni yaratadi (lokal qulaylik uchun).
+## Ma'lumotlar bazasi va migration
 
----
+Yangi database to'liq Alembic history orqali quriladi. Faqat pre-Alembic legacy jadvalalari bor database bir marta metadata baseline qilinadi. `alembic_version` mavjud bo'lsa, deploy faqat normal `alembic upgrade heads` yo'lidan boradi.
 
-## Frontend (React)
+## Frontend
 
-| Qatlam | Papka | Vazifa |
-|--------|-------|--------|
-| **Pages** | `src/pages/` | Home, Courses, Login, Register, Profile, 404 |
-| **Components** | `src/components/` | Navbar, Hero, CourseCard, FeatureCard, AppShell, ProtectedRoute |
-| **Context** | `src/context/` | `AuthContext` — foydalanuvchi holati |
-| **Lib** | `src/lib/api.js` | Markazlashtirilgan API klient (fetch wrapper) |
+- Routing: React Router;
+- state: `AuthContext`, browser cookie session;
+- API: `src/lib/api.js`, barcha requestlar `credentials: include` bilan;
+- styling: Tailwind va CSS design tokens;
+- tests: Vitest + React Testing Library;
+- E2E: Playwright critical student journey.
 
-- **Routing:** React Router (`ProtectedRoute` himoyalangan sahifalar uchun).
-- **Animatsiya:** Framer Motion + GSAP (ScrollTrigger).
-- **Styling:** Tailwind CSS + CSS o'zgaruvchilari (dizayn tokenlari).
-- **Til:** to'liq o'zbek tilidagi interfeys.
+## Release flow
 
----
-
-## DevOps
-
-| Vosita | Fayl |
-|--------|------|
-| Konteynerlar | `backend/Dockerfile`, `frontend/Dockerfile` |
-| Orkestratsiya | `docker-compose.yml` (db, redis, backend, frontend) |
-| CI/CD | `.github/workflows/ci.yml` (lint → test → build → docker) |
-| Kod sifati | `ruff`, `black` (Python) · `eslint`, `prettier` (JS) |
-| Pre-commit | `.pre-commit-config.yaml` |
-| Testlar | `pytest` (backend) · `vitest` + React Testing Library (frontend) |
-
----
-
-## Ma'lumotlar oqimi: login misoli
-
-1. Foydalanuvchi frontend'da `email` + `parol` kiritadi.
-2. `authApi.login()` → `POST /api/auth/login`.
-3. Backend parolni bcrypt bilan tekshiradi, streak'ni yangilaydi.
-4. JWT yaratiladi, httpOnly cookie o'rnatiladi va javobda qaytariladi.
-5. Frontend token/foydalanuvchini `AuthContext`da saqlaydi va rol asosida
-   `/dashboard` yoki `/manage/courses` ga yo'naltiradi.
+1. Ruff va Black;
+2. migration against PostgreSQL;
+3. SQLite va PostgreSQL pytest;
+4. frontend lint, format, test, coverage va build;
+5. Docker image build;
+6. real environment browser E2E;
+7. faqat barcha gate'lar yashil bo'lganda production deploy.

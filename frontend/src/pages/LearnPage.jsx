@@ -58,9 +58,8 @@ export default function LearnPage() {
   useEffect(() => {
     if (!data || activeId !== null) return;
     const firstOpen =
-      flatLessons.find(
-        (lesson) => !lesson.is_locked && !lesson.is_completed
-      ) || flatLessons.find((lesson) => !lesson.is_locked);
+      flatLessons.find((lesson) => !lesson.is_locked && !lesson.is_completed) ||
+      flatLessons.find((lesson) => !lesson.is_locked);
     setActiveId(firstOpen?.id ?? flatLessons[0]?.id ?? null);
   }, [data, flatLessons, activeId]);
 

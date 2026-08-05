@@ -39,8 +39,7 @@ async function uploadVideoMultipart(
       });
       if (!response.ok)
         throw new Error(`Video bo'lagi ${part.part_number} yuklanmadi`);
-      const etag =
-        response.headers.get("ETag") || response.headers.get("etag");
+      const etag = response.headers.get("ETag") || response.headers.get("etag");
       if (!etag) throw new Error("Storage CORS ETag headerini expose qilmagan");
       uploaded.push({ part_number: part.part_number, etag });
       completed += end - start;

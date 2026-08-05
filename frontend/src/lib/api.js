@@ -73,8 +73,7 @@ export const discoveryApi = {
 };
 
 export const quizApi = {
-  courseQuizzes: (courseId) =>
-    request(`/api/quiz/courses/${courseId}/quizzes`),
+  courseQuizzes: (courseId) => request(`/api/quiz/courses/${courseId}/quizzes`),
   take: (quizId) => request(`/api/quiz/quizzes/${quizId}`),
   submit: (quizId, answers) =>
     request(`/api/quiz/quizzes/${quizId}/submit`, {
@@ -154,8 +153,7 @@ export const notificationsApi = {
   unreadCount: () => request("/api/notifications/unread-count"),
   markRead: (id) =>
     request(`/api/notifications/${id}/read`, { method: "POST" }),
-  markAllRead: () =>
-    request("/api/notifications/read-all", { method: "POST" }),
+  markAllRead: () => request("/api/notifications/read-all", { method: "POST" }),
   remove: (id) => request(`/api/notifications/${id}`, { method: "DELETE" }),
 };
 

@@ -98,7 +98,7 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
         samesite="strict",
     )
     _set_refresh_cookie(response, new_raw)
-    return {"access_token": access, "token_type": "bearer"}
+    return {"authenticated": True}
 
 
 @router.post("/logout-all")

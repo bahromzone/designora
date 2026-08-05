@@ -1,59 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-
-function extractErrorMessage(payload) {
-  const detail = payload?.detail;
-  if (!detail) return "So'rovni bajarib bo'lmadi.";
-  if (typeof detail === "string") return detail;
-  if (Array.isArray(detail))
-    return detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ");
-  return "So'rovni bajarib bo'lmadi.";
-}
-
-let refreshPromise = null;
-async function refreshAccessToken() {
-  if (refreshPromise) return refreshPromise;
-  refreshPromise = fetch(`${API_URL}/api/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-  })
-    .then((response) => {
-      if (!response.ok) throw new Error("refresh failed");
-      return true;
-    })
-    .finally(() => {
-      refreshPromise = null;
-    });
-  return refreshPromise;
-}
-
-async function request(path, options = {}) {
-  const { headers, _retry, ...rest } = options;
-  delete rest.token;
-  const isFormData =
-    typeof FormData !== "undefined" && rest.body instanceof FormData;
-  const response = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    credentials: "include",
-    headers: {
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      ...(headers ?? {}),
-    },
-  });
-  if (response.status === 401 && !_retry && !path.startsWith("/api/auth/")) {
-    try {
-      await refreshAccessToken();
-      return request(path, { ...options, _retry: true });
-    } catch {
-      // Continue with the original 401 response.
-    }
-  }
-  const contentType = response.headers.get("content-type") ?? "";
-  const payload = contentType.includes("application/json")
-    ? await response.json()
-    : null;
-  if (!response.ok) throw new Error(extractErrorMessage(payload));
-  return payload;
-}
+import { request } from "./request";
 
 function withQuery(path, params = {}) {
   const usp = new URLSearchParams();
@@ -128,7 +73,8 @@ export const discoveryApi = {
 };
 
 export const quizApi = {
-  courseQuizzes: (courseId) => request(`/api/quiz/courses/${courseId}/quizzes`),
+  courseQuizzes: (courseId) =>
+    request(`/api/quiz/courses/${courseId}/quizzes`),
   take: (quizId) => request(`/api/quiz/quizzes/${quizId}`),
   submit: (quizId, answers) =>
     request(`/api/quiz/quizzes/${quizId}/submit`, {
@@ -208,7 +154,8 @@ export const notificationsApi = {
   unreadCount: () => request("/api/notifications/unread-count"),
   markRead: (id) =>
     request(`/api/notifications/${id}/read`, { method: "POST" }),
-  markAllRead: () => request("/api/notifications/read-all", { method: "POST" }),
+  markAllRead: () =>
+    request("/api/notifications/read-all", { method: "POST" }),
   remove: (id) => request(`/api/notifications/${id}`, { method: "DELETE" }),
 };
 

@@ -90,7 +90,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - run: npm run lint
-      - run: npm run format:check
+      - name: Check formatting
+        id: format
+        run: npm run format:check
+      - name: Report Prettier offenders
+        if: ${{ failure() && steps.format.outcome == 'failure' }}
+        run: |
+          set +e
+          offenders=$(npx prettier --list-different "src/**/*.{js,jsx,css}")
+          status=$?
+          printf '%s\n' "$offenders"
+          while IFS= read -r file; do
+            [ -z "$file" ] || echo "::error file=$file::Prettier formatting differs"
+          done <<< "$offenders"
+          exit "$status"
       - run: npm run test:run
       - run: npm run coverage
       - run: npm run build

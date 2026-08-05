@@ -92,12 +92,28 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 |-------------|--------|
 | `DATABASE_URL` | Ma'lumotlar bazasi ulanishi |
 | `SECRET_KEY` / `SESSION_SECRET_KEY` / `JWT_SECRET_KEY` | Kriptografik kalitlar |
+| `REDIS_URL` | Kesh va rate limit saqlagichi — **production'da majburiy** |
+| `RATE_LIMIT_DEFAULT` | Standart limit (default: `200/minute`) |
+| `RATE_LIMIT_STORAGE_URI` | Rate limit uchun alohida saqlagich (odatda bo'sh) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (ixtiyoriy) |
 | `MAIL_*` | SMTP sozlamalari |
 | `RECAPTCHA_SECRET_KEY` | reCAPTCHA |
 | `ALLOWED_ORIGINS` | CORS ruxsat etilgan manzillar |
 
 To'liq ro'yxat: [`backend/env.example`](backend/env.example)
+
+### ⚠️ Rate limiting va Redis
+
+Rate limit hisoblagichi **umumiy saqlagichda** turishi shart. `memory://`
+rejimida har bir worker (yoki instance) o'z hisobini yuritadi — 4 ta worker'da
+`5/minute` amalda `20/minute` bo'lib qoladi. Shu sabab:
+
+- `ENVIRONMENT=production` bo'lsa va `REDIS_URL` (yoki
+  `RATE_LIMIT_STORAGE_URI`) berilmagan bo'lsa, ilova **ishga tushmaydi**.
+- Saqlagich javob bermasa, production'da boot bosqichida yiqiladi
+  (jimgina degrade bo'lmaydi).
+- Dev'da Redis'siz ishlash mumkin: kesh va limit xotiraga tushadi va
+  ogohlantirish yoziladi.
 
 ---
 
@@ -107,12 +123,29 @@ To'liq ro'yxat: [`backend/env.example`](backend/env.example)
 
 ```bash
 cd backend
-pytest                 # testlar + coverage hisoboti
+pytest                 # testlar + coverage hisoboti (default: SQLite)
 ruff check .           # linter
 black --check .        # format tekshiruvi
 ```
 
 Joriy qamrov (coverage): **~72%** (maqsad ≥ 60%).
+
+#### PostgreSQL'da test yuritish
+
+SQLite tez, lekin prod dialekti emas (JSON maydonlar, `ON DELETE`, VARCHAR
+uzunligi, tranzaksiya semantikasi boshqacha). Shu sabab CI testlarni **ikkala**
+bazada yuritadi va PostgreSQL natijasi hal qiluvchi hisoblanadi.
+
+Lokalda:
+
+```bash
+createdb designora_test
+TEST_DATABASE_URL="postgresql+psycopg2://postgres:password@localhost:5432/designora_test" pytest
+```
+
+`TEST_DATABASE_URL` berilmasa, default `sqlite+pysqlite:///:memory:` ishlatiladi.
+Testlar `DATABASE_URL`ni majburan test bazasiga tenglashtiradi, ya'ni haqiqiy
+bazaga hech qachon tegmaydi.
 
 ### Frontend
 
@@ -145,7 +178,8 @@ Batafsil: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
   rate limiting (slowapi), security headers, IP-blocking middleware.
 - **Frontend** — React SPA, React Router, Framer Motion + GSAP animatsiyalar.
 - **Ma'lumotlar bazasi** — PostgreSQL (prod), SQLite (lokal/test), Alembic migratsiyalar.
-- **Kesh/navbat** — Redis (compose'da tayyor, kelajakdagi funksiyalar uchun).
+- **Kesh/navbat** — Redis: kesh backend'i va rate limit saqlagichi.
+  `REDIS_URL` bo'lmasa xotira zaxirasiga tushadi (faqat dev uchun).
 
 ---
 

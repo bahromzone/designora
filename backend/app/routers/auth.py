@@ -57,7 +57,9 @@ def _set_refresh_cookie(response: Response, token: str) -> None:
     )
 
 
-def _issue_refresh_token(db: Session, user: User, request: Request | None = None) -> str:
+def _issue_refresh_token(
+    db: Session, user: User, request: Request | None = None
+) -> str:
     raw = token_service.generate_refresh_token()
     db.add(
         RefreshToken(

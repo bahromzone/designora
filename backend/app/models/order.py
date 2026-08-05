@@ -39,6 +39,7 @@ class Order(Base):
     receipt_number = Column(String, nullable=True, unique=True)
     refund_status = Column(String, default="none")
     failure_reason = Column(String, nullable=True)
+    idempotency_key = Column(String(128), nullable=True, unique=True, index=True)
 
     user = relationship("User")
     course = relationship("Course")

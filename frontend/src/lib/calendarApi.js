@@ -1,28 +1,19 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-async function parse(response) {
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload?.detail || "Calendar yuklanmadi");
-  return payload;
+import { request } from "./request";
+
+function withQuery(path, params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return query ? `${path}?${query}` : path;
 }
+
 export const calendarApi = {
-  list: (params, token) => {
-    const query = new URLSearchParams(params);
-    return fetch(`${API_URL}/api/calendar/events?${query}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(parse);
-  },
+  list: (params = {}, token) =>
+    request(withQuery("/api/calendar/events", params), { token }),
   create: (body, token) =>
-    fetch(`${API_URL}/api/calendar/events`, {
+    request("/api/calendar/events", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify(body),
-    }).then(parse),
+      token,
+    }),
   remove: (id, token) =>
-    fetch(`${API_URL}/api/calendar/events/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(parse),
+    request(`/api/calendar/events/${id}`, { method: "DELETE", token }),
 };

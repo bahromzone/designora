@@ -1,16 +1,9 @@
-const API = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-async function req(path, token, opt = {}) {
-  const r = await fetch(`${API}${path}`, {
-    ...opt,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  const d = await r.json().catch(() => null);
-  if (!r.ok) throw new Error(d?.detail || "Community xatosi");
-  return d;
+import { request } from "./request";
+
+async function req(path, _token, options = {}) {
+  return request(path, options);
 }
+
 export const courseCommunityApi = {
   list: (courseId, token, lessonId) =>
     req(

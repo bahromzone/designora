@@ -32,10 +32,15 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   if (await enroll.isVisible()) await enroll.click();
 
   await page.goto(`/organish/${courseId}`);
+  await expect(
+    page.getByRole("link", { name: "Kurslarimga qaytish" })
+  ).toBeVisible();
+  await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
   await expect(page.getByText(/Dars|Lesson/).first()).toBeVisible();
+
   await page.goto("/kurslarim");
-  await expect(page.getByText("Shaxsiy kabinet")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Darsni ochish/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Kurslarim" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Darsni davom ettirish/ })).toBeVisible();
 });
 
 test("paid course reaches checkout before payment confirmation", async ({ page }) => {

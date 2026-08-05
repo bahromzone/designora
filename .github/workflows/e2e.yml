@@ -1,12 +1,19 @@
 name: Browser E2E
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: browser-e2e-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   critical-journey:
     name: Critical student journey
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: frontend/e2e
@@ -28,9 +35,12 @@ jobs:
           E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
           E2E_COURSE_ID: ${{ secrets.E2E_COURSE_ID }}
-      - run: npm install
-      - run: npx playwright install --with-deps chromium
-      - run: npm test
+      - name: Install E2E dependencies
+        run: npm install --no-fund --no-audit
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run critical journey
+        run: npm test
         env:
           E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
           E2E_EMAIL: ${{ secrets.E2E_EMAIL }}

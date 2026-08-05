@@ -20,12 +20,14 @@ async function signIn(page) {
   await expect(page).not.toHaveURL(/modal=login/);
 }
 
-test("student can sign in, enroll, open a lesson and return to dashboard", async ({
+test("student can sign in, keep session after reload, enroll, learn and return", async ({
   page,
 }) => {
   await signIn(page);
-  await page.goto(`/kurslar/${courseId}`);
+  await page.reload();
+  await expect(page).not.toHaveURL(/modal=login/);
 
+  await page.goto(`/kurslar/${courseId}`);
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });
   if (await enroll.isVisible()) await enroll.click();
 

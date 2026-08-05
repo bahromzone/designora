@@ -19,9 +19,8 @@ PostgreSQL natijasi hal qiluvchi hisoblanadi.
 
 import os
 
-TEST_DATABASE_URL = (
-    os.environ.get("TEST_DATABASE_URL") or "sqlite+pysqlite:///:memory:"
-).strip()
+_DEFAULT_TEST_DB = "sqlite+pysqlite:///:memory:"
+TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", "").strip() or _DEFAULT_TEST_DB
 IS_SQLITE = TEST_DATABASE_URL.startswith("sqlite")
 
 # ── Test muhiti o'zgaruvchilari (app import qilinishidan oldin) ──────────────
@@ -78,6 +77,9 @@ def _reset_tables() -> None:
     if not tables:
         return
     with test_engine.begin() as conn:
+        # Ochiq qolgan ulanish TRUNCATE'ni cheksiz kutishga majburlamasin —
+        # muammo bo'lsa qotib qolmay, aniq xato bersin.
+        conn.exec_driver_sql("SET LOCAL lock_timeout = '15s'")
         conn.exec_driver_sql(f"TRUNCATE {tables} RESTART IDENTITY CASCADE")
 
 

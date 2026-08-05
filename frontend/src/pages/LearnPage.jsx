@@ -58,8 +58,9 @@ export default function LearnPage() {
   useEffect(() => {
     if (!data || activeId !== null) return;
     const firstOpen =
-      flatLessons.find((lesson) => !lesson.is_locked && !lesson.is_completed) ||
-      flatLessons.find((lesson) => !lesson.is_locked);
+      flatLessons.find(
+        (lesson) => !lesson.is_locked && !lesson.is_completed
+      ) || flatLessons.find((lesson) => !lesson.is_locked);
     setActiveId(firstOpen?.id ?? flatLessons[0]?.id ?? null);
   }, [data, flatLessons, activeId]);
 
@@ -71,9 +72,11 @@ export default function LearnPage() {
     setMarking(true);
     setError("");
     try {
-      if (lesson.is_completed)
+      if (lesson.is_completed) {
         await learningApi.uncompleteLesson(lesson.id);
-      else await learningApi.completeLesson(lesson.id);
+      } else {
+        await learningApi.completeLesson(lesson.id);
+      }
       await load();
     } catch (reason) {
       setError(reason.message);

@@ -21,9 +21,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Dropping the table also removes its indexes. The legacy index is not
-    # present in every fresh schema, so dropping it explicitly breaks CI.
-    op.drop_table("password_resets")
+    # Fresh schemas may never have created this legacy table.
+    op.execute("DROP TABLE IF EXISTS password_resets")
     op.add_column("courses", sa.Column("user_id", sa.Integer(), nullable=True))
     op.create_foreign_key(None, "courses", "users", ["user_id"], ["id"])
 

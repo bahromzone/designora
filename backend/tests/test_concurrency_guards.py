@@ -81,6 +81,7 @@ def test_concurrent_provider_callbacks_keep_one_order(db_session):
     user = User(email="payment-concurrency@example.com", name="Payment Learner")
     db_session.add(user)
     db_session.commit()
+    user_id = user.id
     barrier = Barrier(2)
 
     def persist_callback():
@@ -89,7 +90,7 @@ def test_concurrent_provider_callbacks_keep_one_order(db_session):
             barrier.wait(timeout=5)
             session.add(
                 Order(
-                    user_id=user.id,
+                    user_id=user_id,
                     amount=100,
                     provider="payme",
                     provider_transaction_id="payme-txn-concurrent",

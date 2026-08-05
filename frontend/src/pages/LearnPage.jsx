@@ -13,7 +13,7 @@ import { assignmentsApi } from "../lib/assignmentsApi";
 
 export default function LearnPage() {
   const { courseId } = useParams();
-  const { token } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [data, setData] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
@@ -23,13 +23,13 @@ export default function LearnPage() {
   const [marking, setMarking] = useState(false);
 
   const load = useCallback(async () => {
-    if (!token) return;
+    if (!user) return;
     setError("");
     try {
       const [course, assignmentRows, quizRows] = await Promise.all([
-        learningApi.learn(courseId, token),
-        assignmentsApi.forCourse(courseId, token).catch(() => []),
-        quizApi.courseQuizzes(courseId, token).catch(() => []),
+        learningApi.learn(courseId),
+        assignmentsApi.forCourse(courseId).catch(() => []),
+        quizApi.courseQuizzes(courseId).catch(() => []),
       ]);
       setData(course);
       setAssignments(assignmentRows);
@@ -39,12 +39,14 @@ export default function LearnPage() {
     } finally {
       setLoading(false);
     }
-  }, [courseId, token]);
+  }, [courseId, user]);
 
   useEffect(() => {
-    setLoading(true);
-    load();
-  }, [load]);
+    if (authLoading) return;
+    setLoading(Boolean(user));
+    if (user) load();
+  }, [authLoading, load, user]);
+
   const flatLessons = useMemo(
     () =>
       data
@@ -52,6 +54,7 @@ export default function LearnPage() {
         : [],
     [data]
   );
+
   useEffect(() => {
     if (!data || activeId !== null) return;
     const firstOpen =
@@ -59,6 +62,7 @@ export default function LearnPage() {
       flatLessons.find((lesson) => !lesson.is_locked);
     setActiveId(firstOpen?.id ?? flatLessons[0]?.id ?? null);
   }, [data, flatLessons, activeId]);
+
   const activeLesson =
     flatLessons.find((lesson) => lesson.id === activeId) || null;
 
@@ -68,8 +72,8 @@ export default function LearnPage() {
     setError("");
     try {
       if (lesson.is_completed)
-        await learningApi.uncompleteLesson(lesson.id, token);
-      else await learningApi.completeLesson(lesson.id, token);
+        await learningApi.uncompleteLesson(lesson.id);
+      else await learningApi.completeLesson(lesson.id);
       await load();
     } catch (reason) {
       setError(reason.message);
@@ -78,7 +82,7 @@ export default function LearnPage() {
     }
   }
 
-  if (loading)
+  if (authLoading || loading)
     return <section className="shell py-24">Dars yuklanmoqda...</section>;
   if (error && !data)
     return (
@@ -134,7 +138,6 @@ export default function LearnPage() {
           {activeLesson && (
             <VideoPlayer
               lessonId={activeLesson.id}
-              token={token}
               src={activeLesson.video_url}
               storageKey={`lesson-${activeLesson.id}-position`}
               poster={activeLesson.thumbnail_url}

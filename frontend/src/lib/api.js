@@ -4,19 +4,14 @@ function extractErrorMessage(payload) {
   const detail = payload?.detail;
   if (!detail) return "So'rovni bajarib bo'lmadi.";
   if (typeof detail === "string") return detail;
-  if (Array.isArray(detail)) {
-    return detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ");
-  }
+  if (Array.isArray(detail)) return detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ");
   return "So'rovni bajarib bo'lmadi.";
 }
 
 let refreshPromise = null;
 async function refreshAccessToken() {
   if (refreshPromise) return refreshPromise;
-  refreshPromise = fetch(`${API_URL}/api/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-  })
+  refreshPromise = fetch(`${API_URL}/api/auth/refresh`, { method: "POST", credentials: "include" })
     .then((response) => {
       if (!response.ok) throw new Error("refresh failed");
       return true;
@@ -28,7 +23,8 @@ async function refreshAccessToken() {
 }
 
 async function request(path, options = {}) {
-  const { headers, _retry, token: _token, ...rest } = options;
+  const { headers, _retry, ...rest } = options;
+  delete rest.token;
   const isFormData = typeof FormData !== "undefined" && rest.body instanceof FormData;
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
@@ -38,7 +34,6 @@ async function request(path, options = {}) {
       ...(headers ?? {}),
     },
   });
-
   if (response.status === 401 && !_retry && !path.startsWith("/api/auth/")) {
     try {
       await refreshAccessToken();
@@ -47,11 +42,8 @@ async function request(path, options = {}) {
       // Continue with the original 401 response.
     }
   }
-
   const contentType = response.headers.get("content-type") ?? "";
-  const payload = contentType.includes("application/json")
-    ? await response.json()
-    : null;
+  const payload = contentType.includes("application/json") ? await response.json() : null;
   if (!response.ok) throw new Error(extractErrorMessage(payload));
   return payload;
 }
@@ -59,9 +51,7 @@ async function request(path, options = {}) {
 function withQuery(path, params = {}) {
   const usp = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      usp.append(key, value);
-    }
+    if (value !== undefined && value !== null && value !== "") usp.append(key, value);
   });
   const qs = usp.toString();
   return qs ? `${path}?${qs}` : path;
@@ -71,8 +61,25 @@ export const authApi = {
   login: (body) => request("/api/auth/login", { method: "POST", body: JSON.stringify(body) }),
   register: (body) => request("/api/auth/register", { method: "POST", body: JSON.stringify(body) }),
   profile: () => request("/api/profile/me"),
+  dashboard: async () => {
+    const s = await request("/api/profile/stats");
+    return {
+      ...(s ?? {}),
+      metrics: [
+        { label: "Yozilgan kurslar", value: s?.courses_enrolled ?? 0 },
+        { label: "Tugatilgan", value: s?.courses_completed ?? 0 },
+        { label: "O'rganilgan soat", value: s?.hours_learned ?? 0 },
+        { label: "Sertifikatlar", value: s?.certificates ?? 0 },
+        { label: "Ball", value: s?.points ?? 0 },
+        { label: "Streak (kun)", value: s?.streak_days ?? 0 },
+      ],
+    };
+  },
   courses: () => request("/api/courses"),
-  issueRefresh: () => request("/api/auth/issue-refresh", { method: "POST" }),
+  issueRefresh: (token) => request("/api/auth/issue-refresh", {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  }),
   refresh: () => request("/api/auth/refresh", { method: "POST" }),
   logoutAll: () => request("/api/auth/logout-all", { method: "POST" }),
 };
@@ -142,7 +149,7 @@ export const paymentsApi = {
 };
 
 export const notificationsApi = {
-  list: (onlyUnread = false) => request(withQuery("/api/notifications", { only_unread: onlyUnread })),
+  list: (_token, onlyUnread = false) => request(withQuery("/api/notifications", { only_unread: onlyUnread })),
   unreadCount: () => request("/api/notifications/unread-count"),
   markRead: (id) => request(`/api/notifications/${id}/read`, { method: "POST" }),
   markAllRead: () => request("/api/notifications/read-all", { method: "POST" }),

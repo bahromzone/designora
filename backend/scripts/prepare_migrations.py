@@ -1,10 +1,7 @@
 """Prepare the one-time Alembic cutover for Designora's legacy schema.
 
-Before Alembic was wired into the container, the application created tables
-from SQLAlchemy metadata at startup. A database from that era has no
-alembic_version table, so replaying the historical delta migrations would be
-wrong. This explicit deploy step baselines that schema once; future deploys
-run normal Alembic upgrades only.
+A brand-new database must go through the real Alembic history. Only a
+pre-Alembic database that already contains application tables is baselined.
 """
 
 # fmt: off
@@ -19,6 +16,9 @@ import app.models  # noqa: F401
 from app.core.database import Base, engine
 
 
+_CORE_LEGACY_TABLES = {"users", "courses"}
+
+
 def _migration_heads() -> list[str]:
     config = Config("alembic.ini")
     return ScriptDirectory.from_config(config).get_heads()
@@ -30,7 +30,19 @@ def main() -> None:
         print("Alembic version table exists; normal migration path applies.")
         return
 
-    print("No Alembic version table found; creating a one-time schema baseline.")
+    existing_tables = set(inspector.get_table_names())
+    if not existing_tables:
+        print("Empty database detected; normal Alembic migration path applies.")
+        return
+
+    if not _CORE_LEGACY_TABLES.issubset(existing_tables):
+        missing = ", ".join(sorted(_CORE_LEGACY_TABLES - existing_tables))
+        raise RuntimeError(
+            "Refusing to baseline a partial database. "
+            f"Missing legacy core tables: {missing}"
+        )
+
+    print("Legacy application schema detected; creating a one-time baseline.")
     with engine.begin() as connection:
         Base.metadata.create_all(bind=connection)
         connection.execute(

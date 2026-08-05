@@ -89,6 +89,11 @@ def database_schema():
     if IS_SQLITE:
         yield
         return
+    # Sxema qurishdan oldin metadata TO'LIQ bo'lishi shart. app.models buni
+    # kafolatlaydi; app.main esa qo'shimcha xavfsizlik chorasi (routerlarda
+    # e'lon qilingan jadvallar bo'lsa ham qamrab olinsin).
+    import app.main  # noqa: F401
+
     Base.metadata.drop_all(bind=test_engine)
     Base.metadata.create_all(bind=test_engine)
     yield

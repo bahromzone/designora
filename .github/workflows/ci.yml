@@ -25,6 +25,18 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      # Barcha qadamlar uchun umumiy test sirlari (haqiqiy emas).
+      ENVIRONMENT: development
+      SECRET_KEY: ci-secret
+      SESSION_SECRET_KEY: ci-session
+      JWT_SECRET_KEY: ci-jwt
+      MAIL_USERNAME: ci@example.com
+      MAIL_PASSWORD: ci-pass
+      MAIL_FROM: ci@example.com
+      MAIL_PORT: "587"
+      MAIL_SERVER: smtp.example.com
+      RECAPTCHA_SECRET_KEY: ci-recaptcha
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -40,17 +52,7 @@ jobs:
         run: black --check .
       - name: Prepare and apply migrations against PostgreSQL
         env:
-          ENVIRONMENT: development
           DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora"
-          SECRET_KEY: ci-secret
-          SESSION_SECRET_KEY: ci-session
-          JWT_SECRET_KEY: ci-jwt
-          MAIL_USERNAME: ci@example.com
-          MAIL_PASSWORD: ci-pass
-          MAIL_FROM: ci@example.com
-          MAIL_PORT: "587"
-          MAIL_SERVER: smtp.example.com
-          RECAPTCHA_SECRET_KEY: ci-recaptcha
         run: |
           set -o pipefail
           if ! output=$(python -m scripts.prepare_migrations 2>&1 && alembic upgrade heads 2>&1); then
@@ -59,19 +61,22 @@ jobs:
             echo "::error title=Migration failure::$compact"
             exit 1
           fi
-      - name: Pytest
+      - name: Create isolated test database
         env:
-          ENVIRONMENT: development
-          DATABASE_URL: "sqlite+pysqlite:///:memory:"
-          SECRET_KEY: ci-secret
-          SESSION_SECRET_KEY: ci-session
-          JWT_SECRET_KEY: ci-jwt
-          MAIL_USERNAME: ci@example.com
-          MAIL_PASSWORD: ci-pass
-          MAIL_FROM: ci@example.com
-          MAIL_PORT: "587"
-          MAIL_SERVER: smtp.example.com
-          RECAPTCHA_SECRET_KEY: ci-recaptcha
+          PGPASSWORD: designora
+        run: |
+          psql -h localhost -U designora -d designora \
+            -c "DROP DATABASE IF EXISTS designora_test;" \
+            -c "CREATE DATABASE designora_test;"
+      - name: Pytest (SQLite — tez qayta aloqa)
+        if: ${{ !cancelled() }}
+        env:
+          TEST_DATABASE_URL: "sqlite+pysqlite:///:memory:"
+        run: pytest -q --tb=short
+      - name: Pytest (PostgreSQL — prod dialekti)
+        if: ${{ !cancelled() }}
+        env:
+          TEST_DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora_test"
         run: pytest -q --tb=short
   frontend:
     name: Frontend (lint + test + build)

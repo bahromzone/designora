@@ -85,6 +85,9 @@ def _prod_kwargs(**overrides):
         "VIDEO_STORAGE_ACCESS_KEY": "ci-storage-access",
         "VIDEO_STORAGE_SECRET_KEY": "ci-storage-secret",
         "VIDEO_STORAGE_PUBLIC_BASE_URL": "https://cdn.example.com",
+        # Production'da rate limit umumiy saqlagichda bo'lishi shart —
+        # aks holda har worker o'z limitini sanaydi.
+        "REDIS_URL": "redis://localhost:6379/0",
     }
     base.update(overrides)
     return base

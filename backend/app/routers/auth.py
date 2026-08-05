@@ -20,12 +20,15 @@ from app.core.security import (
     get_current_user_optional,
 )
 from app.models.password_reset import PasswordReset
+from app.models.refresh_token import RefreshToken
 from app.models.user import User
+from app.services import token_service
 from app.utils.routes import dashboard_path_for_role
 
 logger = logging.getLogger(__name__)
 public_router = APIRouter(tags=["Public"])
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
+_REFRESH_COOKIE = "refresh_token"
 
 
 def _is_production() -> bool:
@@ -40,6 +43,32 @@ def _serialize_user(user: User) -> dict:
         "role": user.role,
         "is_active": getattr(user, "is_active", True),
     }
+
+
+def _set_refresh_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        key=_REFRESH_COOKIE,
+        value=token,
+        httponly=True,
+        secure=_is_production(),
+        max_age=token_service.REFRESH_TOKEN_TTL_DAYS * 24 * 3600,
+        samesite="strict",
+        path="/api/auth",
+    )
+
+
+def _issue_refresh_token(db: Session, user: User, request: Request | None = None) -> str:
+    raw = token_service.generate_refresh_token()
+    db.add(
+        RefreshToken(
+            user_id=user.id,
+            token_hash=token_service.hash_token(raw),
+            expires_at=token_service.refresh_expiry(),
+            user_agent=(request.headers.get("user-agent") if request else "")[:255]
+            or None,
+        )
+    )
+    return raw
 
 
 async def verify_recaptcha(token: str) -> bool:
@@ -127,15 +156,14 @@ async def register(
     db.commit()
     db.refresh(user)
     token = create_access_token(user.email)
-    response = JSONResponse(
-        {
-            "message": "Ro'yxatdan o'tish muvaffaqiyatli",
-            "redirect": dashboard_path_for_role(user.role),
-            "access_token": token,
-            "token_type": "bearer",
-            "user": _serialize_user(user),
-        }
-    )
+    refresh_token = _issue_refresh_token(db, user, request)
+    db.commit()
+    payload = {
+        "message": "Ro'yxatdan o'tish muvaffaqiyatli",
+        "redirect": dashboard_path_for_role(user.role),
+        "user": _serialize_user(user),
+    }
+    response = JSONResponse(payload)
     response.set_cookie(
         key="access_token",
         value=token,
@@ -144,6 +172,7 @@ async def register(
         max_age=3600,
         samesite="strict",
     )
+    _set_refresh_cookie(response, refresh_token)
     return response
 
 
@@ -172,6 +201,8 @@ async def login(
         raise HTTPException(status_code=403, detail=INACTIVE_ACCOUNT_DETAIL)
     update_streak(user, db)
     token = create_access_token(user.email)
+    refresh_token = _issue_refresh_token(db, user, request)
+    db.commit()
     response.set_cookie(
         key="access_token",
         value=token,
@@ -180,11 +211,10 @@ async def login(
         max_age=3600,
         samesite="strict",
     )
+    _set_refresh_cookie(response, refresh_token)
     return {
         "success": True,
         "redirect": dashboard_path_for_role(user.role),
-        "access_token": token,
-        "token_type": "bearer",
         "user": _serialize_user(user),
     }
 
@@ -211,6 +241,7 @@ def login_page(request: Request, db: Session = Depends(get_db)):
 def logout(request: Request):
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie("access_token")
+    response.delete_cookie(_REFRESH_COOKIE, path="/api/auth")
     try:
         request.session.clear()
     except Exception:
@@ -262,9 +293,7 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
         .first()
     )
     if not reset:
-        raise HTTPException(
-            status_code=400, detail="Token yaroqsiz yoki muddati o'tgan"
-        )
+        raise HTTPException(status_code=400, detail="Token yaroqsiz yoki muddati o'tgan")
     user = db.query(User).filter(User.id == reset.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
@@ -274,15 +303,14 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     db.delete(reset)
     db.commit()
     access_token = create_access_token(user.email)
-    response = JSONResponse(
-        {
-            "message": "Parol muvaffaqiyatli o'zgartirildi",
-            "redirect": dashboard_path_for_role(user.role),
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": _serialize_user(user),
-        }
-    )
+    refresh_token = _issue_refresh_token(db, user)
+    db.commit()
+    payload = {
+        "message": "Parol muvaffaqiyatli o'zgartirildi",
+        "redirect": dashboard_path_for_role(user.role),
+        "user": _serialize_user(user),
+    }
+    response = JSONResponse(payload)
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -291,4 +319,5 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
         max_age=3600,
         samesite="strict",
     )
+    _set_refresh_cookie(response, refresh_token)
     return response

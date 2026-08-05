@@ -8,6 +8,7 @@ Redis serversiz ham ishlaydi.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from typing import Any
 
@@ -17,6 +18,8 @@ try:
     import redis as _redis
 except ImportError:  # pragma: no cover
     _redis = None
+
+logger = logging.getLogger(__name__)
 
 
 class _MemoryCache:
@@ -57,16 +60,31 @@ def _get_client() -> Any:
     if _client_ready:
         return _client
     _client_ready = True
-    if _redis is None or not settings.REDIS_URL:
+    redis_url = settings.get_redis_url()
+    if _redis is None or not redis_url:
         _client = None
         return None
     try:  # pragma: no cover
-        client = _redis.Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        # Timeout'siz mijoz o'lik Redis'da butun so'rovni osib qo'yadi.
+        client = _redis.Redis.from_url(
+            redis_url,
+            decode_responses=True,
+            socket_connect_timeout=settings.REDIS_SOCKET_TIMEOUT,
+            socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
+        )
         client.ping()
         _client = client
     except Exception:  # pragma: no cover
+        logger.warning("Redis (%s) javob bermadi — xotira keshiga qaytildi", redis_url)
         _client = None
     return _client
+
+
+def reset_client() -> None:
+    """Mijoz keshini tozalaydi (testlar va qayta ulanish uchun)."""
+    global _client, _client_ready
+    _client = None
+    _client_ready = False
 
 
 def get(key: str) -> Any:

@@ -83,7 +83,13 @@ export function AuthProvider({ children }) {
 
   const loginWithToken = useCallback(async (nextToken) => {
     if (!nextToken) return null;
-    await authApi.issueRefresh(nextToken);
+    const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+    const response = await fetch(`${API_URL}/api/auth/issue-refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { Authorization: `Bearer ${nextToken}` },
+    });
+    if (!response.ok) throw new Error("OAuth sessiyasini yaratib bo'lmadi");
     const profile = await authApi.profile();
     setToken(null);
     setUser(profile);

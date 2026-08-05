@@ -7,7 +7,9 @@ async function req(path, _token, options = {}) {
 export const courseCommunityApi = {
   list: (courseId, token, lessonId) =>
     req(
-      `/api/course-community/courses/${courseId}/threads${lessonId ? `?lesson_id=${lessonId}` : ""}`,
+      `/api/course-community/courses/${courseId}/threads${
+        lessonId ? `?lesson_id=${lessonId}` : ""
+      }`,
       token
     ),
   detail: (id, token) => req(`/api/course-community/threads/${id}`, token),

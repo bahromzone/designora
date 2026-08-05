@@ -20,7 +20,8 @@ export function getSessionId() {
   }
 }
 
-// Xatti-harakat hodisasini backend'ga yuboradi. Fire-and-forget: UI oqimini bloklamaydi.
+// Xatti-harakat hodisasini backend'ga yuboradi. Fire-and-forget:
+// UI oqimini bloklamaydi.
 export function trackEvent(name, props = {}) {
   if (!name) return;
   try {

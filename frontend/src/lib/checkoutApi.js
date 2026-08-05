@@ -3,7 +3,9 @@ import { request } from "./request";
 export const checkoutApi = {
   quote: (courseId, coupon = "") =>
     request(
-      `/api/payments/quote/${courseId}${coupon ? `?coupon_code=${encodeURIComponent(coupon)}` : ""}`
+      `/api/payments/quote/${courseId}${
+        coupon ? `?coupon_code=${encodeURIComponent(coupon)}` : ""
+      }`
     ),
   checkout: (body) =>
     request("/api/payments/checkout-safe", {

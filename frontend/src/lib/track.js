@@ -1,11 +1,9 @@
 import { analyticsApi } from "./api";
 
-// AuthContext token'ni shu kalitda saqlaydi.
-const TOKEN_KEY = "designora-auth-token";
 const SESSION_KEY = "designora-session-id";
 
-// Sessiya identifikatorini localStorage'da saqlaymiz (hodisalarni bitta
-// tashrif bo'ylab bog'lash uchun). Yo'q bo'lsa yangi yaratamiz.
+// Sessiya identifikatorini localStorage'da saqlaymiz, hodisalarni bitta
+// tashrif bo'ylab bog'lash uchun. Auth token browser storage'ga yozilmaydi.
 export function getSessionId() {
   try {
     let id = localStorage.getItem(SESSION_KEY);
@@ -22,21 +20,19 @@ export function getSessionId() {
   }
 }
 
-// Xatti-harakat hodisasini backend'ga yuboradi. "Fire-and-forget":
-// hech qachon xato tashlamaydi va UI oqimini bloklamaydi.
+// Xatti-harakat hodisasini backend'ga yuboradi. Fire-and-forget:
+// UI oqimini bloklamaydi.
 export function trackEvent(name, props = {}) {
   if (!name) return;
   try {
-    const token = localStorage.getItem(TOKEN_KEY) || undefined;
     const body = {
       name,
       props,
       session_id: getSessionId(),
       path: typeof window !== "undefined" ? window.location.pathname : null,
     };
-    // Natijani kutmaymiz; xatolarni jimgina yutamiz.
-    analyticsApi.track(body, token).catch(() => {});
+    analyticsApi.track(body).catch(() => {});
   } catch {
-    // localStorage yoki tarmoq muammosi — e'tiborsiz qoldiramiz.
+    // localStorage yoki tarmoq muammosi, e'tiborsiz qoldiramiz.
   }
 }

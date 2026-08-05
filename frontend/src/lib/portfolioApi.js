@@ -1,19 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-
-async function request(path, options = {}) {
-  const { token, ...rest } = options;
-  const response = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(rest.headers || {}),
-    },
-  });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(payload?.detail || "So'rov bajarilmadi");
-  return payload;
-}
+import { request } from "./request";
 
 export const portfolioApi = {
   mine: (token) => request("/api/portfolio/mine", { token }),

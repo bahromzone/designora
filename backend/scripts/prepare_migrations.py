@@ -1,12 +1,15 @@
-"""Prepare the one-time Alembic cutover for Designora's legacy schema.
+"""Prepare the Alembic cutover for legacy and fresh Designora schemas.
 
-A brand-new database must go through the real Alembic history. Only a
-pre-Alembic database that already contains application tables is baselined.
+The historical Alembic chain predates the current full LMS schema: its initial
+revision creates only users, while later revisions assume courses and many
+other tables already exist. Fresh deploys therefore build the complete schema
+from the registered SQLAlchemy metadata and stamp the current Alembic heads.
+Existing pre-Alembic databases follow the same safe baseline path.
 """
 
 # fmt: off
 # This deploy bootstrap intentionally imports application models after the
-# migration libraries so it can inspect the live metadata before stamping.
+# migration libraries so it can inspect the complete live metadata.
 # ruff: noqa: I001
 from alembic.config import Config
 from alembic.script import ScriptDirectory
@@ -24,6 +27,20 @@ def _migration_heads() -> list[str]:
     return ScriptDirectory.from_config(config).get_heads()
 
 
+def _stamp_heads(connection) -> None:
+    connection.execute(
+        text(
+            "CREATE TABLE IF NOT EXISTS alembic_version "
+            "(version_num VARCHAR(32) NOT NULL)"
+        )
+    )
+    for head in _migration_heads():
+        connection.execute(
+            text("INSERT INTO alembic_version (version_num) VALUES (:head)"),
+            {"head": head},
+        )
+
+
 def main() -> None:
     inspector = inspect(engine)
     if inspector.has_table("alembic_version"):
@@ -32,7 +49,13 @@ def main() -> None:
 
     existing_tables = set(inspector.get_table_names())
     if not existing_tables:
-        print("Empty database detected; normal Alembic migration path applies.")
+        print(
+            "Empty database detected; creating the complete application schema "
+            "from SQLAlchemy metadata and stamping Alembic heads."
+        )
+        with engine.begin() as connection:
+            Base.metadata.create_all(bind=connection)
+            _stamp_heads(connection)
         return
 
     if not _CORE_LEGACY_TABLES.issubset(existing_tables):
@@ -45,17 +68,7 @@ def main() -> None:
     print("Legacy application schema detected; creating a one-time baseline.")
     with engine.begin() as connection:
         Base.metadata.create_all(bind=connection)
-        connection.execute(
-            text(
-                "CREATE TABLE IF NOT EXISTS alembic_version "
-                "(version_num VARCHAR(32) NOT NULL)"
-            )
-        )
-        for head in _migration_heads():
-            connection.execute(
-                text("INSERT INTO alembic_version (version_num) VALUES (:head)"),
-                {"head": head},
-            )
+        _stamp_heads(connection)
     print("Legacy schema baselined at Alembic head.")
 
 

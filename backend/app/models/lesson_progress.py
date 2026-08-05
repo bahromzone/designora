@@ -1,6 +1,14 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -14,6 +22,12 @@ class LessonProgress(Base):
     __tablename__ = "lesson_progress"
     __table_args__ = (
         UniqueConstraint("user_id", "lesson_id", name="uq_lesson_progress_user_lesson"),
+        Index(
+            "ix_lesson_progress_user_course_completed",
+            "user_id",
+            "course_id",
+            "is_completed",
+        ),
     )
 
     id = Column(Integer, primary_key=True)

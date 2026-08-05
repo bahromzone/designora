@@ -26,12 +26,11 @@ def test_issue_and_refresh_rotates(client, db_session):
     cookie = issued.cookies.get("refresh_token")
     assert cookie
 
-    # refresh cookie bilan yangi access + rotatsiya
     client.cookies.set("refresh_token", cookie)
     refreshed = client.post("/api/auth/refresh")
     assert refreshed.status_code == 200
-    assert refreshed.json()["access_token"]
-    # eski token bekor qilingan, yangisi bor
+    assert refreshed.json() == {"authenticated": True}
+    assert refreshed.cookies.get("access_token")
     assert db_session.query(RefreshToken).count() == 2
 
 
@@ -48,14 +47,12 @@ def test_reuse_detection_revokes_all(client, db_session):
     old_cookie = issued.cookies.get("refresh_token")
 
     client.cookies.set("refresh_token", old_cookie)
-    client.post("/api/auth/refresh")  # eski endi bekor qilindi
+    client.post("/api/auth/refresh")
 
-    # eski (bekor qilingan) cookie bilan qayta urinish
     client.cookies.set("refresh_token", old_cookie)
     reuse = client.post("/api/auth/refresh")
     assert reuse.status_code == 401
 
-    # barcha tokenlar bekor qilingan bo'lishi kerak
     active = [t for t in db_session.query(RefreshToken).all() if t.is_active]
     assert active == []
 

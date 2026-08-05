@@ -1,5 +1,3 @@
-# ruff: noqa: I001
-
 import os
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
@@ -7,6 +5,7 @@ from threading import Barrier
 import pytest
 from sqlalchemy.exc import IntegrityError
 
+from app.core.database import SessionLocal
 from app.models.Course import Course
 from app.models.assignment import Assignment
 from app.models.assignment_submission import AssignmentSubmission
@@ -23,11 +22,9 @@ pytestmark = pytest.mark.skipif(
 
 
 def _new_testing_session():
-    # Importing conftest inside the helper keeps the test module's import block
-    # deterministic for Ruff while retaining the shared PostgreSQL fixture setup.
-    from conftest import TestingSessionLocal
-
-    return TestingSessionLocal()
+    # Use the application's factory, which is bound to TEST_DATABASE_URL in CI.
+    # Unlike pytest's conftest module, it remains importable in worker threads.
+    return SessionLocal()
 
 
 def _create_assignment(db_session):

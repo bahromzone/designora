@@ -37,6 +37,10 @@ jobs:
       MAIL_PORT: "587"
       MAIL_SERVER: smtp.example.com
       RECAPTCHA_SECRET_KEY: ci-recaptcha
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: designora
+      PGPASSWORD: designora
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -45,39 +49,73 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+        run: |
+          if ! output=$(pip install -r requirements-dev.txt 2>&1); then
+            echo "$output"
+            echo "::error title=Dependency install failure::$(printf '%s' "$output" | tr '\n' ' ' | tail -c 3000)"
+            exit 1
+          fi
+          echo "$output" | tail -n 5
       - name: Ruff check
-        run: ruff check .
+        run: |
+          if ! output=$(ruff check . 2>&1); then
+            echo "$output"
+            echo "::error title=Ruff failure::$(printf '%s' "$output" | tr '\n' ' ' | tail -c 3000)"
+            exit 1
+          fi
+          echo "$output"
       - name: Black check
-        run: black --check .
+        run: |
+          if ! output=$(black --check . 2>&1); then
+            echo "$output"
+            echo "::error title=Black failure::$(printf '%s' "$output" | tr '\n' ' ' | tail -c 3000)"
+            exit 1
+          fi
+          echo "$output"
       - name: Prepare and apply migrations against PostgreSQL
         env:
           DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora"
         run: |
-          set -o pipefail
           if ! output=$(python -m scripts.prepare_migrations 2>&1 && alembic upgrade heads 2>&1); then
             echo "$output"
-            compact=$(printf '%s' "$output" | tr '\n' ' ' | cut -c1-900)
-            echo "::error title=Migration failure::$compact"
+            echo "::error title=Migration failure::$(printf '%s' "$output" | tr '\n' ' ' | tail -c 3000)"
             exit 1
           fi
+          echo "$output"
       - name: Create isolated test database
-        env:
-          PGPASSWORD: designora
+        id: testdb
         run: |
-          psql -h localhost -U designora -d designora \
-            -c "DROP DATABASE IF EXISTS designora_test;" \
-            -c "CREATE DATABASE designora_test;"
+          # dropdb/createdb — har biri alohida ulanish. `psql -c "CREATE
+          # DATABASE ..."` ba'zi versiyalarda implicit tranzaksiyaga tushib
+          # "cannot run inside a transaction block" beradi.
+          if ! output=$( (dropdb --if-exists designora_test && createdb designora_test) 2>&1 ); then
+            echo "$output"
+            echo "::error title=Test database setup failure::$(printf '%s' "$output" | tr '\n' ' ' | tail -c 3000)"
+            exit 1
+          fi
+          echo "designora_test tayyor"
       - name: Pytest (SQLite — tez qayta aloqa)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.testdb.outcome == 'success' }}
         env:
           TEST_DATABASE_URL: "sqlite+pysqlite:///:memory:"
-        run: pytest -q --tb=short
+        run: |
+          if ! output=$(pytest --tb=short 2>&1); then
+            echo "$output"
+            echo "::error title=Pytest (SQLite) failure::$(printf '%s' "$output" | tr '\n' ' ' | tail -c 3000)"
+            exit 1
+          fi
+          echo "$output" | tail -n 20
       - name: Pytest (PostgreSQL — prod dialekti)
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.testdb.outcome == 'success' }}
         env:
           TEST_DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora_test"
-        run: pytest -q --tb=short
+        run: |
+          if ! output=$(pytest --tb=short 2>&1); then
+            echo "$output"
+            echo "::error title=Pytest (PostgreSQL) failure::$(printf '%s' "$output" | tr '\n' ' ' | tail -c 3000)"
+            exit 1
+          fi
+          echo "$output" | tail -n 20
   frontend:
     name: Frontend (lint + test + build)
     runs-on: ubuntu-latest

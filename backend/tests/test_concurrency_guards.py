@@ -1,3 +1,5 @@
+# ruff: noqa: I001
+
 import os
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier

@@ -49,23 +49,43 @@ def sniff_matches(content: bytes, ext: str) -> bool:
     return any(content.startswith(sig) for sig in signatures)
 
 
-def validate_upload(
-    filename: str, content: bytes, *, allowed_extensions: set[str], max_bytes: int
+def validate_upload_metadata(
+    filename: str,
+    sample: bytes,
+    size: int,
+    *,
+    allowed_extensions: set[str],
+    max_bytes: int,
 ) -> str:
+    """Validate a streamed upload without loading the whole file in memory."""
     ext = get_extension(filename)
     if not ext:
         raise UploadValidationError("Fayl kengaytmasi aniqlanmadi")
     if ext not in allowed_extensions:
         raise UploadValidationError(f"Ruxsat etilmagan fayl turi: .{ext}")
-    if not content:
+    if size <= 0:
         raise UploadValidationError("Fayl bo'sh")
-    if len(content) > max_bytes:
+    if size > max_bytes:
         raise UploadValidationError(
             f"Fayl hajmi {max_bytes / (1024 * 1024):.0f} MB dan oshmasligi kerak"
         )
-    if not sniff_matches(content, ext):
+    if not sniff_matches(sample, ext):
         raise UploadValidationError("Fayl mazmuni kengaytmaga mos kelmaydi")
+    if ext == "webp" and sample[8:12] != b"WEBP":
+        raise UploadValidationError("WEBP fayli buzilgan")
     return ext
+
+
+def validate_upload(
+    filename: str, content: bytes, *, allowed_extensions: set[str], max_bytes: int
+) -> str:
+    return validate_upload_metadata(
+        filename,
+        content,
+        len(content),
+        allowed_extensions=allowed_extensions,
+        max_bytes=max_bytes,
+    )
 
 
 def validate_avatar(filename: str, content: bytes) -> str:

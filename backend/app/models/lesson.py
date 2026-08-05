@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Boolean, Column, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Column, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -6,6 +6,9 @@ from app.core.database import Base
 
 class Lesson(Base):
     __tablename__ = "lessons"
+    __table_args__ = (
+        Index("ix_lessons_course_order", "course_id", "order", "id"),
+    )
 
     id = Column(Integer, primary_key=True)
     course_id = Column(Integer, ForeignKey("courses.id"))

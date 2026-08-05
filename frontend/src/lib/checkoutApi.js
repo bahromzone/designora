@@ -23,7 +23,8 @@ export const checkoutApi = {
         ...body,
         idempotency_key:
           body.idempotency_key ||
-          (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
+          globalThis.crypto?.randomUUID?.() ||
+          `${Date.now()}-${Math.random()}`,
       }),
     }),
   retry: (orderId) =>

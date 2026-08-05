@@ -2,8 +2,11 @@
 """Roadmap 3.22 checkout quote, retry, receipt and refund visibility."""
 
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -12,10 +15,17 @@ from app.models.coupon import Coupon
 from app.models.Course import Course
 from app.models.order import Order
 from app.models.user import User
-from app.routers.payments import CheckoutBody, _build_pay_url
+from app.routers.payments import _build_pay_url
 
 router = APIRouter(prefix="/api/payments", tags=["Checkout UX"])
 PROVIDERS = {"payme", "click"}
+
+
+class SafeCheckoutBody(BaseModel):
+    course_id: int
+    provider: Literal["payme", "click"]
+    coupon_code: str | None = None
+    idempotency_key: str | None = Field(default=None, min_length=16, max_length=128)
 
 
 def _user(db: Session, email: str) -> User:
@@ -39,6 +49,20 @@ def _price(
         discount = coupon.apply(course.price or 0)
         normalized = coupon.code
     return max(0, (course.price or 0) - discount), discount, normalized
+
+
+def _order_response(order: Order, *, reused: bool) -> dict:
+    return {
+        "order_id": order.id,
+        "status": order.status,
+        "amount": order.amount,
+        "discount": order.discount_amount,
+        "provider": order.provider,
+        "pay_url": (
+            _build_pay_url(order.provider, order) if order.status == "pending" else None
+        ),
+        "reused": reused,
+    }
 
 
 @router.get("/quote/{course_id}")
@@ -67,13 +91,11 @@ def quote(
 
 @router.post("/checkout-safe")
 def safe_checkout(
-    body: CheckoutBody,
+    body: SafeCheckoutBody,
     email: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     user = _user(db, email)
-    if body.provider not in PROVIDERS:
-        raise HTTPException(status_code=400, detail="Noma'lum to'lov provayderi")
     course = (
         db.query(Course)
         .filter(Course.id == body.course_id, Course.is_active.is_(True))
@@ -82,6 +104,20 @@ def safe_checkout(
     if not course:
         raise HTTPException(status_code=404, detail="Kurs topilmadi")
     total, discount, code = _price(db, course, body.coupon_code)
+
+    if body.idempotency_key:
+        keyed = (
+            db.query(Order)
+            .filter(Order.idempotency_key == body.idempotency_key)
+            .first()
+        )
+        if keyed:
+            if keyed.user_id != user.id or keyed.course_id != course.id:
+                raise HTTPException(status_code=409, detail="Idempotency key band")
+            if keyed.provider != body.provider:
+                raise HTTPException(status_code=409, detail="Provider o'zgartirilmadi")
+            return _order_response(keyed, reused=True)
+
     cutoff = datetime.now(UTC) - timedelta(minutes=15)
     pending = (
         db.query(Order)
@@ -96,15 +132,11 @@ def safe_checkout(
         .first()
     )
     if pending:
-        return {
-            "order_id": pending.id,
-            "status": pending.status,
-            "amount": pending.amount,
-            "discount": pending.discount_amount,
-            "provider": pending.provider,
-            "pay_url": _build_pay_url(pending.provider, pending),
-            "reused": True,
-        }
+        if body.idempotency_key and pending.idempotency_key is None:
+            pending.idempotency_key = body.idempotency_key
+            db.commit()
+        return _order_response(pending, reused=True)
+
     order = Order(
         user_id=user.id,
         course_id=course.id,
@@ -114,19 +146,27 @@ def safe_checkout(
         coupon_code=code,
         provider=body.provider,
         status="pending",
+        idempotency_key=body.idempotency_key,
     )
     db.add(order)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        if body.idempotency_key:
+            keyed = (
+                db.query(Order)
+                .filter(
+                    Order.user_id == user.id,
+                    Order.idempotency_key == body.idempotency_key,
+                )
+                .first()
+            )
+            if keyed:
+                return _order_response(keyed, reused=True)
+        raise HTTPException(status_code=409, detail="Checkout qayta yuborildi")
     db.refresh(order)
-    return {
-        "order_id": order.id,
-        "status": order.status,
-        "amount": total,
-        "discount": discount,
-        "provider": body.provider,
-        "pay_url": _build_pay_url(body.provider, order),
-        "reused": False,
-    }
+    return _order_response(order, reused=False)
 
 
 @router.post("/orders/{order_id}/retry")

@@ -7,18 +7,16 @@ async function parse(response) {
 }
 
 export const videoPlayerApi = {
-  manifest: (lessonId, token) =>
+  manifest: (lessonId) =>
     fetch(`${API_URL}/api/media/lessons/${lessonId}/sign`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     }).then(parse),
-  save: (lessonId, body, token) =>
+  save: (lessonId, body) =>
     fetch(`${API_URL}/api/media/lessons/${lessonId}/progress`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
       keepalive: true,
     }).then(parse),

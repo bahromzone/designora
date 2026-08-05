@@ -15,7 +15,8 @@ def register(client, email: str = "portfolio@example.com") -> tuple[dict, str]:
         },
     )
     assert response.status_code == 200
-    token = response.json()["access_token"]
+    token = client.cookies.get("access_token")
+    assert token
     return {"Authorization": f"Bearer {token}"}, email
 
 

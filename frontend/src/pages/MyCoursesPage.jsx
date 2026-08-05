@@ -145,9 +145,7 @@ export default function MyCoursesPage() {
           <div className="continue-copy">
             <span className="continue-label">Davom ettirish</span>
             <p className="continue-course">{continueCourse?.title}</p>
-            <h2>
-              {dashboard?.next_lesson?.title || "Keyingi darsga o'ting"}
-            </h2>
+            <h2>{dashboard?.next_lesson?.title || "Keyingi darsga o'ting"}</h2>
             <p>
               {continueCourse?.progress_percent || 0}% bajarildi,{" "}
               {continueCourse?.lessons_count || 0} ta dars.

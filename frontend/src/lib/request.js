@@ -9,8 +9,7 @@ async function refreshAccessToken() {
   })
     .then(async (response) => {
       if (!response.ok) throw new Error("refresh failed");
-      const payload = await response.json();
-      return payload?.access_token;
+      return true;
     })
     .finally(() => {
       refreshPromise = null;
@@ -19,7 +18,8 @@ async function refreshAccessToken() {
 }
 
 export async function request(path, options = {}) {
-  const { token, headers, _retry, ...rest } = options;
+  const { headers, _retry, ...rest } = options;
+  delete rest.token;
   const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
@@ -27,24 +27,12 @@ export async function request(path, options = {}) {
     headers: {
       "Content-Type": "application/json",
       ...(headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
-  if (
-    response.status === 401 &&
-    token &&
-    !_retry &&
-    !path.startsWith("/api/auth/")
-  ) {
+  if (response.status === 401 && !_retry && !path.startsWith("/api/auth/")) {
     try {
-      const nextToken = await refreshAccessToken();
-      if (nextToken) {
-        localStorage.setItem("designora-auth-token", nextToken);
-        window.dispatchEvent(
-          new CustomEvent("designora-token-refreshed", { detail: nextToken })
-        );
-        return request(path, { ...options, token: nextToken, _retry: true });
-      }
+      await refreshAccessToken();
+      return request(path, { ...options, _retry: true });
     } catch {
       /* return original response below */
     }

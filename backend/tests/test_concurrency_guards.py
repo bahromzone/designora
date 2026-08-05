@@ -6,9 +6,9 @@ from sqlalchemy.exc import IntegrityError
 
 from conftest import IS_SQLITE, TestingSessionLocal
 from app.models.Course import Course
-from app.models.Order import Order
 from app.models.assignment import Assignment
 from app.models.assignment_submission import AssignmentSubmission
+from app.models.order import Order
 from app.models.user import User
 
 

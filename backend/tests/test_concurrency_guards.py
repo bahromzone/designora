@@ -1,3 +1,4 @@
+import os
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 
@@ -9,13 +10,22 @@ from app.models.assignment import Assignment
 from app.models.assignment_submission import AssignmentSubmission
 from app.models.order import Order
 from app.models.user import User
-from conftest import IS_SQLITE, TestingSessionLocal
 
+
+IS_SQLITE = os.environ.get("TEST_DATABASE_URL", "").strip().startswith("sqlite")
 
 pytestmark = pytest.mark.skipif(
     IS_SQLITE,
     reason="Concurrent transaction checks require PostgreSQL connections",
 )
+
+
+def _new_testing_session():
+    # Importing conftest inside the helper keeps the test module's import block
+    # deterministic for Ruff while retaining the shared PostgreSQL fixture setup.
+    from conftest import TestingSessionLocal
+
+    return TestingSessionLocal()
 
 
 def _create_assignment(db_session):
@@ -38,7 +48,7 @@ def test_concurrent_assignment_submissions_keep_one_row(db_session):
     barrier = Barrier(2)
 
     def submit_once():
-        session = TestingSessionLocal()
+        session = _new_testing_session()
         try:
             barrier.wait(timeout=5)
             session.add(
@@ -75,7 +85,7 @@ def test_concurrent_provider_callbacks_keep_one_order(db_session):
     barrier = Barrier(2)
 
     def persist_callback():
-        session = TestingSessionLocal()
+        session = _new_testing_session()
         try:
             barrier.wait(timeout=5)
             session.add(

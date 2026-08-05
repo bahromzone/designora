@@ -36,6 +36,17 @@ def _set_refresh_cookie(response, token):
     )
 
 
+def _set_access_cookie(response, email):
+    response.set_cookie(
+        key="access_token",
+        value=create_access_token(email),
+        httponly=True,
+        secure=_is_production(),
+        max_age=3600,
+        samesite="strict",
+    )
+
+
 def _revoke_all(db, user_id):
     return (
         db.query(RefreshToken)
@@ -88,15 +99,7 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
     rec.revoked_at = datetime.now(UTC)
     rec.replaced_by = token_service.hash_token(new_raw)
     db.commit()
-    access = create_access_token(user.email)
-    response.set_cookie(
-        key="access_token",
-        value=access,
-        httponly=True,
-        secure=_is_production(),
-        max_age=3600,
-        samesite="strict",
-    )
+    _set_access_cookie(response, user.email)
     _set_refresh_cookie(response, new_raw)
     return {"authenticated": True}
 
@@ -132,5 +135,6 @@ def issue_refresh_for_current(
         raise HTTPException(status_code=403, detail=INACTIVE_ACCOUNT_DETAIL)
     raw = issue_refresh_token(db, user, request.headers.get("user-agent"))
     db.commit()
+    _set_access_cookie(response, user.email)
     _set_refresh_cookie(response, raw)
     return {"message": "Refresh-token berildi"}

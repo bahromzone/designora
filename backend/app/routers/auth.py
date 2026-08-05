@@ -263,7 +263,9 @@ def forgot_password(
     request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)
 ):
     same_response = {
-        "message": "Agar email tizimda mavjud bo'lsa, parolni tiklash havolasi yuborildi"
+        "message": (
+            "Agar email tizimda mavjud bo'lsa, parolni tiklash havolasi yuborildi"
+        )
     }
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not user.is_active:
@@ -279,7 +281,12 @@ def forgot_password(
     send_email(
         to=user.email,
         subject="Parolni tiklash | Designora",
-        body=f'<h3>Parolni tiklash</h3><p>Quyidagi havola orqali yangi parol o\'rnating:</p><a href="{link}">{link}</a><p>Havola 30 daqiqa amal qiladi.</p>',
+        body=(
+            "<h3>Parolni tiklash</h3>"
+            "<p>Quyidagi havola orqali yangi parol o'rnating:</p>"
+            f'<a href="{link}">{link}</a>'
+            "<p>Havola 30 daqiqa amal qiladi.</p>"
+        ),
     )
     return same_response
 
@@ -295,7 +302,9 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
         .first()
     )
     if not reset:
-        raise HTTPException(status_code=400, detail="Token yaroqsiz yoki muddati o'tgan")
+        raise HTTPException(
+            status_code=400, detail="Token yaroqsiz yoki muddati o'tgan"
+        )
     user = db.query(User).filter(User.id == reset.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")

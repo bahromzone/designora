@@ -35,8 +35,12 @@ def test_safe_checkout_reuses_idempotency_key(client, db_session):
 
 def test_safe_checkout_rejects_key_reuse_for_another_course(client, db_session):
     user = User(email="checkout2@example.com", name="buyer", role="user")
-    first_course = Course(title="First", price=100000, is_active=True, status="published")
-    second_course = Course(title="Second", price=100000, is_active=True, status="published")
+    first_course = Course(
+        title="First", price=100000, is_active=True, status="published"
+    )
+    second_course = Course(
+        title="Second", price=100000, is_active=True, status="published"
+    )
     db_session.add_all([user, first_course, second_course])
     db_session.commit()
     headers = {"Authorization": f"Bearer {create_access_token(user.email)}"}
@@ -44,12 +48,20 @@ def test_safe_checkout_rejects_key_reuse_for_another_course(client, db_session):
 
     first = client.post(
         "/api/payments/checkout-safe",
-        json={"course_id": first_course.id, "provider": "click", "idempotency_key": key},
+        json={
+            "course_id": first_course.id,
+            "provider": "click",
+            "idempotency_key": key,
+        },
         headers=headers,
     )
     second = client.post(
         "/api/payments/checkout-safe",
-        json={"course_id": second_course.id, "provider": "click", "idempotency_key": key},
+        json={
+            "course_id": second_course.id,
+            "provider": "click",
+            "idempotency_key": key,
+        },
         headers=headers,
     )
 

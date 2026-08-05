@@ -9,7 +9,10 @@ export const reminderApi = {
       token,
     }),
   test: (token) =>
-    request("/api/notifications/preferences/test", { method: "POST", token }),
+    request("/api/notifications/preferences/test", {
+      method: "POST",
+      token,
+    }),
   subscribe: (body, token) =>
     request("/api/notifications/push-subscriptions", {
       method: "POST",

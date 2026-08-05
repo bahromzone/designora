@@ -8,9 +8,15 @@ function withQuery(path, params = {}) {
 export const instructorAnalyticsApi = {
   get: (token, courseId) =>
     request(
-      withQuery("/api/instructor/analytics", courseId ? { course_id: courseId } : {}),
+      withQuery(
+        "/api/instructor/analytics",
+        courseId ? { course_id: courseId } : {}
+      ),
       { token }
     ),
   exportUrl: (courseId) =>
-    withQuery("/api/instructor/analytics/export.csv", courseId ? { course_id: courseId } : {}),
+    withQuery(
+      "/api/instructor/analytics/export.csv",
+      courseId ? { course_id: courseId } : {}
+    ),
 };

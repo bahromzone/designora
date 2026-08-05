@@ -115,9 +115,7 @@ def safe_checkout(
             if keyed.user_id != user.id or keyed.course_id != course.id:
                 raise HTTPException(status_code=409, detail="Idempotency key band")
             if keyed.provider != body.provider:
-                raise HTTPException(
-                    status_code=409, detail="Provider o'zgartirilmadi"
-                )
+                raise HTTPException(status_code=409, detail="Provider o'zgartirilmadi")
             return _order_response(keyed, reused=True)
 
     cutoff = datetime.now(UTC) - timedelta(minutes=15)

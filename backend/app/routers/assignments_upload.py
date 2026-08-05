@@ -42,9 +42,7 @@ async def _stream_assignment(file: UploadFile) -> tuple[str, int, str]:
     SUBMISSION_DIR.mkdir(parents=True, exist_ok=True)
     sample = bytearray()
     size = 0
-    temporary = NamedTemporaryFile(
-        dir=SUBMISSION_DIR, prefix=".upload-", delete=False
-    )
+    temporary = NamedTemporaryFile(dir=SUBMISSION_DIR, prefix=".upload-", delete=False)
     try:
         while chunk := await file.read(1024 * 1024):
             size += len(chunk)

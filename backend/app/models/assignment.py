@@ -21,9 +21,7 @@ def _now():
 
 class Assignment(Base):
     __tablename__ = "assignments"
-    __table_args__ = (
-        Index("ix_assignments_course_due_date", "course_id", "due_date"),
-    )
+    __table_args__ = (Index("ix_assignments_course_due_date", "course_id", "due_date"),)
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)

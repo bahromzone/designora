@@ -25,9 +25,7 @@ class Order(Base):
     currency = Column(String, default="UZS")
     status = Column(String, default="pending", index=True)
     provider = Column(String, nullable=True)
-    provider_transaction_id = Column(
-        String, nullable=True, index=True, unique=True
-    )
+    provider_transaction_id = Column(String, nullable=True, index=True, unique=True)
     provider_state = Column(Integer, default=0)
     cancel_reason = Column(Integer, nullable=True)
     create_time_ms = Column(BigInteger, default=0)

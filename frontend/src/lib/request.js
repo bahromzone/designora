@@ -37,9 +37,7 @@ export async function request(path, options = {}) {
       await refreshAccessToken();
       return request(path, { ...options, _retry: true });
     } catch {
-      window.dispatchEvent(
-        new Event("designora-session-invalidated")
-      );
+      window.dispatchEvent(new Event("designora-session-invalidated"));
       /* return original response below */
     }
   }

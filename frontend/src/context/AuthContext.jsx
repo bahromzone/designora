@@ -84,8 +84,7 @@ export function AuthProvider({ children }) {
       credentials: "include",
       headers: { Authorization: `Bearer ${nextToken}` },
     });
-    if (!response.ok)
-      throw new Error("OAuth sessiyasini yaratib bo'lmadi");
+    if (!response.ok) throw new Error("OAuth sessiyasini yaratib bo'lmadi");
     const profile = await authApi.profile();
     setUser(profile);
     return profile;

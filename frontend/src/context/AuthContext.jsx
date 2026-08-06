@@ -21,7 +21,10 @@ export function AuthProvider({ children }) {
     const onInvalid = () => {
       setUser(null);
     };
-    window.addEventListener("designora-session-invalidated", onInvalid);
+    window.addEventListener(
+      "designora-session-invalidated",
+      onInvalid
+    );
     return () =>
       window.removeEventListener(
         "designora-session-invalidated",
@@ -92,7 +95,9 @@ export function AuthProvider({ children }) {
       }
     );
     if (!response.ok)
-      throw new Error("OAuth sessiyasini yaratib bo'lmadi");
+      throw new Error(
+        "OAuth sessiyasini yaratib bo'lmadi"
+      );
     const profile = await authApi.profile();
     setUser(profile);
     return profile;

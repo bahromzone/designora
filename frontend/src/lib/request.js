@@ -38,7 +38,6 @@ export async function request(path, options = {}) {
       return request(path, { ...options, _retry: true });
     } catch {
       window.dispatchEvent(new Event("designora-session-invalidated"));
-      /* return original response below */
     }
   }
   const contentType = response.headers.get("content-type") ?? "";

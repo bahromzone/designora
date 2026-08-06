@@ -22,19 +22,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "max-age=31536000; includeSubDomains"
             )
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'"
-            " https://cdn.tailwindcss.com"
-            " https://unpkg.com"
-            " https://www.google.com"
-            " https://www.gstatic.com; "
-            "style-src 'self' 'unsafe-inline'"
-            " https://fonts.googleapis.com"
-            " https://cdn.tailwindcss.com; "
-            "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data: https:; "
-            "connect-src 'self' https://accounts.google.com; "
-            "frame-src 'self' https://www.google.com;"
+            "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://accounts.google.com; frame-src 'self' https://www.google.com;"
         )
         return response
 
@@ -45,9 +33,7 @@ class IPBlockingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         client_ip = request.client.host
         if client_ip in self.BLOCKED_IPS:
-            return JSONResponse(
-                status_code=403, content={"detail": "Access forbidden"}
-            )
+            return JSONResponse(status_code=403, content={"detail": "Access forbidden"})
         return await call_next(request)
 
 
@@ -61,14 +47,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             path=request.url.path,
             status=str(response.status_code),
         )
-        metrics.observe(
-            "http_request_duration_seconds",
-            time.perf_counter() - started,
-        )
+        metrics.observe("http_request_duration_seconds", time.perf_counter() - started)
         logger.info(
-            "%s %s -> %s",
-            request.method,
-            request.url.path,
-            response.status_code,
+            "%s %s -> %s", request.method, request.url.path, response.status_code
         )
         return response

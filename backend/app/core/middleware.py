@@ -3,7 +3,6 @@ import time
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core import metrics
@@ -23,7 +22,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "max-age=31536000; includeSubDomains"
             )
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://accounts.google.com; frame-src 'self' https://www.google.com;"
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://www.google.com https://www.gstatic.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self' https://accounts.google.com; "
+            "frame-src 'self' https://www.google.com;"
         )
         return response
 
@@ -53,13 +58,3 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             "%s %s -> %s", request.method, request.url.path, response.status_code
         )
         return response
-
-
-async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
-    return JSONResponse(
-        status_code=429,
-        content={
-            "detail": "Too many requests. Please try again later.",
-            "retry_after": 60,
-        },
-    )

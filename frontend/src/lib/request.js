@@ -18,7 +18,7 @@ async function refreshAccessToken() {
 }
 
 export async function request(path, options = {}) {
-  const { headers, _retry, ...rest } = options;
+  const { headers, _retry, signal, ...rest } = options;
   delete rest.token;
   const isFormData =
     typeof FormData !== "undefined" && rest.body instanceof FormData;
@@ -26,6 +26,7 @@ export async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
     credentials: "include",
+    signal,
     headers: {
       ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(headers ?? {}),
@@ -36,6 +37,7 @@ export async function request(path, options = {}) {
       await refreshAccessToken();
       return request(path, { ...options, _retry: true });
     } catch {
+      window.dispatchEvent(new Event("designora-session-invalidated"));
       /* return original response below */
     }
   }
@@ -46,8 +48,8 @@ export async function request(path, options = {}) {
   if (!response.ok) {
     const detail = payload?.detail;
     const message = Array.isArray(detail)
-      ? detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ")
-      : detail || "So'rovni bajarib bo'lmadi.";
+      ? detail.map((item) => item?.msg ?? "Noma\u2019lum xato").join(" ")
+      : detail || "So\u2019rovni bajarib bo\u2019lmadi.";
     throw new Error(message);
   }
   return payload;

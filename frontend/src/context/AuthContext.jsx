@@ -11,7 +11,6 @@ import { authApi } from "../lib/api";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +19,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const onInvalid = () => {
-      setToken(null);
       setUser(null);
     };
     window.addEventListener("designora-session-invalidated", onInvalid);
@@ -42,7 +40,6 @@ export function AuthProvider({ children }) {
           if (active) setUser(profile);
         } catch {
           if (active) {
-            setToken(null);
             setUser(null);
           }
         }
@@ -67,7 +64,6 @@ export function AuthProvider({ children }) {
 
   async function login(credentials) {
     const response = await authApi.login(credentials);
-    setToken(null);
     setUser(response.user);
     handlePostAuthRedirect(response);
     return response;
@@ -75,7 +71,6 @@ export function AuthProvider({ children }) {
 
   async function register(payload) {
     const response = await authApi.register(payload);
-    setToken(null);
     setUser(response.user);
     handlePostAuthRedirect(response);
     return response;
@@ -89,16 +84,14 @@ export function AuthProvider({ children }) {
       credentials: "include",
       headers: { Authorization: `Bearer ${nextToken}` },
     });
-    if (!response.ok) throw new Error("OAuth sessiyasini yaratib bo'lmadi");
+    if (!response.ok) throw new Error("OAuth sessiyasini yaratib bo\u2019lmadi");
     const profile = await authApi.profile();
-    setToken(null);
     setUser(profile);
     return profile;
   }, []);
 
   function logout() {
     authApi.logoutAll().catch(() => {});
-    setToken(null);
     setUser(null);
   }
 
@@ -111,7 +104,6 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       value={{
-        token,
         user,
         loading,
         isAuthenticated: Boolean(user),

@@ -67,13 +67,15 @@ from app.routers import (
 )
 from app.routers.auth import public_router
 
+_log_handlers: list[logging.Handler] = [logging.StreamHandler()]
+_log_file = os.getenv("LOG_FILE", "")
+if _log_file:
+    _log_handlers.append(RotatingFileHandler(_log_file, maxBytes=10_000_000, backupCount=5))
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        RotatingFileHandler("app.log", maxBytes=10_000_000, backupCount=5),
-        logging.StreamHandler(),
-    ],
+    handlers=_log_handlers,
 )
 app = FastAPI(
     title="Designora Platform",
@@ -174,6 +176,7 @@ def me():
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    logging.getLogger(__name__).exception("Unhandled error on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={

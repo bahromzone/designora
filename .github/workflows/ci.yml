@@ -25,6 +25,21 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      ENVIRONMENT: development
+      SECRET_KEY: ci-secret
+      SESSION_SECRET_KEY: ci-session
+      JWT_SECRET_KEY: ci-jwt
+      MAIL_USERNAME: ci@example.com
+      MAIL_PASSWORD: ci-pass
+      MAIL_FROM: ci@example.com
+      MAIL_PORT: "587"
+      MAIL_SERVER: smtp.example.com
+      RECAPTCHA_SECRET_KEY: ci-recaptcha
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: designora
+      PGPASSWORD: designora
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -33,46 +48,32 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+        run: bash scripts/ci_annotate.sh "Dependency install" pip install -r requirements-dev.txt
       - name: Ruff check
-        run: ruff check .
+        run: bash scripts/ci_annotate.sh "Ruff" ruff check .
       - name: Black check
-        run: black --check .
+        run: bash scripts/ci_annotate.sh "Black" black --check .
       - name: Prepare and apply migrations against PostgreSQL
         env:
-          ENVIRONMENT: development
           DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora"
-          SECRET_KEY: ci-secret
-          SESSION_SECRET_KEY: ci-session
-          JWT_SECRET_KEY: ci-jwt
-          MAIL_USERNAME: ci@example.com
-          MAIL_PASSWORD: ci-pass
-          MAIL_FROM: ci@example.com
-          MAIL_PORT: "587"
-          MAIL_SERVER: smtp.example.com
-          RECAPTCHA_SECRET_KEY: ci-recaptcha
         run: |
-          set -o pipefail
-          if ! output=$(python -m scripts.prepare_migrations 2>&1 && alembic upgrade heads 2>&1); then
-            echo "$output"
-            compact=$(printf '%s' "$output" | tr '\n' ' ' | cut -c1-900)
-            echo "::error title=Migration failure::$compact"
-            exit 1
-          fi
-      - name: Pytest
+          bash scripts/ci_annotate.sh "Migration" bash -c \
+            "python -m scripts.prepare_migrations && alembic upgrade heads"
+      - name: Create isolated test database
+        id: testdb
+        run: |
+          bash scripts/ci_annotate.sh "Test database setup" bash -c \
+            "dropdb --if-exists designora_test && createdb designora_test"
+      - name: Pytest (SQLite - fast feedback)
+        if: ${{ !cancelled() && steps.testdb.outcome == 'success' }}
         env:
-          ENVIRONMENT: development
-          DATABASE_URL: "sqlite+pysqlite:///:memory:"
-          SECRET_KEY: ci-secret
-          SESSION_SECRET_KEY: ci-session
-          JWT_SECRET_KEY: ci-jwt
-          MAIL_USERNAME: ci@example.com
-          MAIL_PASSWORD: ci-pass
-          MAIL_FROM: ci@example.com
-          MAIL_PORT: "587"
-          MAIL_SERVER: smtp.example.com
-          RECAPTCHA_SECRET_KEY: ci-recaptcha
-        run: pytest -q --tb=short
+          TEST_DATABASE_URL: "sqlite+pysqlite:///:memory:"
+        run: bash scripts/ci_annotate.sh "Pytest (SQLite)" pytest --tb=short
+      - name: Pytest (PostgreSQL - production dialect)
+        if: ${{ !cancelled() && steps.testdb.outcome == 'success' }}
+        env:
+          TEST_DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora_test"
+        run: bash scripts/ci_annotate.sh "Pytest (PostgreSQL)" pytest --tb=short
   frontend:
     name: Frontend (lint + test + build)
     runs-on: ubuntu-latest
@@ -86,9 +87,23 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm install --legacy-peer-deps
+      - name: Install dependencies
+        run: npm ci
       - run: npm run lint
-      - run: npm run format:check
+      - name: Check formatting
+        id: format
+        run: npm run format:check
+      - name: Report Prettier offenders
+        if: ${{ failure() && steps.format.outcome == 'failure' }}
+        run: |
+          set +e
+          offenders=$(npx prettier --list-different "src/**/*.{js,jsx,css}")
+          status=$?
+          printf '%s\n' "$offenders"
+          while IFS= read -r file; do
+            [ -z "$file" ] || echo "::error file=$file::Prettier formatting differs"
+          done <<< "$offenders"
+          exit "$status"
       - run: npm run test:run
       - run: npm run coverage
       - run: npm run build

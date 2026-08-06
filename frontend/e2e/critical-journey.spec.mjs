@@ -20,20 +20,27 @@ async function signIn(page) {
   await expect(page).not.toHaveURL(/modal=login/);
 }
 
-test("student can sign in, enroll, open a lesson and return to dashboard", async ({
+test("student can sign in, keep session after reload, enroll, learn and return", async ({
   page,
 }) => {
   await signIn(page);
-  await page.goto(`/kurslar/${courseId}`);
+  await page.reload();
+  await expect(page).not.toHaveURL(/modal=login/);
 
+  await page.goto(`/kurslar/${courseId}`);
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });
   if (await enroll.isVisible()) await enroll.click();
 
   await page.goto(`/organish/${courseId}`);
+  await expect(
+    page.getByRole("link", { name: "Kurslarimga qaytish" })
+  ).toBeVisible();
+  await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
   await expect(page.getByText(/Dars|Lesson/).first()).toBeVisible();
+
   await page.goto("/kurslarim");
-  await expect(page.getByText("Shaxsiy kabinet")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Darsni ochish/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Kurslarim" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Darsni davom ettirish/ })).toBeVisible();
 });
 
 test("paid course reaches checkout before payment confirmation", async ({ page }) => {

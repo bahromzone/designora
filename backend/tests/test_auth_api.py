@@ -1,6 +1,6 @@
 """Autentifikatsiya API (/api/auth) va streak mantiqi testlari."""
 
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.models.user import User
 from app.routers.auth import update_streak
@@ -13,7 +13,7 @@ def _register_payload(**over):
         "username": "testuser",
         "email": "test@example.com",
         "password": VALID_PASSWORD,
-        "recaptcha_token": "dummy",  # development'da tekshirilmaydi
+        "recaptcha_token": "dummy",
     }
     data.update(over)
     return data
@@ -23,7 +23,9 @@ def test_register_success(client):
     resp = client.post("/api/auth/register", json=_register_payload())
     assert resp.status_code == 200
     body = resp.json()
-    assert "access_token" in body
+    assert "access_token" not in body
+    assert client.cookies.get("access_token")
+    assert client.cookies.get("refresh_token")
     assert body["user"]["email"] == "test@example.com"
     assert body["redirect"] == "/dashboard"
 
@@ -55,12 +57,15 @@ def test_register_short_username(client):
 
 def test_login_success(client):
     client.post("/api/auth/register", json=_register_payload())
+    client.cookies.clear()
     resp = client.post(
         "/api/auth/login",
         json={"email": "test@example.com", "password": VALID_PASSWORD},
     )
     assert resp.status_code == 200
     assert resp.json()["success"] is True
+    assert "access_token" not in resp.json()
+    assert client.cookies.get("refresh_token")
 
 
 def test_login_wrong_password(client):

@@ -1,18 +1,11 @@
+import { request } from "./request";
+
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-async function request(path, token, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.headers ?? {}),
-    },
-    credentials: "include",
-  });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(payload?.detail || "So'rov bajarilmadi");
-  return payload;
+
+async function apiRequest(path, _token, options = {}) {
+  return request(path, options);
 }
+
 async function uploadVideoMultipart(
   courseId,
   lessonId,
@@ -22,7 +15,7 @@ async function uploadVideoMultipart(
 ) {
   const ext = file.name.split(".").pop()?.toLowerCase();
   const contentType = ext === "m4v" ? "video/mp4" : file.type || "video/mp4";
-  const init = await request(
+  const init = await apiRequest(
     `/api/uploads/video/${courseId}/${lessonId}/initiate`,
     token,
     {
@@ -52,7 +45,7 @@ async function uploadVideoMultipart(
       completed += end - start;
       onProgress?.(Math.round((completed / file.size) * 100));
     }
-    return await request(
+    return await apiRequest(
       `/api/uploads/video/${courseId}/${lessonId}/complete`,
       token,
       {
@@ -67,45 +60,51 @@ async function uploadVideoMultipart(
   } catch (error) {
     const query = new URLSearchParams({ key: init.key });
     await fetch(
-      `${API_URL}/api/uploads/video/${courseId}/${lessonId}/${encodeURIComponent(init.upload_id)}?${query}`,
+      `${API_URL}/api/uploads/video/${courseId}/${lessonId}/${encodeURIComponent(
+        init.upload_id
+      )}?${query}`,
       {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
         credentials: "include",
       }
     ).catch(() => null);
     throw error;
   }
 }
+
 export const courseBuilderApi = {
   get: (courseId, token) =>
-    request(`/api/instructor/builder/courses/${courseId}`, token),
+    apiRequest(`/api/instructor/builder/courses/${courseId}`, token),
   autosave: (courseId, body, token) =>
-    request(`/api/instructor/builder/courses/${courseId}/autosave`, token, {
+    apiRequest(`/api/instructor/builder/courses/${courseId}/autosave`, token, {
       method: "PATCH",
       body: JSON.stringify(body),
     }),
   reorder: (courseId, body, token) =>
-    request(`/api/instructor/builder/courses/${courseId}/reorder`, token, {
+    apiRequest(`/api/instructor/builder/courses/${courseId}/reorder`, token, {
       method: "POST",
       body: JSON.stringify(body),
     }),
   bulkLessons: (courseId, lessons, token) =>
-    request(`/api/instructor/builder/courses/${courseId}/bulk-lessons`, token, {
-      method: "POST",
-      body: JSON.stringify({ lessons }),
-    }),
+    apiRequest(
+      `/api/instructor/builder/courses/${courseId}/bulk-lessons`,
+      token,
+      {
+        method: "POST",
+        body: JSON.stringify({ lessons }),
+      }
+    ),
   preview: (courseId, token) =>
-    request(`/api/instructor/builder/courses/${courseId}/preview`, token),
+    apiRequest(`/api/instructor/builder/courses/${courseId}/preview`, token),
   versions: (courseId, token) =>
-    request(`/api/instructor/builder/courses/${courseId}/versions`, token),
+    apiRequest(`/api/instructor/builder/courses/${courseId}/versions`, token),
   createVersion: (courseId, label, token) =>
-    request(`/api/instructor/builder/courses/${courseId}/versions`, token, {
+    apiRequest(`/api/instructor/builder/courses/${courseId}/versions`, token, {
       method: "POST",
       body: JSON.stringify({ label }),
     }),
   restore: (courseId, versionId, token) =>
-    request(
+    apiRequest(
       `/api/instructor/builder/courses/${courseId}/versions/${versionId}/restore`,
       token,
       { method: "POST" }

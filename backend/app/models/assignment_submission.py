@@ -4,9 +4,11 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -24,6 +26,18 @@ class AssignmentSubmission(Base):
     """
 
     __tablename__ = "assignment_submissions"
+    __table_args__ = (
+        UniqueConstraint(
+            "assignment_id",
+            "user_id",
+            name="uq_assignment_submission_assignment_user",
+        ),
+        Index(
+            "ix_assignment_submissions_user_assignment",
+            "user_id",
+            "assignment_id",
+        ),
+    )
 
     id = Column(Integer, primary_key=True)
     assignment_id = Column(

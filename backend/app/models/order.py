@@ -25,7 +25,7 @@ class Order(Base):
     currency = Column(String, default="UZS")
     status = Column(String, default="pending", index=True)
     provider = Column(String, nullable=True)
-    provider_transaction_id = Column(String, nullable=True, index=True)
+    provider_transaction_id = Column(String, nullable=True, index=True, unique=True)
     provider_state = Column(Integer, default=0)
     cancel_reason = Column(Integer, nullable=True)
     create_time_ms = Column(BigInteger, default=0)
@@ -39,6 +39,7 @@ class Order(Base):
     receipt_number = Column(String, nullable=True, unique=True)
     refund_status = Column(String, default="none")
     failure_reason = Column(String, nullable=True)
+    idempotency_key = Column(String(128), nullable=True, unique=True, index=True)
 
     user = relationship("User")
     course = relationship("Course")

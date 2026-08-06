@@ -1,30 +1,27 @@
-const API = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-async function req(path, token, options = {}) {
-  const r = await fetch(`${API}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  const d = await r.json().catch(() => null);
-  if (!r.ok) throw new Error(d?.detail || "Monetizatsiya xatosi");
-  return d;
-}
+import { request } from "./request";
+
 export const monetizationApi = {
-  catalog: () => req("/api/monetization/catalog"),
-  bundle: (id, t) =>
-    req(`/api/monetization/bundles/${id}/activate`, t, { method: "POST" }),
-  subscribe: (id, t) =>
-    req(`/api/monetization/plans/${id}/subscribe`, t, { method: "POST" }),
-  team: (body, t) =>
-    req("/api/monetization/teams", t, {
+  catalog: () => request("/api/monetization/catalog"),
+  bundle: (id, token) =>
+    request(`/api/monetization/bundles/${id}/activate`, {
       method: "POST",
-      body: JSON.stringify(body),
+      token,
     }),
-  aid: (body, t) =>
-    req("/api/monetization/aid", t, {
+  subscribe: (id, token) =>
+    request(`/api/monetization/plans/${id}/subscribe`, {
+      method: "POST",
+      token,
+    }),
+  team: (body, token) =>
+    request("/api/monetization/teams", {
       method: "POST",
       body: JSON.stringify(body),
+      token,
+    }),
+  aid: (body, token) =>
+    request("/api/monetization/aid", {
+      method: "POST",
+      body: JSON.stringify(body),
+      token,
     }),
 };

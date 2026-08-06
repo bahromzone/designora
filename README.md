@@ -1,53 +1,32 @@
 # 🎨 Designora
 
 > O'zbekiston uchun jahon darajasidagi **online dizayn ta'lim platformasi**.
-> Backend: **FastAPI + PostgreSQL** · Frontend: **React 18 + Vite + Tailwind**
+> Backend: **FastAPI + PostgreSQL** · Frontend: **React 19 + Vite + Tailwind**
 
 [![CI](https://github.com/bahromzone/designora/actions/workflows/ci.yml/badge.svg)](https://github.com/bahromzone/designora/actions/workflows/ci.yml)
-
----
 
 ## 📦 Loyiha tuzilishi
 
 ```
 designora/
 ├── backend/            # FastAPI API (Python 3.12)
-│   ├── app/
-│   │   ├── core/       # config, database, security, middleware
-│   │   ├── models/     # SQLAlchemy modellari
-│   │   ├── routers/    # API endpointlari
-│   │   ├── admin/      # sqladmin panel
-│   │   ├── utils/      # yordamchilar
-│   │   └── alembic/    # migratsiyalar
+│   ├── app/            # core, models, routers, services, admin
 │   ├── tests/          # pytest testlari
-│   ├── Dockerfile
-│   └── pyproject.toml  # ruff / black / pytest sozlamalari
+│   └── pyproject.toml
 ├── frontend/           # React + Vite ilova
-│   ├── src/
-│   │   ├── components/  # UI komponentlar
-│   │   ├── pages/       # sahifalar
-│   │   ├── context/     # AuthContext
-│   │   ├── lib/         # API klient
-│   │   └── test/        # vitest sozlamalari
-│   ├── Dockerfile
-│   └── eslint.config.js
-├── docs/               # ARCHITECTURE.md, API.md
-├── docker-compose.yml  # to'liq lokal stek
-└── .github/workflows/  # CI/CD
+│   ├── src/            # components, pages, context, lib
+│   └── e2e/            # Playwright critical journey
+├── docs/               # arxitektura, API va roadmap
+├── docker-compose.yml  # db, redis, backend, frontend
+└── .github/workflows/  # CI/CD va browser E2E
 ```
-
----
 
 ## 🚀 Tez boshlash
 
-### Variant A — Docker (tavsiya etiladi)
+### Docker
 
 ```bash
-# 1. Muhit fayllarini tayyorlang
-cp .env.example .env
-cp backend/env.example backend/.env      # qiymatlarni to'ldiring
-
-# 2. Ishga tushiring
+cp backend/env.example backend/.env  # qiymatlarni to'ldiring
 docker compose up --build
 ```
 
@@ -55,51 +34,46 @@ docker compose up --build
 - Backend API → http://localhost:8000
 - API hujjatlari → http://localhost:8000/docs
 
-### Variant B — Qo'lda (lokal)
-
-**Backend:**
+### Qo'lda
 
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp env.example .env                       # qiymatlarni to'ldiring
+cp env.example .env
 uvicorn app.main:app --reload
 ```
 
-**Frontend:**
+Alohida terminalda:
 
 ```bash
 cd frontend
-npm install
+npm ci
 cp .env.example .env
 npm run dev
 ```
 
----
+## 🔑 Muhit o'zgaruvchilari
 
-## 🔑 Muhit o'zgaruvchilari (secrets)
+Real `.env` fayllari **hech qachon** commit qilinmaydi. Production uchun quyidagilar majburiy:
 
-Real `.env` fayllari **hech qachon** commit qilinmaydi (`.gitignore` bilan himoyalangan).
+- `DATABASE_URL`, `SECRET_KEY`, `SESSION_SECRET_KEY`, `JWT_SECRET_KEY`;
+- `REDIS_URL` yoki `RATE_LIMIT_STORAGE_URI`;
+- Payme/Click webhook kalitlari;
+- video storage credentials va public base URL;
+- `ALLOWED_ORIGINS` va email sozlamalari.
 
-Kuchli tasodifiy kalit yaratish:
+Kuchli kalit yaratish:
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
-| O'zgaruvchi | Tavsif |
-|-------------|--------|
-| `DATABASE_URL` | Ma'lumotlar bazasi ulanishi |
-| `SECRET_KEY` / `SESSION_SECRET_KEY` / `JWT_SECRET_KEY` | Kriptografik kalitlar |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (ixtiyoriy) |
-| `MAIL_*` | SMTP sozlamalari |
-| `RECAPTCHA_SECRET_KEY` | reCAPTCHA |
-| `ALLOWED_ORIGINS` | CORS ruxsat etilgan manzillar |
+### Auth xavfsizligi
 
-To'liq ro'yxat: [`backend/env.example`](backend/env.example)
+Access va refresh tokenlar frontend JavaScript'iga berilmaydi. Ular `httpOnly`, `SameSite=Strict` cookie'larda saqlanadi; refresh token rotation va reuse detection bilan himoyalangan. Frontend `localStorage`'da token saqlamaydi.
 
----
+Production'da Redis ishlamasa ilova boot vaqtida to'xtaydi: ko'p worker'li muhitda `memory://` rate limit xavfsiz emas.
 
 ## 🧪 Testlar va kod sifati
 
@@ -107,68 +81,56 @@ To'liq ro'yxat: [`backend/env.example`](backend/env.example)
 
 ```bash
 cd backend
-pytest                 # testlar + coverage hisoboti
-ruff check .           # linter
-black --check .        # format tekshiruvi
+pytest
+ruff check .
+black --check .
 ```
 
-Joriy qamrov (coverage): **~72%** (maqsad ≥ 60%).
+CI testlarni SQLite va PostgreSQL'da alohida ishga tushiradi. PostgreSQL production dialekti sifatida blocking gate hisoblanadi. Testlar haqiqiy `DATABASE_URL`ga tegmaydi.
 
 ### Frontend
 
 ```bash
 cd frontend
-npm run test:run       # vitest
-npm run coverage       # coverage bilan
-npm run lint           # eslint
-npm run format:check   # prettier
-npm run build          # ishlab chiqarish build
+npm ci
+npm run lint
+npm run format:check
+npm run test:run
+npm run coverage
+npm run build
 ```
 
-### Pre-commit hooks
+`format:check` faqat tekshiradi, fayllarni o'zgartirmaydi.
+
+### Browser E2E
+
+Critical student journey `frontend/e2e/critical-journey.spec.mjs` ichida: login, reload'dan keyin cookie session, enrollment, lesson ochish va dashboard'ga qaytish. GitHub Actions'da `E2E_BASE_URL`, `E2E_EMAIL`, `E2E_PASSWORD`, `E2E_COURSE_ID` secretlari kerak.
 
 ```bash
-pip install pre-commit
-pre-commit install
-pre-commit run --all-files
+cd frontend/e2e
+npm install
+npx playwright install --with-deps chromium
+E2E_BASE_URL=... E2E_EMAIL=... E2E_PASSWORD=... E2E_COURSE_ID=... npm test
 ```
-
-Har commit'da avtomatik: trailing-whitespace, merge-conflict tekshiruvi, ruff, black, prettier.
-
----
 
 ## 🏗️ Arxitektura
 
+- **Backend** — FastAPI JSON API, cookie-based auth, JWT, CSRF, rate limiting, security headers va IP-blocking middleware.
+- **Frontend** — React SPA, React Router, Framer Motion va GSAP.
+- **Ma'lumotlar bazasi** — PostgreSQL production uchun, SQLite lokal testlar uchun, Alembic migratsiyalari bilan.
+- **Kesh/navbat** — Redis.
+- **Media** — signed video URL, multipart object-storage upload va bounded disk streaming.
+- **Payments** — Payme/Click webhook validation, idempotent checkout va access grant/revoke.
+
 Batafsil: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
-- **Backend** — FastAPI JSON API. JWT + session autentifikatsiya, CSRF himoyasi,
-  rate limiting (slowapi), security headers, IP-blocking middleware.
-- **Frontend** — React SPA, React Router, Framer Motion + GSAP animatsiyalar.
-- **Ma'lumotlar bazasi** — PostgreSQL (prod), SQLite (lokal/test), Alembic migratsiyalar.
-- **Kesh/navbat** — Redis (compose'da tayyor, kelajakdagi funksiyalar uchun).
+## 🤝 Hissa qo'shish
 
----
-
-## 📖 API hujjatlari
-
-- Interaktiv (Swagger): `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
-- Qisqacha yo'riqnoma: [`docs/API.md`](docs/API.md)
-
----
-
-## 🤝 Hissa qo'shish (Contributing)
-
-1. Yangi branch oching: `git checkout -b feature/xususiyat-nomi`
-2. `pre-commit install` — hooklarni yoqing
-3. Testlar yozing va `pytest` / `npm run test:run` yashil bo'lsin
-4. Pull Request oching — CI avtomatik lint + test + build tekshiradi
-
----
+1. `git checkout -b feature/xususiyat-nomi`
+2. `pre-commit install`
+3. Testlar va CI yashil bo'lishini kuting
+4. Pull Request oching
 
 ## 🗺️ Yo'l xaritasi
 
-Loyiha bosqichma-bosqich rivojlanadi (LMS yadrosi → to'lovlar → o'rganish sifati
-→ community → miqyoslash). Bu repozitoriya **Bosqich 0 — Poydevorni
-mustahkamlash** yakunlangan holatini o'z ichiga oladi: testlar, Docker, CI/CD,
-kod sifati vositalari, muhit boshqaruvi va hujjatlar.
+Avval kritik student journey ishonchliligi, keyin Student Dashboard, onboarding, assignment feedback, portfolio, search va learning paths. Random feature emas, real learning outcome ustuvor.

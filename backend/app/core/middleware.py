@@ -1,5 +1,6 @@
 import logging
 import time
+from urllib.parse import urlparse
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -9,6 +10,16 @@ from app.core import metrics
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _csp_connect_origins() -> str:
+    """Return configured origins in a CSP-safe space-separated form."""
+    origins = {"'self'", "https://accounts.google.com"}
+    for value in [*settings.get_allowed_origins(), settings.FRONTEND_URL]:
+        parsed = urlparse(value.strip())
+        if parsed.scheme in {"http", "https"} and parsed.netloc:
+            origins.add(f"{parsed.scheme}://{parsed.netloc}")
+    return " ".join(sorted(origins))
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -22,7 +33,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "max-age=31536000; includeSubDomains"
             )
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://accounts.google.com; frame-src 'self' https://www.google.com;"
+            "default-src 'self'; script-src 'self' 'unsafe-inline' "
+            "https://cdn.tailwindcss.com https://unpkg.com "
+            "https://www.google.com https://www.gstatic.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
+            "https://cdn.tailwindcss.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            f"connect-src {_csp_connect_origins()}; "
+            "frame-src 'self' https://www.google.com;"
         )
         return response
 

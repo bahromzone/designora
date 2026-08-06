@@ -171,6 +171,16 @@ def home():
     }
 
 
+@app.get("/healthz")
+def healthz():
+    """Unauthenticated liveness probe for load balancers and containers."""
+    return {
+        "status": "ok",
+        "service": "designora-api",
+        "version": os.getenv("APP_VERSION", "1.0"),
+    }
+
+
 @app.get("/api/me")
 def me():
     return RedirectResponse(url="/api/profile/me", status_code=307)

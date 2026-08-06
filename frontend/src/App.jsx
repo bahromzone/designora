@@ -43,31 +43,21 @@ const InstructorManagePage = lazy(() =>
   import("./pages/InstructorManagePage")
 );
 const InstructorPage = lazy(() => import("./pages/InstructorPage"));
-const InstructorReviewPage = lazy(() =>
-  import("./pages/InstructorReviewPage")
-);
+const InstructorReviewPage = lazy(() => import("./pages/InstructorReviewPage"));
 const LearnPage = lazy(() => import("./pages/LearnPage"));
 const LearningPathDetailPage = lazy(() =>
   import("./pages/LearningPathDetailPage")
 );
 const LearningPathsPage = lazy(() => import("./pages/LearningPathsPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
-const PortfolioBuilderPage = lazy(() =>
-  import("./pages/PortfolioBuilderPage")
-);
+const PortfolioBuilderPage = lazy(() => import("./pages/PortfolioBuilderPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const PublicPortfolioPage = lazy(() =>
-  import("./pages/PublicPortfolioPage")
-);
+const PublicPortfolioPage = lazy(() => import("./pages/PublicPortfolioPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
-const StudentDashboardPage = lazy(() =>
-  import("./pages/StudentDashboardPage")
-);
-const SuperadminAuditPage = lazy(() =>
-  import("./pages/SuperadminAuditPage")
-);
+const StudentDashboardPage = lazy(() => import("./pages/StudentDashboardPage"));
+const SuperadminAuditPage = lazy(() => import("./pages/SuperadminAuditPage"));
 const SuperadminDashboardPage = lazy(() =>
   import("./pages/SuperadminDashboardPage")
 );

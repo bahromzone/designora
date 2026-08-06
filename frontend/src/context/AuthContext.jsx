@@ -23,10 +23,7 @@ export function AuthProvider({ children }) {
     };
     window.addEventListener("designora-session-invalidated", onInvalid);
     return () =>
-      window.removeEventListener(
-        "designora-session-invalidated",
-        onInvalid
-      );
+      window.removeEventListener("designora-session-invalidated", onInvalid);
   }, []);
 
   useEffect(() => {

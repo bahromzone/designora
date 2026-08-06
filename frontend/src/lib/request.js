@@ -2,7 +2,8 @@ let refreshPromise = null;
 
 async function refreshAccessToken() {
   if (refreshPromise) return refreshPromise;
-  const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+  const API_URL =
+    import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
   refreshPromise = fetch(`${API_URL}/api/auth/refresh`, {
     method: "POST",
     credentials: "include",
@@ -22,7 +23,8 @@ export async function request(path, options = {}) {
   delete rest.token;
   const isFormData =
     typeof FormData !== "undefined" && rest.body instanceof FormData;
-  const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+  const API_URL =
+    import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
   const response = await fetch(`${API_URL}${path}`, {
     ...rest,
     credentials: "include",
@@ -32,12 +34,18 @@ export async function request(path, options = {}) {
       ...(headers ?? {}),
     },
   });
-  if (response.status === 401 && !_retry && !path.startsWith("/api/auth/")) {
+  if (
+    response.status === 401 &&
+    !_retry &&
+    !path.startsWith("/api/auth/")
+  ) {
     try {
       await refreshAccessToken();
       return request(path, { ...options, _retry: true });
     } catch {
-      window.dispatchEvent(new Event("designora-session-invalidated"));
+      window.dispatchEvent(
+        new Event("designora-session-invalidated")
+      );
       /* return original response below */
     }
   }
@@ -48,7 +56,9 @@ export async function request(path, options = {}) {
   if (!response.ok) {
     const detail = payload?.detail;
     const message = Array.isArray(detail)
-      ? detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ")
+      ? detail
+          .map((item) => item?.msg ?? "Noma'lum xato")
+          .join(" ")
       : detail || "So'rovni bajarib bo'lmadi.";
     throw new Error(message);
   }

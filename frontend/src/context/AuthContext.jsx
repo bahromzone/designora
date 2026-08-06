@@ -23,7 +23,10 @@ export function AuthProvider({ children }) {
     };
     window.addEventListener("designora-session-invalidated", onInvalid);
     return () =>
-      window.removeEventListener("designora-session-invalidated", onInvalid);
+      window.removeEventListener(
+        "designora-session-invalidated",
+        onInvalid
+      );
   }, []);
 
   useEffect(() => {
@@ -78,13 +81,18 @@ export function AuthProvider({ children }) {
 
   const loginWithToken = useCallback(async (nextToken) => {
     if (!nextToken) return null;
-    const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-    const response = await fetch(`${API_URL}/api/auth/issue-refresh`, {
-      method: "POST",
-      credentials: "include",
-      headers: { Authorization: `Bearer ${nextToken}` },
-    });
-    if (!response.ok) throw new Error("OAuth sessiyasini yaratib bo'lmadi");
+    const API_URL =
+      import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+    const response = await fetch(
+      `${API_URL}/api/auth/issue-refresh`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { Authorization: `Bearer ${nextToken}` },
+      }
+    );
+    if (!response.ok)
+      throw new Error("OAuth sessiyasini yaratib bo'lmadi");
     const profile = await authApi.profile();
     setUser(profile);
     return profile;
@@ -104,7 +112,6 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       value={{
-        token: null,
         user,
         loading,
         isAuthenticated: Boolean(user),

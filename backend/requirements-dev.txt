@@ -3,7 +3,7 @@
 -r requirements.txt
 
 # ===== Test =====
-pytest==8.4.2
+pytest==9.1.1
 pytest-cov==6.2.1
 pytest-asyncio==1.4.0
 

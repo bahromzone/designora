@@ -5,7 +5,7 @@ from app.core.config import settings
 
 _is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 
-_engine_kwargs = {}
+_engine_kwargs: dict = {}
 if not _is_sqlite:
     _engine_kwargs.update(
         pool_pre_ping=True,

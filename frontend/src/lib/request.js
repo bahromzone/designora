@@ -48,8 +48,8 @@ export async function request(path, options = {}) {
   if (!response.ok) {
     const detail = payload?.detail;
     const message = Array.isArray(detail)
-      ? detail.map((item) => item?.msg ?? "Noma\u2019lum xato").join(" ")
-      : detail || "So\u2019rovni bajarib bo\u2019lmadi.";
+      ? detail.map((item) => item?.msg ?? "Noma'lum xato").join(" ")
+      : detail || "So'rovni bajarib bo'lmadi.";
     throw new Error(message);
   }
   return payload;

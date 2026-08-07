@@ -18,6 +18,7 @@ async function signIn(page) {
   await page.getByPlaceholder("Parol").fill(password);
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
   await expect(page).not.toHaveURL(/modal=login/);
+  await expect(page.getByRole("heading", { name: /Salom,/ })).toBeVisible();
 }
 
 test("student can sign in, keep session after reload, enroll, learn and return", async ({

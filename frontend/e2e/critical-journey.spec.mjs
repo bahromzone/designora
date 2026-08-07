@@ -45,10 +45,12 @@ test("student can sign in, keep session after reload, enroll, learn and return",
     page.getByRole("link", { name: "Kurslarim sahifasiga qaytish" }),
   ).toBeVisible();
   await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
-  await expect(page.getByText(/Dars|Lesson/).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "E2E Lesson" })).toBeVisible();
 
   await page.goto("/kurslarim");
-  await expect(page.getByRole("heading", { name: "Kurslarim" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Kurslarim", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("link", { name: /O'qishni davom ettirish/ }),
   ).toBeVisible();

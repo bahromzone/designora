@@ -12,6 +12,15 @@ test.beforeEach(() => {
   );
 });
 
+async function dismissOnboarding(page) {
+  const onboarding = page.getByRole("button", {
+    name: "Keyinroq davom etish",
+  });
+  if (await onboarding.isVisible().catch(() => false)) {
+    await onboarding.click();
+  }
+}
+
 async function signIn(page) {
   await page.goto("/?modal=login");
   await page.getByPlaceholder("E-pochta").fill(email);
@@ -20,8 +29,11 @@ async function signIn(page) {
   await expect(page).not.toHaveURL(/modal=login/);
   await expect(page).toHaveURL(/\/kurslarim/);
   await expect(
-    page.getByRole("heading", { name: "Kurslarim", exact: true }),
+    page.getByRole("heading", {
+      name: /Kurslarim|Birinchi kursga yoziling!/,
+    }),
   ).toBeVisible();
+  await dismissOnboarding(page);
 }
 
 test("student can sign in, keep session after reload, enroll, learn and return", async ({
@@ -31,6 +43,7 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   await page.reload();
   await expect(page).not.toHaveURL(/modal=login/);
   await expect(page).toHaveURL(/\/kurslarim/);
+  await dismissOnboarding(page);
 
   await page.goto(`/kurslar/${courseId}`);
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });

@@ -31,29 +31,36 @@ COURSE_SPECS = (
 )
 
 
+def _course_values(spec: dict) -> dict:
+    return {
+        "title": spec["title"],
+        "subtitle": "Deterministic browser test course",
+        "description": "Course fixture for the Designora browser journey.",
+        "price": spec["price"],
+        "category": spec["category"],
+        "level": "beginner",
+        "language": "uz",
+        "duration_minutes": 10,
+        "rating_avg": 5.0,
+        "rating_count": 1,
+        "students_count": 0,
+        "status": "published",
+        "is_active": True,
+        "learning_outcomes": ["Complete the deterministic E2E journey"],
+        "requirements": [],
+    }
+
+
 def _ensure_course(db, spec: dict) -> Course:
     course = db.query(Course).filter(Course.slug == spec["slug"]).one_or_none()
     if course is None:
-        course = Course(slug=spec["slug"])
+        course = Course(slug=spec["slug"], **_course_values(spec))
         db.add(course)
         db.flush()
-
-    course.title = spec["title"]
-    course.subtitle = "Deterministic browser test course"
-    course.description = "Course fixture for the Designora browser journey."
-    course.price = spec["price"]
-    course.category = spec["category"]
-    course.level = "beginner"
-    course.language = "uz"
-    course.duration_minutes = 10
-    course.rating_avg = 5.0
-    course.rating_count = 1
-    course.students_count = 0
-    course.status = "published"
-    course.is_active = True
-    course.learning_outcomes = ["Complete the deterministic E2E journey"]
-    course.requirements = []
-    db.flush()
+    else:
+        for field, value in _course_values(spec).items():
+            setattr(course, field, value)
+        db.flush()
 
     module = (
         db.query(Module)

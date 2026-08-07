@@ -7,6 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: browser-e2e-${{ github.ref }}
   cancel-in-progress: true
@@ -15,7 +18,7 @@ jobs:
   critical-journey:
     name: Critical student journey
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: frontend/e2e
@@ -26,26 +29,73 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/e2e/package.json
-      - name: Validate E2E configuration
+
+      - name: Create deterministic E2E environment
+        working-directory: .
         run: |
-          test -n "$E2E_BASE_URL"
-          test -n "$E2E_EMAIL"
-          test -n "$E2E_PASSWORD"
-          test -n "$E2E_COURSE_ID"
-        env:
-          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
-          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
-          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
-          E2E_COURSE_ID: ${{ secrets.E2E_COURSE_ID }}
+          cat > backend/.env <<'EOF'
+          DATABASE_URL=postgresql+psycopg2://designora:designora@db:5432/designora
+          SECRET_KEY=e2e-secret-key
+          ENVIRONMENT=development
+          SESSION_SECRET_KEY=e2e-session-secret
+          JWT_SECRET_KEY=e2e-jwt-secret
+          JWT_EXPIRE_MINUTES=60
+          MAIL_USERNAME=e2e@example.com
+          MAIL_PASSWORD=e2e-password
+          MAIL_FROM=e2e@example.com
+          MAIL_PORT=587
+          MAIL_SERVER=smtp.example.com
+          RECAPTCHA_SECRET_KEY=e2e-recaptcha
+          ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+          FRONTEND_URL=http://localhost:5173
+          REDIS_URL=redis://redis:6379/0
+          RATE_LIMIT_STORAGE_URI=redis://redis:6379/0
+          EOF
+          docker compose down -v --remove-orphans
+
+      - name: Build and start local E2E stack
+        working-directory: .
+        run: docker compose up -d --build
+
+      - name: Wait for the local API
+        working-directory: .
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8000/healthz >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs --no-color backend
+          exit 1
+
+      - name: Seed deterministic user and courses
+        working-directory: .
+        run: |
+          seed_output="$(docker compose exec -T backend python -m scripts.seed_e2e)"
+          for key in E2E_EMAIL E2E_PASSWORD E2E_COURSE_ID E2E_PAID_COURSE_ID; do
+            value="$(printf '%s\n' "$seed_output" | awk -F= -v key="$key" '$1 == key {print substr($0, index($0, "=") + 1)}')"
+            test -n "$value"
+            printf '%s=%s\n' "$key" "$value" >> "$GITHUB_ENV"
+          done
+          echo "Deterministic E2E fixtures are ready."
+          echo "E2E_BASE_URL=http://127.0.0.1:5173" >> "$GITHUB_ENV"
+
       - name: Install E2E dependencies
         run: npm install --no-fund --no-audit
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+
       - name: Run critical journey
         run: npm test
-        env:
-          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
-          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
-          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
-          E2E_COURSE_ID: ${{ secrets.E2E_COURSE_ID }}
-          E2E_PAID_COURSE_ID: ${{ secrets.E2E_PAID_COURSE_ID }}
+
+      - name: Dump local stack logs on failure
+        if: ${{ failure() }}
+        working-directory: .
+        run: docker compose logs --no-color
+
+      - name: Tear down local E2E stack
+        if: ${{ always() }}
+        working-directory: .
+        run: docker compose down -v --remove-orphans

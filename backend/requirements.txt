@@ -44,7 +44,7 @@ limits==5.8.0
 magic-filter==1.0.12
 MarkupSafe==3.0.3
 multidict==6.7.1
-mypy_extensions==1.1.0
+mypy_extensions==1.1.1
 packaging==25.0
 passlib==1.7.4
 pathspec==1.1.1
@@ -62,7 +62,7 @@ python-multipart==0.0.32
 pytz==2025.2
 redis==5.2.1
 regex==2025.11.3
-reportlab==4.2.0
+reportlab==4.2.5
 requests==2.34.2
 rsa==4.9.1
 six==1.17.0

@@ -29,7 +29,16 @@ test("student can sign in, keep session after reload, enroll, learn and return",
 
   await page.goto(`/kurslar/${courseId}`);
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });
-  if (await enroll.isVisible()) await enroll.click();
+  if (await enroll.isVisible()) {
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes(`/api/learning/enroll/${courseId}`) &&
+          response.ok(),
+      ),
+      enroll.click(),
+    ]);
+  }
 
   await page.goto(`/organish/${courseId}`);
   await expect(

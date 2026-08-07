@@ -26,27 +26,25 @@ const ForumListPage = lazy(() => import("./pages/ForumListPage"));
 const ForumThreadPage = lazy(() => import("./pages/ForumThreadPage"));
 const GlobalSearchPage = lazy(() => import("./pages/GlobalSearchPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
-const InstructorAnalyticsPage = lazy(() =>
-  import("./pages/InstructorAnalyticsPage")
+const InstructorAnalyticsPage = lazy(
+  () => import("./pages/InstructorAnalyticsPage")
 );
 const InstructorApplyPage = lazy(() => import("./pages/InstructorApplyPage"));
-const InstructorApplicationsPage = lazy(() =>
-  import("./pages/InstructorApplicationsPage")
+const InstructorApplicationsPage = lazy(
+  () => import("./pages/InstructorApplicationsPage")
 );
-const InstructorCourseEditPage = lazy(() =>
-  import("./pages/InstructorCourseEditPage")
+const InstructorCourseEditPage = lazy(
+  () => import("./pages/InstructorCourseEditPage")
 );
-const InstructorDashboardPage = lazy(() =>
-  import("./pages/InstructorDashboardPage")
+const InstructorDashboardPage = lazy(
+  () => import("./pages/InstructorDashboardPage")
 );
-const InstructorManagePage = lazy(() =>
-  import("./pages/InstructorManagePage")
-);
+const InstructorManagePage = lazy(() => import("./pages/InstructorManagePage"));
 const InstructorPage = lazy(() => import("./pages/InstructorPage"));
 const InstructorReviewPage = lazy(() => import("./pages/InstructorReviewPage"));
 const LearnPage = lazy(() => import("./pages/LearnPage"));
-const LearningPathDetailPage = lazy(() =>
-  import("./pages/LearningPathDetailPage")
+const LearningPathDetailPage = lazy(
+  () => import("./pages/LearningPathDetailPage")
 );
 const LearningPathsPage = lazy(() => import("./pages/LearningPathsPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
@@ -58,8 +56,8 @@ const PublicPortfolioPage = lazy(() => import("./pages/PublicPortfolioPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const StudentDashboardPage = lazy(() => import("./pages/StudentDashboardPage"));
 const SuperadminAuditPage = lazy(() => import("./pages/SuperadminAuditPage"));
-const SuperadminDashboardPage = lazy(() =>
-  import("./pages/SuperadminDashboardPage")
+const SuperadminDashboardPage = lazy(
+  () => import("./pages/SuperadminDashboardPage")
 );
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const VerifyPage = lazy(() => import("./pages/VerifyPage"));
@@ -176,18 +174,9 @@ export default function App() {
             path="/admin/moderation"
             element={ad(<AdminModerationPage />)}
           />
-          <Route
-            path="/admin/analytics"
-            element={ad(<AdminAnalyticsPage />)}
-          />
-          <Route
-            path="/superadmin"
-            element={sa(<SuperadminDashboardPage />)}
-          />
-          <Route
-            path="/superadmin/users"
-            element={sa(<AdminUsersPage />)}
-          />
+          <Route path="/admin/analytics" element={ad(<AdminAnalyticsPage />)} />
+          <Route path="/superadmin" element={sa(<SuperadminDashboardPage />)} />
+          <Route path="/superadmin/users" element={sa(<AdminUsersPage />)} />
           <Route
             path="/superadmin/audit"
             element={sa(<SuperadminAuditPage />)}

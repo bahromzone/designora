@@ -11,7 +11,7 @@ annotated-types==0.8.0
 anyio==4.14.2
 attrs==25.4.0
 Authlib==1.7.2
-bcrypt==4.1.2
+bcrypt==4.0.1
 black==25.12.0
 blinker==1.9.0
 certifi==2026.7.22
@@ -62,7 +62,7 @@ python-multipart==0.0.32
 pytz==2025.2
 redis==5.2.1
 regex==2025.11.3
-reportlab==4.2.5
+reportlab==4.2.0
 requests==2.34.2
 rsa==4.9.1
 six==1.17.0

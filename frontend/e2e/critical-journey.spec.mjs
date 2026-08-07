@@ -18,7 +18,10 @@ async function signIn(page) {
   await page.getByPlaceholder("Parol").fill(password);
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
   await expect(page).not.toHaveURL(/modal=login/);
-  await expect(page.getByRole("heading", { name: /Salom,/ })).toBeVisible();
+  await expect(page).toHaveURL(/\/kurslarim/);
+  await expect(
+    page.getByRole("heading", { name: "Kurslarim", exact: true }),
+  ).toBeVisible();
 }
 
 test("student can sign in, keep session after reload, enroll, learn and return", async ({
@@ -27,6 +30,7 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   await signIn(page);
   await page.reload();
   await expect(page).not.toHaveURL(/modal=login/);
+  await expect(page).toHaveURL(/\/kurslarim/);
 
   await page.goto(`/kurslar/${courseId}`);
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });

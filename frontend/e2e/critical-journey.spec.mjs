@@ -33,7 +33,7 @@ test("student can sign in, keep session after reload, enroll, learn and return",
 
   await page.goto(`/organish/${courseId}`);
   await expect(
-    page.getByRole("link", { name: "Kurslarimga qaytish" }),
+    page.getByRole("link", { name: "Kurslarim sahifasiga qaytish" }),
   ).toBeVisible();
   await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
   await expect(page.getByText(/Dars|Lesson/).first()).toBeVisible();

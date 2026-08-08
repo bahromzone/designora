@@ -92,14 +92,19 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   await page.goto(`/kurslar/${courseId}`);
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });
   if (await enroll.isVisible().catch(() => false)) {
-    await Promise.all([
+    const [enrollResponse] = await Promise.all([
       page.waitForResponse(
         (response) =>
           response.url().includes(`/api/learning/enroll/${courseId}`) &&
-          response.ok(),
+          response.request().method() === "POST",
       ),
       enroll.click(),
     ]);
+    const enrollBody = await enrollResponse.text().catch(() => "<body unavailable>");
+    expect(
+      enrollResponse.ok(),
+      `Enrollment failed with ${enrollResponse.status()}: ${enrollBody}`,
+    ).toBeTruthy();
   }
 
   await page.goto(`/organish/${courseId}`);

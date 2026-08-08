@@ -12,12 +12,54 @@ test.beforeEach(() => {
   );
 });
 
+async function dismissOnboarding(page) {
+  const onboarding = page.getByRole("button", {
+    name: "Keyinroq davom etish",
+  });
+  if (await onboarding.isVisible().catch(() => false)) {
+    await onboarding.click();
+  }
+}
+
 async function signIn(page) {
+  const consoleMessages = [];
+  page.on("console", (message) => {
+    if (["error", "warning"].includes(message.type())) {
+      consoleMessages.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+
   await page.goto("/?modal=login");
   await page.getByPlaceholder("E-pochta").fill(email);
   await page.getByPlaceholder("Parol").fill(password);
+  const loginResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/auth/login") &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
-  await expect(page).not.toHaveURL(/modal=login/);
+  const loginResponse = await loginResponsePromise;
+  const loginBody = await loginResponse.text();
+  const setCookie = loginResponse.headers()["set-cookie"] || "";
+  console.log(`E2E_LOGIN_STATUS=${loginResponse.status()}`);
+  console.log(`E2E_LOGIN_URL=${loginResponse.url()}`);
+  console.log(`E2E_LOGIN_SET_COOKIE_PRESENT=${setCookie ? "yes" : "no"}`);
+  console.log(`E2E_LOGIN_BODY=${loginBody}`);
+  console.log(`E2E_URL_AFTER_LOGIN=${page.url()}`);
+  if (consoleMessages.length > 0) {
+    console.log(`E2E_BROWSER_MESSAGES=${consoleMessages.join(" | ")}`);
+  }
+  expect(
+    loginResponse.ok(),
+    `Login failed with ${loginResponse.status()}: ${loginBody}`,
+  ).toBeTruthy();
+  await expect(page).toHaveURL(/\/kurslarim/);
+  await expect(
+    page.getByRole("heading", {
+      name: /Kurslarim|Birinchi kursga yoziling!/,
+    }),
+  ).toBeVisible();
+  await dismissOnboarding(page);
 }
 
 test("student can sign in, keep session after reload, enroll, learn and return", async ({
@@ -26,21 +68,36 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   await signIn(page);
   await page.reload();
   await expect(page).not.toHaveURL(/modal=login/);
+  await expect(page).toHaveURL(/\/kurslarim/);
+  await dismissOnboarding(page);
 
   await page.goto(`/kurslar/${courseId}`);
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });
-  if (await enroll.isVisible()) await enroll.click();
+  if (await enroll.isVisible()) {
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes(`/api/learning/enroll/${courseId}`) &&
+          response.ok(),
+      ),
+      enroll.click(),
+    ]);
+  }
 
   await page.goto(`/organish/${courseId}`);
   await expect(
-    page.getByRole("link", { name: "Kurslarimga qaytish" })
+    page.getByRole("link", { name: "Kurslarim sahifasiga qaytish" }),
   ).toBeVisible();
   await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
-  await expect(page.getByText(/Dars|Lesson/).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "E2E Lesson" })).toBeVisible();
 
   await page.goto("/kurslarim");
-  await expect(page.getByRole("heading", { name: "Kurslarim" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Darsni davom ettirish/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Kurslarim", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /O'qishni davom ettirish/ }),
+  ).toBeVisible();
 });
 
 test("paid course reaches checkout before payment confirmation", async ({ page }) => {

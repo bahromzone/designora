@@ -3,9 +3,10 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { authApi } from "../lib/api";
 
 const AuthContext = createContext(null);
@@ -13,12 +14,13 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const authVersion = useRef(0);
 
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const onInvalid = () => {
+      authVersion.current += 1;
       setUser(null);
     };
     window.addEventListener("designora-session-invalidated", onInvalid);
@@ -28,23 +30,26 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
+    const restoreVersion = authVersion.current;
     setLoading(true);
     const restore = async () => {
       try {
         const profile = await authApi.profile();
-        if (active) setUser(profile);
+        if (active && authVersion.current === restoreVersion) setUser(profile);
       } catch {
         try {
           await authApi.refresh();
           const profile = await authApi.profile();
-          if (active) setUser(profile);
+          if (active && authVersion.current === restoreVersion) {
+            setUser(profile);
+          }
         } catch {
-          if (active) {
+          if (active && authVersion.current === restoreVersion) {
             setUser(null);
           }
         }
       } finally {
-        if (active) setLoading(false);
+        if (active && authVersion.current === restoreVersion) setLoading(false);
       }
     };
     restore();
@@ -54,24 +59,26 @@ export function AuthProvider({ children }) {
   }, []);
 
   function handlePostAuthRedirect(response) {
-    if (response.redirect) {
-      window.location.assign(response.redirect);
-      return;
-    }
-    const returnTo = location.state?.from;
-    if (returnTo) navigate(returnTo, { replace: true });
+    const nextPath = response?.redirect || location.state?.from || "/dashboard";
+    window.location.replace(nextPath);
   }
 
   async function login(credentials) {
+    const version = ++authVersion.current;
     const response = await authApi.login(credentials);
+    if (authVersion.current !== version) return response;
     setUser(response.user);
+    setLoading(false);
     handlePostAuthRedirect(response);
     return response;
   }
 
   async function register(payload) {
+    const version = ++authVersion.current;
     const response = await authApi.register(payload);
+    if (authVersion.current !== version) return response;
     setUser(response.user);
+    setLoading(false);
     handlePostAuthRedirect(response);
     return response;
   }
@@ -91,6 +98,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   function logout() {
+    authVersion.current += 1;
     authApi.logoutAll().catch(() => {});
     setUser(null);
   }

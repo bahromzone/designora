@@ -130,6 +130,10 @@ export default function App() {
             path="/portfolio/u/:userId"
             element={<PublicPortfolioPage />}
           />
+          <Route
+            path="/dashboard"
+            element={<Navigate to="/kurslarim" replace />}
+          />
           <Route path="/kurslarim" element={p(<StudentDashboardPage />)} />
           <Route path="/organish/:courseId" element={p(<LearnPage />)} />
           <Route

@@ -61,7 +61,7 @@ jobs:
         working-directory: .
         run: |
           for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:8000/healthz >/dev/null; then
+            if curl --fail --silent http://localhost:8000/healthz >/dev/null; then
               exit 0
             fi
             sleep 2
@@ -73,7 +73,7 @@ jobs:
         working-directory: .
         run: |
           for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:5173/ >/dev/null; then
+            if curl --fail --silent http://localhost:5173/ >/dev/null; then
               exit 0
             fi
             sleep 2
@@ -91,7 +91,7 @@ jobs:
             printf '%s=%s\n' "$key" "$value" >> "$GITHUB_ENV"
           done
           echo "Deterministic E2E fixtures are ready."
-          echo "E2E_BASE_URL=http://127.0.0.1:5173" >> "$GITHUB_ENV"
+          echo "E2E_BASE_URL=http://localhost:5173" >> "$GITHUB_ENV"
 
       - name: Install E2E dependencies
         run: npm install --no-fund --no-audit

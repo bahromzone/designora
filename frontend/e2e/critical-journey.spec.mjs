@@ -25,8 +25,18 @@ async function signIn(page) {
   await page.goto("/?modal=login");
   await page.getByPlaceholder("E-pochta").fill(email);
   await page.getByPlaceholder("Parol").fill(password);
+  const loginResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/auth/login") &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
-  await expect(page).not.toHaveURL(/modal=login/);
+  const loginResponse = await loginResponsePromise;
+  const loginBody = await loginResponse.text();
+  expect(
+    loginResponse.ok(),
+    `Login failed with ${loginResponse.status()}: ${loginBody}`,
+  ).toBeTruthy();
   await expect(page).toHaveURL(/\/kurslarim/);
   await expect(
     page.getByRole("heading", {

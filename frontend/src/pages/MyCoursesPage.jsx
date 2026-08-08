@@ -39,22 +39,26 @@ function ProgressRing({ value }) {
 }
 
 export default function MyCoursesPage() {
-  const { token, user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const loadDashboard = useCallback(async () => {
-    if (!token) return;
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
-      setDashboard(await dashboardApi.get(token));
+      setDashboard(await dashboardApi.get());
     } catch (err) {
       setError(err.message || "Dashboardni yuklab bo'lmadi");
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [authLoading, user]);
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
@@ -147,7 +151,7 @@ export default function MyCoursesPage() {
             <p className="continue-course">{continueCourse?.title}</p>
             <h2>{dashboard?.next_lesson?.title || "Keyingi darsga o'ting"}</h2>
             <p>
-              {continueCourse?.progress_percent || 0}% bajarildi,{" "}
+              {continueCourse?.progress_percent || 0}% bajarildi, {" "}
               {continueCourse?.lessons_count || 0} ta dars.
             </p>
             <Link

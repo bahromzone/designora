@@ -22,6 +22,13 @@ async function dismissOnboarding(page) {
 }
 
 async function signIn(page) {
+  const consoleMessages = [];
+  page.on("console", (message) => {
+    if (["error", "warning"].includes(message.type())) {
+      consoleMessages.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+
   await page.goto("/?modal=login");
   await page.getByPlaceholder("E-pochta").fill(email);
   await page.getByPlaceholder("Parol").fill(password);
@@ -33,6 +40,14 @@ async function signIn(page) {
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
   const loginResponse = await loginResponsePromise;
   const loginBody = await loginResponse.text();
+  console.log(`E2E_LOGIN_STATUS=${loginResponse.status()}`);
+  console.log(`E2E_LOGIN_URL=${loginResponse.url()}`);
+  console.log(`E2E_LOGIN_SET_COOKIE=${loginResponse.headers()["set-cookie"] || "<missing>"}`);
+  console.log(`E2E_LOGIN_BODY=${loginBody}`);
+  console.log(`E2E_URL_AFTER_LOGIN=${page.url()}`);
+  if (consoleMessages.length > 0) {
+    console.log(`E2E_BROWSER_MESSAGES=${consoleMessages.join(" | ")}`);
+  }
   expect(
     loginResponse.ok(),
     `Login failed with ${loginResponse.status()}: ${loginBody}`,

@@ -12,7 +12,7 @@ from app.models.lesson import Lesson
 from app.models.module import Module
 from app.models.user import User
 
-E2E_EMAIL = "e2e.student@designora.test"
+E2E_EMAIL = "e2e.student@designora.com"
 E2E_PASSWORD = "DesignoraE2E2026!"
 
 COURSE_SPECS = (

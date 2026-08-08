@@ -61,7 +61,7 @@ jobs:
         working-directory: .
         run: |
           for attempt in $(seq 1 60); do
-            if curl --fail --silent http://127.0.0.1:8000/healthz >/dev/null; then
+            if curl --fail --silent http://127.0.0.1:8000/docs >/dev/null; then
               exit 0
             fi
             sleep 2

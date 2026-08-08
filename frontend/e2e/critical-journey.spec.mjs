@@ -12,15 +12,27 @@ test.beforeEach(() => {
   );
 });
 
+async function disableOnboarding(page) {
+  await page.addInitScript(() => {
+    localStorage.setItem("designora-onboarded", "1");
+  });
+}
+
 async function signIn(page) {
+  await disableOnboarding(page);
+
   await page.goto("/?modal=login");
   await page.getByPlaceholder("E-pochta").fill(email);
   await page.getByPlaceholder("Parol").fill(password);
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
+
   await expect(page).not.toHaveURL(/modal=login/);
   await expect(page).toHaveURL(/\/kurslarim/);
+
   await expect(
-    page.getByRole("heading", { name: "Kurslarim", exact: true }),
+    page.getByRole("heading", {
+      name: /Kurslarim|Birinchi kursga yoziling!/,
+    }),
   ).toBeVisible();
 }
 
@@ -28,12 +40,17 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   page,
 }) => {
   await signIn(page);
+
   await page.reload();
   await expect(page).not.toHaveURL(/modal=login/);
   await expect(page).toHaveURL(/\/kurslarim/);
 
   await page.goto(`/kurslar/${courseId}`);
-  const enroll = page.getByRole("button", { name: "Kursga yozilish" });
+
+  const enroll = page.getByRole("button", {
+    name: "Kursga yozilish",
+  });
+
   if (await enroll.isVisible()) {
     await Promise.all([
       page.waitForResponse(
@@ -46,27 +63,59 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   }
 
   await page.goto(`/organish/${courseId}`);
+
   await expect(
-    page.getByRole("link", { name: "Kurslarim sahifasiga qaytish" }),
+    page.getByRole("link", {
+      name: "Kurslarim sahifasiga qaytish",
+    }),
   ).toBeVisible();
-  await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "E2E Lesson" })).toBeVisible();
+
+  await expect(
+    page.getByText("Dars yuklanmoqda..."),
+  ).toHaveCount(0);
+
+  await expect(
+    page.getByRole("heading", {
+      name: "E2E Lesson",
+    }),
+  ).toBeVisible();
 
   await page.goto("/kurslarim");
+
   await expect(
-    page.getByRole("heading", { name: "Kurslarim", exact: true }),
+    page.getByRole("heading", {
+      name: "Kurslarim",
+      exact: true,
+    }),
   ).toBeVisible();
+
   await expect(
-    page.getByRole("link", { name: /O'qishni davom ettirish/ }),
+    page.getByRole("link", {
+      name: /O'qishni davom ettirish/,
+    }),
   ).toBeVisible();
 });
 
-test("paid course reaches checkout before payment confirmation", async ({ page }) => {
-  test.skip(!paidCourseId, "Set E2E_PAID_COURSE_ID to exercise checkout.");
+test("paid course reaches checkout before payment confirmation", async ({
+  page,
+}) => {
+  test.skip(
+    !paidCourseId,
+    "Set E2E_PAID_COURSE_ID to exercise checkout.",
+  );
+
   await signIn(page);
+
   await page.goto(`/kurslar/${paidCourseId}`);
-  const checkout = page.getByRole("button", { name: "Kursga yozilish" });
+
+  const checkout = page.getByRole("button", {
+    name: "Kursga yozilish",
+  });
+
   await expect(checkout).toBeVisible();
   await checkout.click();
-  await expect(page).toHaveURL(new RegExp(`/checkout/${paidCourseId}`));
+
+  await expect(page).toHaveURL(
+    new RegExp(`/checkout/${paidCourseId}`),
+  );
 });

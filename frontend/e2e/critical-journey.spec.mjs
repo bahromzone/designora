@@ -40,9 +40,6 @@ async function signIn(page) {
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
   const loginResponse = await loginResponsePromise;
 
-  // Agar sahifa navigatsiya qilsa, CDP response body'ni yo'qotadi va
-  // response.text() "No resource with given identifier found" bilan yiqiladi.
-  // Diagnostika testni buzmasligi kerak.
   const loginBody = await loginResponse
     .text()
     .catch(() => "<body unavailable after navigation>");
@@ -56,8 +53,6 @@ async function signIn(page) {
     `Login failed with ${loginResponse.status()}: ${loginBody}`,
   ).toBeTruthy();
 
-  // Diqqat: set-cookie header'i Playwright'da odatda ko'rinmaydi, shu sabab
-  // uni tekshirish har doim "no" berardi. Haqiqiy manba — brauzer cookie jar.
   const cookies = await page.context().cookies();
   const cookieNames = cookies.map((cookie) => cookie.name);
   console.log(`E2E_COOKIES=${cookieNames.join(",") || "none"}`);
@@ -100,7 +95,9 @@ test("student can sign in, keep session after reload, enroll, learn and return",
       ),
       enroll.click(),
     ]);
-    const enrollBody = await enrollResponse.text().catch(() => "<body unavailable>");
+    const enrollBody = await enrollResponse
+      .text()
+      .catch(() => "<body unavailable>");
     expect(
       enrollResponse.ok(),
       `Enrollment failed with ${enrollResponse.status()}: ${enrollBody}`,
@@ -109,15 +106,13 @@ test("student can sign in, keep session after reload, enroll, learn and return",
 
   await page.goto(`/organish/${courseId}`);
 
-  // Enrollment yaratilmagan bo'lsa xato aniq bo'lsin. Aks holda quyidagi
-  // "link topilmadi" xabari asl sababni yashiradi.
   await expect(
     page.getByRole("heading", { name: "Bu kursga hali yozilmagansiz" }),
     `E2E_COURSE_ID=${courseId} uchun enrollment yo'q. seed_e2e.py chiqargan ID'ni ishlatayotganingizni tekshiring.`,
   ).toHaveCount(0);
   await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "Kurslarim sahifasiga qaytish" }),
+    page.getByRole("link", { name: "Kurslarimga qaytish" }),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "E2E Lesson" })).toBeVisible();
 

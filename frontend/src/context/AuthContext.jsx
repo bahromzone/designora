@@ -6,10 +6,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
 
 const AuthContext = createContext(null);
+
+// Backend rolga qarab `redirect` qaytaradi; bu faqat zaxira qiymat.
+// App.jsx dagi haqiqiy <Route> bilan mos bo'lishi shart.
+const DEFAULT_POST_AUTH_PATH = "/kurslarim";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -17,6 +21,7 @@ export function AuthProvider({ children }) {
   const authVersion = useRef(0);
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onInvalid = () => {
@@ -59,8 +64,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   function handlePostAuthRedirect(response) {
-    const nextPath = response?.redirect || location.state?.from || "/dashboard";
-    window.location.replace(nextPath);
+    const nextPath =
+      response?.redirect || location.state?.from || DEFAULT_POST_AUTH_PATH;
+    // Ilgari bu yerda window.location.replace() bor edi: u to'liq sahifa
+    // reload qilib, auth restore'ni noldan ishga tushirardi. Natijada
+    // login'dan keyin darhol 401 poygasi va flaky redirect paydo bo'lardi.
+    // Client-side navigatsiya sessiyani va React holatini saqlab qoladi.
+    navigate(nextPath, { replace: true });
   }
 
   async function login(credentials) {

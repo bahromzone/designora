@@ -1,8 +1,8 @@
 """Create the deterministic local dataset used by browser E2E tests.
 
 The script is intentionally safe to rerun. It creates one stable student and
-one free plus one paid published course, then prints the values consumed by the
-GitHub Actions workflow.
+one free plus one paid published course, then prints the values consumed by
+the GitHub Actions workflow.
 """
 
 from app.core.database import SessionLocal
@@ -12,7 +12,7 @@ from app.models.lesson import Lesson
 from app.models.module import Module
 from app.models.user import User
 
-E2E_EMAIL = "e2e.student@designora.test"
+E2E_EMAIL = "e2e.student@example.com"
 E2E_PASSWORD = "DesignoraE2E2026!"
 
 COURSE_SPECS = (

@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { authApi } from "../lib/api";
 
 const AuthContext = createContext(null);
@@ -17,7 +17,6 @@ export function AuthProvider({ children }) {
   const authVersion = useRef(0);
 
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const onInvalid = () => {
@@ -61,7 +60,7 @@ export function AuthProvider({ children }) {
 
   function handlePostAuthRedirect(response) {
     const nextPath = response?.redirect || location.state?.from || "/dashboard";
-    navigate(nextPath, { replace: true });
+    window.location.replace(nextPath);
   }
 
   async function login(credentials) {

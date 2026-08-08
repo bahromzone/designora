@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
+import { bumpAuthEpoch, currentAuthEpoch } from "../lib/authEpoch";
 
 const AuthContext = createContext(null);
 
@@ -24,7 +25,12 @@ export function AuthProvider({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const onInvalid = () => {
+    const onInvalid = (event) => {
+      // Eski epoch'dan kelgan 401 — e'tiborsiz qoldiramiz. Aks holda
+      // login'dan oldin boshlangan anonim /api/profile/me so'rovi keyin
+      // kelib, yangi sessiyani darhol o'chirib tashlaydi.
+      const eventEpoch = event?.detail?.epoch;
+      if (eventEpoch !== undefined && eventEpoch !== currentAuthEpoch()) return;
       authVersion.current += 1;
       setUser(null);
     };
@@ -77,6 +83,8 @@ export function AuthProvider({ children }) {
     const version = ++authVersion.current;
     const response = await authApi.login(credentials);
     if (authVersion.current !== version) return response;
+    // Yangi sessiya — bundan oldingi barcha 401'lar endi eskirgan.
+    bumpAuthEpoch();
     setUser(response.user);
     setLoading(false);
     handlePostAuthRedirect(response);
@@ -87,6 +95,7 @@ export function AuthProvider({ children }) {
     const version = ++authVersion.current;
     const response = await authApi.register(payload);
     if (authVersion.current !== version) return response;
+    bumpAuthEpoch();
     setUser(response.user);
     setLoading(false);
     handlePostAuthRedirect(response);
@@ -102,6 +111,7 @@ export function AuthProvider({ children }) {
       headers: { Authorization: `Bearer ${nextToken}` },
     });
     if (!response.ok) throw new Error("OAuth sessiyasini yaratib bo'lmadi");
+    bumpAuthEpoch();
     const profile = await authApi.profile();
     setUser(profile);
     return profile;
@@ -109,6 +119,7 @@ export function AuthProvider({ children }) {
 
   function logout() {
     authVersion.current += 1;
+    bumpAuthEpoch();
     authApi.logoutAll().catch(() => {});
     setUser(null);
   }

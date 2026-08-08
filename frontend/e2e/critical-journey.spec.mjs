@@ -40,9 +40,10 @@ async function signIn(page) {
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
   const loginResponse = await loginResponsePromise;
   const loginBody = await loginResponse.text();
+  const setCookie = loginResponse.headers()["set-cookie"] || "";
   console.log(`E2E_LOGIN_STATUS=${loginResponse.status()}`);
   console.log(`E2E_LOGIN_URL=${loginResponse.url()}`);
-  console.log(`E2E_LOGIN_SET_COOKIE=${loginResponse.headers()["set-cookie"] || "<missing>"}`);
+  console.log(`E2E_LOGIN_SET_COOKIE_PRESENT=${setCookie ? "yes" : "no"}`);
   console.log(`E2E_LOGIN_BODY=${loginBody}`);
   console.log(`E2E_URL_AFTER_LOGIN=${page.url()}`);
   if (consoleMessages.length > 0) {

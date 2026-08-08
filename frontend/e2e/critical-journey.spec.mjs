@@ -112,7 +112,7 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   ).toHaveCount(0);
   await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "Kurslarimga qaytish" }),
+    page.getByRole("link", { name: "Kurslarim sahifasiga qaytish" }),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "E2E Lesson" })).toBeVisible();
 

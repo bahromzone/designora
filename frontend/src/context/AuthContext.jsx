@@ -54,12 +54,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   function handlePostAuthRedirect(response) {
-    if (response.redirect) {
-      window.location.assign(response.redirect);
-      return;
-    }
-    const returnTo = location.state?.from;
-    if (returnTo) navigate(returnTo, { replace: true });
+    const nextPath = response?.redirect || location.state?.from || "/dashboard";
+    navigate(nextPath, { replace: true });
   }
 
   async function login(credentials) {

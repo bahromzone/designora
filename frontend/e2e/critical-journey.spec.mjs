@@ -39,21 +39,39 @@ async function signIn(page) {
   );
   await page.getByRole("button", { name: "KIRISH", exact: true }).click();
   const loginResponse = await loginResponsePromise;
-  const loginBody = await loginResponse.text();
-  const setCookie = loginResponse.headers()["set-cookie"] || "";
+
+  // Agar sahifa navigatsiya qilsa, CDP response body'ni yo'qotadi va
+  // response.text() "No resource with given identifier found" bilan yiqiladi.
+  // Diagnostika testni buzmasligi kerak.
+  const loginBody = await loginResponse
+    .text()
+    .catch(() => "<body unavailable after navigation>");
+
   console.log(`E2E_LOGIN_STATUS=${loginResponse.status()}`);
   console.log(`E2E_LOGIN_URL=${loginResponse.url()}`);
-  console.log(`E2E_LOGIN_SET_COOKIE_PRESENT=${setCookie ? "yes" : "no"}`);
   console.log(`E2E_LOGIN_BODY=${loginBody}`);
-  console.log(`E2E_URL_AFTER_LOGIN=${page.url()}`);
-  if (consoleMessages.length > 0) {
-    console.log(`E2E_BROWSER_MESSAGES=${consoleMessages.join(" | ")}`);
-  }
+
   expect(
     loginResponse.ok(),
     `Login failed with ${loginResponse.status()}: ${loginBody}`,
   ).toBeTruthy();
+
+  // Diqqat: set-cookie header'i Playwright'da odatda ko'rinmaydi, shu sabab
+  // uni tekshirish har doim "no" berardi. Haqiqiy manba — brauzer cookie jar.
+  const cookies = await page.context().cookies();
+  const cookieNames = cookies.map((cookie) => cookie.name);
+  console.log(`E2E_COOKIES=${cookieNames.join(",") || "none"}`);
+  expect(
+    cookieNames,
+    `Auth cookie kutilgan edi, olindi: ${cookieNames.join(",") || "none"}`,
+  ).toContain("access_token");
+
   await expect(page).toHaveURL(/\/kurslarim/);
+  console.log(`E2E_URL_AFTER_LOGIN=${page.url()}`);
+  if (consoleMessages.length > 0) {
+    console.log(`E2E_BROWSER_MESSAGES=${consoleMessages.join(" | ")}`);
+  }
+
   await expect(
     page.getByRole("heading", {
       name: /Kurslarim|Birinchi kursga yoziling!/,
@@ -73,7 +91,7 @@ test("student can sign in, keep session after reload, enroll, learn and return",
 
   await page.goto(`/kurslar/${courseId}`);
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });
-  if (await enroll.isVisible()) {
+  if (await enroll.isVisible().catch(() => false)) {
     await Promise.all([
       page.waitForResponse(
         (response) =>
@@ -85,10 +103,17 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   }
 
   await page.goto(`/organish/${courseId}`);
+
+  // Enrollment yaratilmagan bo'lsa xato aniq bo'lsin. Aks holda quyidagi
+  // "link topilmadi" xabari asl sababni yashiradi.
+  await expect(
+    page.getByRole("heading", { name: "Bu kursga hali yozilmagansiz" }),
+    `E2E_COURSE_ID=${courseId} uchun enrollment yo'q. seed_e2e.py chiqargan ID'ni ishlatayotganingizni tekshiring.`,
+  ).toHaveCount(0);
+  await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "Kurslarim sahifasiga qaytish" }),
   ).toBeVisible();
-  await expect(page.getByText("Dars yuklanmoqda...")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "E2E Lesson" })).toBeVisible();
 
   await page.goto("/kurslarim");
@@ -100,7 +125,9 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   ).toBeVisible();
 });
 
-test("paid course reaches checkout before payment confirmation", async ({ page }) => {
+test("paid course reaches checkout before payment confirmation", async ({
+  page,
+}) => {
   test.skip(!paidCourseId, "Set E2E_PAID_COURSE_ID to exercise checkout.");
   await signIn(page);
   await page.goto(`/kurslar/${paidCourseId}`);

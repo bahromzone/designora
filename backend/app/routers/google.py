@@ -22,37 +22,70 @@ from app.utils.routes import dashboard_path_for_role
 
 router = APIRouter()
 
+# Google discovery hujjatini olishda tashqi tarmoqqa chiqiladi.
+# Timeout bo'lmasa so'rov uzoq osilib qoladi.
+OAUTH_HTTP_TIMEOUT = 10.0
+
+# Kalitlar bo'lmasa OAuth oqimini boshlashning ma'nosi yo'q: Google
+# bo'sh client_id uchun "401 invalid_client" beradi, ya'ni xato bizning
+# tomonda emas, foydalanuvchi ekranida chiqadi.
+OAUTH_CONFIGURED = bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)
+
 oauth = OAuth()
 oauth.register(
     name="google",
     client_id=settings.GOOGLE_CLIENT_ID,
     client_secret=settings.GOOGLE_CLIENT_SECRET,
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
+    client_kwargs={
+        "scope": "openid email profile",
+        "timeout": OAUTH_HTTP_TIMEOUT,
+    },
 )
+
+
+def _login_error(reason: str) -> RedirectResponse:
+    """Foydalanuvchini login modaliga tushunarli xato bilan qaytarish."""
+    return RedirectResponse(f"{settings.FRONTEND_URL}/?modal=login&error={reason}")
 
 
 @router.get("/auth/google")
 async def google_login(request: Request):
+    if not OAUTH_CONFIGURED:
+        logger.warning(
+            "Google OAuth so'raldi, lekin GOOGLE_CLIENT_ID/SECRET sozlanmagan."
+        )
+        return _login_error("oauth_unavailable")
+
     redirect_uri = request.url_for("google_callback")
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    try:
+        return await oauth.google.authorize_redirect(request, redirect_uri)
+    except Exception as e:  # tarmoq, timeout, metadata xatolari
+        logger.warning(f"Google OAuth redirect failed: {e!r}")
+        return _login_error("oauth_unreachable")
 
 
 @router.get("/auth/google/callback")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
+    if not OAUTH_CONFIGURED:
+        return _login_error("oauth_unavailable")
+
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as e:
         logger.warning(f"Google OAuth error: {e}")
-        return RedirectResponse(
-            f"{settings.FRONTEND_URL}/?modal=login&error=oauth_failed"
-        )
+        return _login_error("oauth_failed")
+    except Exception as e:  # token almashinuvida tarmoq uzilishi
+        logger.warning(f"Google OAuth token exchange failed: {e!r}")
+        return _login_error("oauth_unreachable")
 
-    userinfo = token["userinfo"]
+    userinfo = token.get("userinfo")
+    if not userinfo:
+        logger.warning("Google OAuth: token ichida userinfo yo'q")
+        return _login_error("oauth_failed")
+
     if not userinfo.get("email_verified", False):
-        return RedirectResponse(
-            f"{settings.FRONTEND_URL}/?modal=login&error=email_not_verified"
-        )
+        return _login_error("email_not_verified")
 
     email = userinfo["email"]
     name = userinfo.get("name")

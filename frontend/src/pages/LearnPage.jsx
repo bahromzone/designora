@@ -97,7 +97,11 @@ export default function LearnPage() {
 
   if (!user)
     return (
-      <section className="shell py-24" role="alert" data-testid="learn-unauthenticated">
+      <section
+        className="shell py-24"
+        role="alert"
+        data-testid="learn-unauthenticated"
+      >
         <h1>Sessiya topilmadi</h1>
         <p>Iltimos, qaytadan tizimga kiring.</p>
         <Link to="/?modal=login">Kirish</Link>

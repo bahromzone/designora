@@ -57,6 +57,35 @@ def test_sign_free_preview_without_enrollment(client, db_session):
     assert data["url"].startswith("/video/free.mp4?")
 
 
+def test_sign_empty_video_returns_empty_manifest(client, db_session):
+    _make_user(db_session)
+    course = Course(title="Media kurs empty", is_active=True, status="published")
+    db_session.add(course)
+    db_session.commit()
+    lesson = Lesson(
+        course_id=course.id,
+        title="Video keyin yuklanadi",
+        video_url="",
+        is_free_preview=True,
+    )
+    db_session.add(lesson)
+    db_session.commit()
+    db_session.refresh(lesson)
+
+    resp = client.post(
+        f"/api/media/lessons/{lesson.id}/sign",
+        headers=_auth("media@example.com"),
+    )
+
+    assert resp.status_code == 200
+    assert resp.json() == {
+        "lesson_id": lesson.id,
+        "sources": [],
+        "subtitles": [],
+        "resume_seconds": 0,
+    }
+
+
 def test_sign_locked_requires_enrollment(client, db_session):
     _make_user(db_session)
     _course, _free, locked = _course_with_lessons(db_session)

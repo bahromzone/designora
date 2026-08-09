@@ -86,14 +86,29 @@ def sign_lesson_video(
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:
         raise HTTPException(status_code=404, detail="Dars topilmadi")
+    _lesson_access(db, user, lesson)
     sources = lesson.video_sources or (
         [{"label": "Auto", "url": lesson.video_url, "type": "video/mp4"}]
         if lesson.video_url
         else []
     )
+    progress = (
+        db.query(LessonProgress)
+        .filter(
+            LessonProgress.user_id == user.id, LessonProgress.lesson_id == lesson.id
+        )
+        .first()
+    )
     if not sources:
-        raise HTTPException(status_code=404, detail="Videoning manzili yo'q")
-    _lesson_access(db, user, lesson)
+        # A lesson may be valid before its video is uploaded. Return the same
+        # manifest shape with no sources so the player can show its existing
+        # "video unavailable" state instead of creating a noisy 404.
+        return {
+            "lesson_id": lesson.id,
+            "sources": [],
+            "subtitles": lesson.subtitles or [],
+            "resume_seconds": progress.position_seconds if progress else 0,
+        }
     signed_sources = []
     primary = None
     for source in sources:
@@ -106,13 +121,6 @@ def sign_lesson_video(
         if primary is None:
             primary = signed
         signed_sources.append({**source, "url": signed["url"]})
-    progress = (
-        db.query(LessonProgress)
-        .filter(
-            LessonProgress.user_id == user.id, LessonProgress.lesson_id == lesson.id
-        )
-        .first()
-    )
     return {
         "lesson_id": lesson.id,
         **primary,

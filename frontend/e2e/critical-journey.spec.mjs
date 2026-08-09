@@ -68,6 +68,21 @@ async function ensureNoOnboardingOverlay(page) {
   await expect(overlay).toHaveCount(0, { timeout: 10_000 });
 }
 
+// /kurslarim yuklanganini tasdiqlash. MUHIM: faqat h1 ga qaraymiz.
+// Kengroq regex (masalan /Kurslarim|Salom,/) StudentDashboardPage'da
+// ikkita elementga tushadi (<h1>Salom, ...</h1> va <h2>Kurslarim</h2>) va
+// strict mode violation beradi. Bundan tashqari bu tartibga bog'liq edi:
+// birinchi test studentni kursga yozgach, dashboard bo'sh holatdan
+// to'ldirilgan holatga o'tadi va heading'lar soni o'zgaradi.
+async function expectMyCoursesPage(page) {
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: /Salom,|Birinchi kursga yoziling!/,
+    }),
+  ).toBeVisible({ timeout: 20_000 });
+}
+
 async function signIn(page) {
   await page.goto("/?modal=login");
   await page.getByPlaceholder("E-pochta").fill(email);
@@ -105,12 +120,7 @@ async function signIn(page) {
   console.log(`E2E_URL_AFTER_LOGIN=${page.url()}`);
 
   await ensureNoOnboardingOverlay(page);
-
-  await expect(
-    page.getByRole("heading", {
-      name: /Kurslarim|Birinchi kursga yoziling!|Salom,/,
-    }),
-  ).toBeVisible({ timeout: 20_000 });
+  await expectMyCoursesPage(page);
 }
 
 // Ilgari bu yerda `if (await enroll.isVisible())` bor edi. goto()'dan keyin
@@ -154,6 +164,7 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   await expect(page).not.toHaveURL(/modal=login/);
   await expect(page).toHaveURL(/\/kurslarim/);
   await ensureNoOnboardingOverlay(page);
+  await expectMyCoursesPage(page);
 
   await ensureEnrolled(page, courseId);
 
@@ -191,9 +202,7 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   await expect(page.getByRole("heading", { name: "E2E Lesson" })).toBeVisible();
 
   await page.goto("/kurslarim");
-  await expect(
-    page.getByRole("heading", { name: "Kurslarim", exact: true }),
-  ).toBeVisible({ timeout: 20_000 });
+  await expectMyCoursesPage(page);
 });
 
 test("paid course reaches checkout before payment confirmation", async ({

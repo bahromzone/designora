@@ -24,7 +24,10 @@ def _is_production():
     return settings.ENVIRONMENT == "production"
 
 
-def _set_refresh_cookie(response, token):
+# Bu ikki helper ommaviy: Google OAuth callback ham xuddi shu cookie'larni
+# o'rnatishi kerak. Nusxa ko'chirilsa ikki oqim jimgina bir-biridan uzoqlashadi
+# (masalan biri "Bearer " prefiksi bilan yozadi, ikkinchisi prefikssiz).
+def set_refresh_cookie(response, token):
     response.set_cookie(
         key=_REFRESH_COOKIE,
         value=token,
@@ -36,7 +39,7 @@ def _set_refresh_cookie(response, token):
     )
 
 
-def _set_access_cookie(response, email):
+def set_access_cookie(response, email):
     response.set_cookie(
         key="access_token",
         value=create_access_token(email),
@@ -99,8 +102,8 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
     rec.revoked_at = datetime.now(UTC)
     rec.replaced_by = token_service.hash_token(new_raw)
     db.commit()
-    _set_access_cookie(response, user.email)
-    _set_refresh_cookie(response, new_raw)
+    set_access_cookie(response, user.email)
+    set_refresh_cookie(response, new_raw)
     return {"authenticated": True}
 
 
@@ -135,6 +138,6 @@ def issue_refresh_for_current(
         raise HTTPException(status_code=403, detail=INACTIVE_ACCOUNT_DETAIL)
     raw = issue_refresh_token(db, user, request.headers.get("user-agent"))
     db.commit()
-    _set_access_cookie(response, user.email)
-    _set_refresh_cookie(response, raw)
+    set_access_cookie(response, user.email)
+    set_refresh_cookie(response, raw)
     return {"message": "Refresh-token berildi"}

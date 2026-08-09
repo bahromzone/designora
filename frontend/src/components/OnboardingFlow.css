@@ -77,6 +77,7 @@
   grid-template-columns: 300px minmax(0, 1fr);
   height: calc(100% - 72px);
   min-height: 0;
+  overflow: hidden;
 }
 .onboarding-aside {
   display: flex;
@@ -157,8 +158,12 @@
 .onboarding-main {
   position: relative;
   display: block;
+  width: 100%;
+  height: 100%;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
 }
 .onboarding-progress {
   position: absolute;
@@ -176,6 +181,7 @@
   transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .onboarding-step {
+  width: 100%;
   height: 100%;
   min-height: 0;
   overflow-y: auto;
@@ -422,17 +428,20 @@
 .onboarding-actions {
   position: absolute;
   inset: auto 0 0;
-  z-index: 4;
-  display: flex;
+  z-index: 10;
+  display: flex !important;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   min-height: 82px;
+  width: 100%;
   box-sizing: border-box;
   padding: 18px clamp(32px, 6vw, 76px);
   border-top: 1px solid var(--ob-line);
   background: var(--ob-paper);
   box-shadow: 0 -8px 20px oklch(0.18 0.02 285/0.04);
+  visibility: visible;
+  opacity: 1;
 }
 .onboarding-actions button {
   display: inline-flex;

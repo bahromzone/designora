@@ -147,7 +147,9 @@ export default function OnboardingModal() {
     reminder: initial.reminder ?? true,
   });
 
-  if (!isAuthenticated || !open) return null;
+  // Shaxsiy onboarding faqat oddiy userlar uchun. Instructor, admin va
+  // superadminlar bu student oqimini ko‘rmasligi kerak.
+  if (!isAuthenticated || user?.role !== "user" || !open) return null;
 
   const valid = [
     profile.goal,
@@ -436,7 +438,7 @@ export default function OnboardingModal() {
                 onClick={() => setStep((value) => Math.max(0, value - 1))}
                 disabled={step === 0}
               >
-                <Icon name="back" /> Orqaga
+                <Icon name="back" /> Oldingi
               </button>
               <button
                 type="button"
@@ -444,7 +446,7 @@ export default function OnboardingModal() {
                 onClick={next}
                 disabled={!valid}
               >
-                {step === STEPS.length - 1 ? "Rejani yaratish" : "Davom etish"}
+                {step === STEPS.length - 1 ? "Rejani yaratish" : "Keyingi"}
                 <Icon name="arrow" />
               </button>
             </footer>

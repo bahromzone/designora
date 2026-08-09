@@ -102,18 +102,15 @@ export function AuthProvider({ children }) {
     return response;
   }
 
-  const loginWithToken = useCallback(async (nextToken) => {
-    if (!nextToken) return null;
-    const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
-    const response = await fetch(`${API_URL}/api/auth/issue-refresh`, {
-      method: "POST",
-      credentials: "include",
-      headers: { Authorization: `Bearer ${nextToken}` },
-    });
-    if (!response.ok) throw new Error("OAuth sessiyasini yaratib bo'lmadi");
+  // Google callback sahifasi chaqiradi. Token almashinuvi yo'q: backend
+  // httpOnly access va refresh cookie'larini o'rnatib bo'lgan, bu yerda
+  // faqat sessiya tasdiqlanadi.
+  const completeOAuthLogin = useCallback(async () => {
+    authVersion.current += 1;
     bumpAuthEpoch();
     const profile = await authApi.profile();
     setUser(profile);
+    setLoading(false);
     return profile;
   }, []);
 
@@ -138,7 +135,7 @@ export function AuthProvider({ children }) {
         isAuthenticated: Boolean(user),
         login,
         register,
-        loginWithToken,
+        completeOAuthLogin,
         logout,
         refreshProfile,
       }}

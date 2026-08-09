@@ -2,9 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const CALLBACK_TIMEOUT_MS = 12000;
+const FAILURE_PATH = "/?modal=login&error=oauth_failed";
+
+// Backend `next` ni rolga qarab yuboradi. Ro'yxat App.jsx dagi haqiqiy
+// <Route path="..."> bilan mos bo'lishi shart, aks holda foydalanuvchi
+// jimgina bosh sahifaga tushib qoladi.
 const ALLOWED_REDIRECTS = new Set([
   "/",
+  "/kurslarim",
   "/admin",
   "/superadmin",
   "/instruktor-panel",
@@ -16,7 +21,7 @@ function safeRedirect(path) {
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { completeOAuthLogin } = useAuth();
   const [error, setError] = useState("");
   const handled = useRef(false);
 
@@ -24,48 +29,34 @@ export default function AuthCallbackPage() {
     if (handled.current) return;
     handled.current = true;
 
-    const token = new URLSearchParams(window.location.hash.slice(1)).get(
-      "token"
-    );
     const redirectPath = safeRedirect(
       new URLSearchParams(window.location.search).get("next") || "/"
     );
 
-    if (!token) {
-      setError("Google orqali kirishda xatolik yuz berdi.");
-      const timeout = setTimeout(
-        () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
-        1500
-      );
-      return () => clearTimeout(timeout);
-    }
-
     let active = true;
     let errorTimeout;
-    const fail = () => {
-      if (!active) return;
-      setError("Google orqali kirishda sessiyani tasdiqlab bo'lmadi.");
-      errorTimeout = setTimeout(
-        () => navigate("/?modal=login&error=oauth_failed", { replace: true }),
-        1500
-      );
-    };
 
-    const callbackTimeout = setTimeout(fail, CALLBACK_TIMEOUT_MS);
-    // Backend user rolini allaqachon tekshirgan va `next` ni imzolangan oqimdan
-    // yuborgan. Redirectni profil API javobini kutmasdan qilamiz, RoleRoute esa
-    // panelga kirishda serverdan kelgan rolni yana tekshiradi.
-    loginWithToken(token)
-      .catch(fail)
-      .finally(() => clearTimeout(callbackTimeout));
-    navigate(redirectPath, { replace: true });
+    // URL'dan token o'qilmaydi: backend access va refresh cookie'larini
+    // allaqachon o'rnatgan. Bu yerda faqat sessiya haqiqatan ishlayotgani
+    // tasdiqlanadi, shundan keyingina redirect qilamiz.
+    completeOAuthLogin()
+      .then(() => {
+        if (active) navigate(redirectPath, { replace: true });
+      })
+      .catch(() => {
+        if (!active) return;
+        setError("Google orqali kirishda sessiyani tasdiqlab bo'lmadi.");
+        errorTimeout = setTimeout(
+          () => navigate(FAILURE_PATH, { replace: true }),
+          1500
+        );
+      });
 
     return () => {
       active = false;
-      clearTimeout(callbackTimeout);
       clearTimeout(errorTimeout);
     };
-  }, [loginWithToken, navigate]);
+  }, [completeOAuthLogin, navigate]);
 
   return (
     <section className="flex min-h-[60vh] items-center justify-center">

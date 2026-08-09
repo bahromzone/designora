@@ -16,8 +16,12 @@ except ImportError as _e:  # pragma: no cover
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.logger import logger
-from app.core.security import create_access_token
 from app.models.user import User
+from app.routers.token import (
+    issue_refresh_token,
+    set_access_cookie,
+    set_refresh_cookie,
+)
 from app.utils.routes import dashboard_path_for_role
 
 router = APIRouter()
@@ -25,11 +29,6 @@ router = APIRouter()
 # Google discovery hujjatini olishda tashqi tarmoqqa chiqiladi.
 # Timeout bo'lmasa so'rov uzoq osilib qoladi.
 OAUTH_HTTP_TIMEOUT = 10.0
-
-# Kalitlar bo'lmasa OAuth oqimini boshlashning ma'nosi yo'q: Google
-# bo'sh client_id uchun "401 invalid_client" beradi, ya'ni xato bizning
-# tomonda emas, foydalanuvchi ekranida chiqadi.
-OAUTH_CONFIGURED = bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)
 
 oauth = OAuth()
 oauth.register(
@@ -44,6 +43,19 @@ oauth.register(
 )
 
 
+def _oauth_configured() -> bool:
+    """Kalitlar sozlanganmi.
+
+    Bo'sh client_id bilan ham redirect qurilaveradi va xato faqat Google
+    ekranida "401 invalid_client" bo'lib chiqadi. Shu sabab oqimni oldindan
+    to'xtatamiz.
+
+    Konstanta emas, funksiya: modul darajasida hisoblansa qiymat import
+    vaqtida muzlab qoladi.
+    """
+    return bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)
+
+
 def _login_error(reason: str) -> RedirectResponse:
     """Foydalanuvchini login modaliga tushunarli xato bilan qaytarish."""
     return RedirectResponse(f"{settings.FRONTEND_URL}/?modal=login&error={reason}")
@@ -51,7 +63,7 @@ def _login_error(reason: str) -> RedirectResponse:
 
 @router.get("/auth/google")
 async def google_login(request: Request):
-    if not OAUTH_CONFIGURED:
+    if not _oauth_configured():
         logger.warning(
             "Google OAuth so'raldi, lekin GOOGLE_CLIENT_ID/SECRET sozlanmagan."
         )
@@ -67,7 +79,7 @@ async def google_login(request: Request):
 
 @router.get("/auth/google/callback")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
-    if not OAUTH_CONFIGURED:
+    if not _oauth_configured():
         return _login_error("oauth_unavailable")
 
     try:
@@ -88,28 +100,37 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         return _login_error("email_not_verified")
 
     email = userinfo["email"]
-    name = userinfo.get("name")
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
-        user = User(email=email, name=name, provider="google", role="user")
+        user = User(
+            email=email,
+            name=userinfo.get("name"),
+            provider="google",
+            role="user",
+        )
         db.add(user)
         db.commit()
         db.refresh(user)
 
-    jwt_token = create_access_token(email)
+    # Parol oqimi buni /api/auth/login ichida tekshiradi. Google oqimida
+    # tekshiruv faqat issue-refresh ichida bor edi va u yo'l endi
+    # ishlatilmaydi, ya'ni bu yerda bo'lmasa bloklangan hisob kira olardi.
+    if not user.is_active:
+        logger.warning("Google OAuth: bloklangan hisob kirishga urindi (%s)", email)
+        return _login_error("account_blocked")
+
+    # Sessiya to'liq shu yerda quriladi: access + refresh cookie. Ilgari JWT
+    # frontend'ga URL fragmentida (#token=) yuborilar, u esa alohida so'rov
+    # bilan refresh token so'rardi. Token URL'da qolishi httpOnly cookie'ning
+    # ma'nosini yo'qqa chiqarardi (brauzer tarixi, referrer, sahifa skriptlari).
+    refresh_raw = issue_refresh_token(db, user, request.headers.get("user-agent"))
+    db.commit()
+
     next_path = dashboard_path_for_role(getattr(user, "role", "user"))
-    callback_url = (
+    redirect = RedirectResponse(
         f"{settings.FRONTEND_URL}/auth/callback?next={quote(next_path, safe='')}"
-        f"#token={jwt_token}"
     )
-    redirect = RedirectResponse(callback_url)
-    redirect.set_cookie(
-        key="access_token",
-        value=f"Bearer {jwt_token}",
-        httponly=True,
-        secure=settings.ENVIRONMENT == "production",
-        samesite="strict",
-        max_age=3600,
-    )
+    set_access_cookie(redirect, user.email)
+    set_refresh_cookie(redirect, refresh_raw)
     return redirect

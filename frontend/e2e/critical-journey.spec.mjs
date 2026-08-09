@@ -6,9 +6,23 @@ const courseId = process.env.E2E_COURSE_ID;
 const paidCourseId = process.env.E2E_PAID_COURSE_ID;
 const apiUrl = process.env.E2E_API_URL ?? "http://localhost:8000";
 
+// OnboardingModal `localStorage["designora-onboarded"] !== "1"` bo'lsa
+// ochiladi va `role="dialog"` overlay butun sahifani to'sadi. Playwright
+// har testda toza kontekst beradi, shuning uchun modal login'dan keyin
+// darhol chiqadi. Uni yopish ham yetarli emas: closeForNow() flag'ni "1"
+// qilmaydi, ya'ni modal har navigatsiyada qaytadan paydo bo'ladi.
+// Shuning uchun flag'ni har sahifa yuklanishidan OLDIN o'rnatamiz.
+const ONBOARDING_DONE_SCRIPT = () => {
+  try {
+    window.localStorage.setItem("designora-onboarded", "1");
+  } catch {
+    /* private mode: modal zaxira yo'l bilan yopiladi */
+  }
+};
+
 // Console/page xatolarini butun test bo'yi yig'amiz. Ilgari listener faqat
 // signIn() ichida turardi, shuning uchun login'dan keyingi React xatolari
-// hisobotga tushmasdi — aynan shu sababni yashirardi.
+// hisobotga tushmasdi.
 const pageLogs = new WeakMap();
 
 test.beforeEach(async ({ page }) => {
@@ -16,6 +30,8 @@ test.beforeEach(async ({ page }) => {
     !email || !password || !courseId,
     "Set E2E_EMAIL, E2E_PASSWORD and E2E_COURSE_ID for a real environment.",
   );
+
+  await page.addInitScript(ONBOARDING_DONE_SCRIPT);
 
   const logs = [];
   pageLogs.set(page, logs);
@@ -39,13 +55,17 @@ test.afterEach(async ({ page }, testInfo) => {
   }
 });
 
-async function dismissOnboarding(page) {
-  const onboarding = page.getByRole("button", {
-    name: "Keyinroq davom etish",
-  });
-  if (await onboarding.isVisible().catch(() => false)) {
-    await onboarding.click();
+// Zaxira: agar localStorage biror sababdan ishlamasa, modalni qo'lda yopamiz
+// va hech qanday overlay qolmaganini tasdiqlaymiz.
+async function ensureNoOnboardingOverlay(page) {
+  const overlay = page.locator(".onboarding-layer");
+  if (await overlay.isVisible().catch(() => false)) {
+    await page
+      .getByRole("button", { name: "Keyinroq davom etish" })
+      .click()
+      .catch(() => null);
   }
+  await expect(overlay).toHaveCount(0, { timeout: 10_000 });
 }
 
 async function signIn(page) {
@@ -84,12 +104,13 @@ async function signIn(page) {
   await expect(page).toHaveURL(/\/kurslarim/);
   console.log(`E2E_URL_AFTER_LOGIN=${page.url()}`);
 
+  await ensureNoOnboardingOverlay(page);
+
   await expect(
     page.getByRole("heading", {
       name: /Kurslarim|Birinchi kursga yoziling!|Salom,/,
     }),
-  ).toBeVisible();
-  await dismissOnboarding(page);
+  ).toBeVisible({ timeout: 20_000 });
 }
 
 // Ilgari bu yerda `if (await enroll.isVisible())` bor edi. goto()'dan keyin
@@ -97,6 +118,7 @@ async function signIn(page) {
 // darhol false qaytarardi va butun enroll bloki JIMGINA tashlab ketilardi.
 async function ensureEnrolled(page, id) {
   await page.goto(`/kurslar/${id}`);
+  await ensureNoOnboardingOverlay(page);
 
   const enroll = page.getByRole("button", { name: "Kursga yozilish" });
   const already = page.getByRole("link", { name: /O.qishni davom ettirish/ });
@@ -110,6 +132,7 @@ async function ensureEnrolled(page, id) {
         (response) =>
           response.url().includes(`/api/learning/enroll/${id}`) &&
           response.request().method() === "POST",
+        { timeout: 20_000 },
       ),
       enroll.click(),
     ]);
@@ -130,7 +153,7 @@ test("student can sign in, keep session after reload, enroll, learn and return",
   await page.reload();
   await expect(page).not.toHaveURL(/modal=login/);
   await expect(page).toHaveURL(/\/kurslarim/);
-  await dismissOnboarding(page);
+  await ensureNoOnboardingOverlay(page);
 
   await ensureEnrolled(page, courseId);
 
@@ -179,6 +202,7 @@ test("paid course reaches checkout before payment confirmation", async ({
   test.skip(!paidCourseId, "Set E2E_PAID_COURSE_ID to exercise checkout.");
   await signIn(page);
   await page.goto(`/kurslar/${paidCourseId}`);
+  await ensureNoOnboardingOverlay(page);
   const checkout = page.getByRole("button", { name: "Kursga yozilish" });
   await expect(checkout).toBeVisible({ timeout: 20_000 });
   await checkout.click();

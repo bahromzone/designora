@@ -1,3 +1,5 @@
+import { currentAuthEpoch } from "./authEpoch";
+
 let refreshPromise = null;
 
 async function refreshAccessToken() {
@@ -18,6 +20,8 @@ async function refreshAccessToken() {
 }
 
 export async function request(path, options = {}) {
+  // So'rov boshlangan paytdagi sessiya epoch'i.
+  const epochAtStart = currentAuthEpoch();
   const { headers, _retry, signal, ...rest } = options;
   delete rest.token;
   const isFormData =
@@ -37,7 +41,13 @@ export async function request(path, options = {}) {
       await refreshAccessToken();
       return request(path, { ...options, _retry: true });
     } catch {
-      window.dispatchEvent(new Event("designora-session-invalidated"));
+      // Epoch'ni birga yuboramiz: eski (login'dan oldingi) xato yangi
+      // sessiyani invalidatsiya qilmasligi kerak.
+      window.dispatchEvent(
+        new CustomEvent("designora-session-invalidated", {
+          detail: { epoch: epochAtStart },
+        })
+      );
     }
   }
   const contentType = response.headers.get("content-type") ?? "";

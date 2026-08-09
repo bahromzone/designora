@@ -1,9 +1,11 @@
 name: Browser E2E
 run-name: Browser E2E (${{ github.event_name }})
 
+# MUHIM: bu yerda `pull_request.branches: [main]` filtri BO'LMASLIGI kerak.
+# Filtr bo'lganda main'ga qaratilmagan PR'larda workflow umuman ishga
+# tushmaydi va PR yolg'ondan "Ready to merge" ko'rinadi.
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -94,6 +96,7 @@ jobs:
           done
           echo "Deterministic E2E fixtures are ready."
           echo "E2E_BASE_URL=http://localhost:5173" >> "$GITHUB_ENV"
+          echo "E2E_API_URL=http://localhost:8000" >> "$GITHUB_ENV"
 
       - name: Install E2E dependencies
         run: npm install --no-fund --no-audit
@@ -111,6 +114,15 @@ jobs:
         if: ${{ failure() }}
         working-directory: .
         run: docker compose logs --no-color > "$RUNNER_TEMP/compose.log" 2>&1 || true
+
+      - name: Upload Playwright artifacts on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: frontend/e2e/test-results
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Comment diagnostics on pull request
         if: ${{ failure() && github.event_name == 'pull_request' }}

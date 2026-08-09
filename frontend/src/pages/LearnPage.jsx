@@ -84,18 +84,47 @@ export default function LearnPage() {
     }
   }
 
+  // MUHIM: bu yerda hech qachon `return null` bo'lmasligi kerak. Ilgari
+  // `if (!data) return null;` bor edi va API xato qaytarganda sahifa
+  // butunlay bo'sh render bo'lardi — na foydalanuvchi, na E2E test
+  // sababni ko'ra olmasdi. Har bir holat o'z ovoziga ega bo'lsin.
   if (authLoading || loading)
-    return <section className="shell py-24">Dars yuklanmoqda...</section>;
-  if (error && !data)
     return (
-      <section className="shell py-24" role="alert">
-        {error} <button onClick={load}>Qayta urinish</button>
+      <section className="shell py-24" data-testid="learn-loading">
+        Dars yuklanmoqda...
       </section>
     );
-  if (!data) return null;
+
+  if (!user)
+    return (
+      <section className="shell py-24" role="alert" data-testid="learn-unauthenticated">
+        <h1>Sessiya topilmadi</h1>
+        <p>Iltimos, qaytadan tizimga kiring.</p>
+        <Link to="/?modal=login">Kirish</Link>
+      </section>
+    );
+
+  if (error && !data)
+    return (
+      <section className="shell py-24" role="alert" data-testid="learn-error">
+        <h1>Darsni ochib bo‘lmadi</h1>
+        <p data-testid="learn-error-message">{error}</p>
+        <button onClick={load}>Qayta urinish</button>
+      </section>
+    );
+
+  if (!data)
+    return (
+      <section className="shell py-24" role="alert" data-testid="learn-empty">
+        <h1>Kurs ma‘lumoti bo‘sh keldi</h1>
+        <p>Kurs ID‘sini tekshirib, sahifani yangilang.</p>
+        <button onClick={load}>Qayta urinish</button>
+      </section>
+    );
+
   if (!data.is_enrolled)
     return (
-      <section className="shell py-24">
+      <section className="shell py-24" data-testid="learn-not-enrolled">
         <h1>Bu kursga hali yozilmagansiz</h1>
         <p>To‘liq darslarga kirish uchun avval kursga yoziling.</p>
         <Link to={`/kurslar/${courseId}`}>Kurs sahifasiga o‘tish</Link>
@@ -106,11 +135,14 @@ export default function LearnPage() {
     Number(data.progress_percent) >= 100 && Number(data.total_lessons) > 0;
 
   return (
-    <section className="shell py-16">
+    <section className="shell py-16" data-testid="learn-ready">
       <div className="mb-8 flex flex-col gap-4 sm:mb-10">
+        {/* aria-label ataylab yo'q: u ko'rinadigan matndan farq qilsa,
+            accessible name buziladi va getByRole('link', { name })
+            ekrandagi matn bilan mos kelmaydi. */}
         <Link
           to="/kurslarim"
-          aria-label="Kurslarim sahifasiga qaytish"
+          data-testid="back-to-my-courses"
           className="group inline-flex w-fit min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-6 sm:text-lg"
         >
           <span

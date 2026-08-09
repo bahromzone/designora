@@ -7,21 +7,26 @@ export default function CourseDetailPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [enrolled, setEnrolled] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const loadEnrollment = useCallback(async () => {
-    if (!token) return;
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setEnrolled(false);
+      return;
+    }
     try {
-      const r = await learningApi.learn(courseId, token);
+      const r = await learningApi.learn(courseId);
       setEnrolled(Boolean(r.is_enrolled));
     } catch {
       setEnrolled(false);
     }
-  }, [courseId, token]);
+  }, [courseId, isAuthenticated, authLoading]);
 
   useEffect(() => {
     coursesApi
@@ -39,18 +44,25 @@ export default function CourseDetailPage() {
   if (error || !course)
     return <main className="shell py-20">{error || "Kurs topilmadi"}</main>;
 
-  const buy = () => {
+  const buy = async () => {
+    if (authLoading || busy) return;
     if (!isAuthenticated) {
-      // Login'dan keyin shu sahifaga qaytarish uchun redirect parametri
       navigate(`/?modal=login`, { state: { from: location.pathname } });
       return;
     }
-    if ((course.price || 0) > 0) navigate(`/checkout/${courseId}`);
-    else
-      learningApi
-        .enroll(courseId, token)
-        .then(() => navigate(`/organish/${courseId}`))
-        .catch((e) => setError(e.message));
+    if ((course.price || 0) > 0) {
+      navigate(`/checkout/${courseId}`);
+      return;
+    }
+    setBusy(true);
+    try {
+      await learningApi.enroll(courseId);
+      navigate(`/organish/${courseId}`);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -82,6 +94,7 @@ export default function CourseDetailPage() {
             <button
               className="btn-primary mt-5 w-full justify-center"
               onClick={buy}
+              disabled={authLoading || busy}
             >
               Kursga yozilish
             </button>

@@ -130,6 +130,19 @@ export default function App() {
             path="/portfolio/u/:userId"
             element={<PublicPortfolioPage />}
           />
+          {/* Legacy yo'llar: eski havolalar 404'ga tushmasligi uchun. */}
+          <Route
+            path="/dashboard"
+            element={<Navigate to="/kurslarim" replace />}
+          />
+          <Route
+            path="/user/profile"
+            element={<Navigate to="/profil" replace />}
+          />
+          <Route
+            path="/admin/profile"
+            element={<Navigate to="/profil" replace />}
+          />
           <Route path="/kurslarim" element={p(<StudentDashboardPage />)} />
           <Route path="/organish/:courseId" element={p(<LearnPage />)} />
           <Route

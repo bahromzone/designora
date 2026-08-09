@@ -3,22 +3,35 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
+import { bumpAuthEpoch, currentAuthEpoch } from "../lib/authEpoch";
 
 const AuthContext = createContext(null);
+
+// Backend rolga qarab `redirect` qaytaradi; bu faqat zaxira qiymat.
+// App.jsx dagi haqiqiy <Route> bilan mos bo'lishi shart.
+const DEFAULT_POST_AUTH_PATH = "/kurslarim";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const authVersion = useRef(0);
 
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const onInvalid = () => {
+    const onInvalid = (event) => {
+      // Eski epoch'dan kelgan 401 — e'tiborsiz qoldiramiz. Aks holda
+      // login'dan oldin boshlangan anonim /api/profile/me so'rovi keyin
+      // kelib, yangi sessiyani darhol o'chirib tashlaydi.
+      const eventEpoch = event?.detail?.epoch;
+      if (eventEpoch !== undefined && eventEpoch !== currentAuthEpoch()) return;
+      authVersion.current += 1;
       setUser(null);
     };
     window.addEventListener("designora-session-invalidated", onInvalid);
@@ -28,23 +41,26 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let active = true;
+    const restoreVersion = authVersion.current;
     setLoading(true);
     const restore = async () => {
       try {
         const profile = await authApi.profile();
-        if (active) setUser(profile);
+        if (active && authVersion.current === restoreVersion) setUser(profile);
       } catch {
         try {
           await authApi.refresh();
           const profile = await authApi.profile();
-          if (active) setUser(profile);
+          if (active && authVersion.current === restoreVersion) {
+            setUser(profile);
+          }
         } catch {
-          if (active) {
+          if (active && authVersion.current === restoreVersion) {
             setUser(null);
           }
         }
       } finally {
-        if (active) setLoading(false);
+        if (active && authVersion.current === restoreVersion) setLoading(false);
       }
     };
     restore();
@@ -54,24 +70,34 @@ export function AuthProvider({ children }) {
   }, []);
 
   function handlePostAuthRedirect(response) {
-    if (response.redirect) {
-      window.location.assign(response.redirect);
-      return;
-    }
-    const returnTo = location.state?.from;
-    if (returnTo) navigate(returnTo, { replace: true });
+    const nextPath =
+      response?.redirect || location.state?.from || DEFAULT_POST_AUTH_PATH;
+    // Ilgari bu yerda window.location.replace() bor edi: u to'liq sahifa
+    // reload qilib, auth restore'ni noldan ishga tushirardi. Natijada
+    // login'dan keyin darhol 401 poygasi va flaky redirect paydo bo'lardi.
+    // Client-side navigatsiya sessiyani va React holatini saqlab qoladi.
+    navigate(nextPath, { replace: true });
   }
 
   async function login(credentials) {
+    const version = ++authVersion.current;
     const response = await authApi.login(credentials);
+    if (authVersion.current !== version) return response;
+    // Yangi sessiya — bundan oldingi barcha 401'lar endi eskirgan.
+    bumpAuthEpoch();
     setUser(response.user);
+    setLoading(false);
     handlePostAuthRedirect(response);
     return response;
   }
 
   async function register(payload) {
+    const version = ++authVersion.current;
     const response = await authApi.register(payload);
+    if (authVersion.current !== version) return response;
+    bumpAuthEpoch();
     setUser(response.user);
+    setLoading(false);
     handlePostAuthRedirect(response);
     return response;
   }
@@ -85,12 +111,15 @@ export function AuthProvider({ children }) {
       headers: { Authorization: `Bearer ${nextToken}` },
     });
     if (!response.ok) throw new Error("OAuth sessiyasini yaratib bo'lmadi");
+    bumpAuthEpoch();
     const profile = await authApi.profile();
     setUser(profile);
     return profile;
   }, []);
 
   function logout() {
+    authVersion.current += 1;
+    bumpAuthEpoch();
     authApi.logoutAll().catch(() => {});
     setUser(null);
   }

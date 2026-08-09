@@ -27,7 +27,7 @@ def test_register_success(client):
     assert client.cookies.get("access_token")
     assert client.cookies.get("refresh_token")
     assert body["user"]["email"] == "test@example.com"
-    assert body["redirect"] == "/dashboard"
+    assert body["redirect"] == "/kurslarim"
 
 
 def test_register_duplicate_email(client):
@@ -64,6 +64,7 @@ def test_login_success(client):
     )
     assert resp.status_code == 200
     assert resp.json()["success"] is True
+    assert resp.json()["redirect"] == "/kurslarim"
     assert "access_token" not in resp.json()
     assert client.cookies.get("refresh_token")
 

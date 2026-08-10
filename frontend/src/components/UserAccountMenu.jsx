@@ -80,14 +80,14 @@ export default function UserAccountMenu() {
   return (
     <div
       ref={ref}
-      className="fixed right-[8.5rem] top-4 z-50 md:right-[9.5rem] md:top-5"
+      className="fixed right-[7.5rem] top-4 z-50 md:right-[8.5rem] md:top-5"
     >
       <button
         type="button"
         aria-label="Foydalanuvchi menyusi"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-violet-500 to-indigo-600 text-xs font-bold text-white shadow-md ring-1 ring-slate-200 transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+        className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-violet-500 to-indigo-600 text-[10px] font-bold text-white shadow-md ring-1 ring-slate-200 transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
       >
         {user?.avatar_url ? (
           <img

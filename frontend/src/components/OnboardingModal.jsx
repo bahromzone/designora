@@ -220,20 +220,6 @@ export default function OnboardingModal() {
       aria-labelledby="onboarding-title"
     >
       <div className="onboarding-shell">
-        <header className="onboarding-topbar">
-          <div className="onboarding-brand">
-            <span>D</span>
-            <strong>DESIGNORA</strong>
-          </div>
-          <button
-            type="button"
-            className="onboarding-close"
-            onClick={closeForNow}
-            aria-label="Keyinroq davom etish"
-          >
-            <Icon name="close" />
-          </button>
-        </header>
         <div className="onboarding-layout">
           <aside className="onboarding-aside">
             <div>
@@ -273,6 +259,14 @@ export default function OnboardingModal() {
                 style={{ transform: `scaleX(${(step + 1) / STEPS.length})` }}
               />
             </div>
+            <button
+              type="button"
+              className="onboarding-close"
+              onClick={closeForNow}
+              aria-label="Keyinroq davom etish"
+            >
+              <Icon name="close" />
+            </button>
             <div className="onboarding-step" key={step}>
               {step === 0 && (
                 <>

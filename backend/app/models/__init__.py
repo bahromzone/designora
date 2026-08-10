@@ -44,5 +44,4 @@ from .notification import Notification
 from .password_reset import PasswordReset
 from .payment import Payment
 from .progress import Progress
-from .saved_course import SavedCourse
 from .user import User

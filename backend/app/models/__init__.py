@@ -23,7 +23,6 @@ from . import (
     review,
     saved_course,
 )
-
 from .assignment import Assignment
 from .certificate import Certificate
 from .Course import Course

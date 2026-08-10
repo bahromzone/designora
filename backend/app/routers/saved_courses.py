@@ -104,7 +104,8 @@ def unsave_course(
     row = (
         db.query(SavedCourse)
         .filter(
-            SavedCourse.user_id == user.id, SavedCourse.course_id == course_id
+            SavedCourse.user_id == user.id,
+            SavedCourse.course_id == course_id,
         )
         .first()
     )

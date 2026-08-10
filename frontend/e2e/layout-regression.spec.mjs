@@ -15,6 +15,10 @@ const ONBOARDING_KEY = "designora-onboarded";
 // antialiasing o'zgaradi, natijada gate flaky bo'lib ishonchini yo'qotadi.
 // O'rniga geometriya invariantlari qulflanadi: nima ko'rinishi SHART, qayerda
 // turishi shart va nimaning ustida turmasligi shart.
+//
+// Session `auth.setup.mjs` da bir marta olinadi va storageState orqali
+// ulashiladi: har testda login qilish `5 per 1 minute` limitiga urilib 429
+// beradi.
 
 test.use({ reducedMotion: "reduce" });
 
@@ -98,7 +102,10 @@ async function waitForHeaderToSettle(page) {
   });
 }
 
-async function signIn(page, { suppressOnboarding }) {
+// URL ATAYLAB tekshirilmaydi: ProtectedRoute auth yuklanayotganda qisqa vaqt
+// boshqa yo'lda turishi mumkin. Kutilgan elementning o'zini kutish esa shu
+// poygaga bog'liq emas.
+async function openDashboard(page, { suppressOnboarding }) {
   if (suppressOnboarding) {
     await page.addInitScript((key) => {
       try {
@@ -108,27 +115,7 @@ async function signIn(page, { suppressOnboarding }) {
       }
     }, ONBOARDING_KEY);
   }
-
-  await page.goto("/?modal=login");
-  await page.getByPlaceholder("E-pochta").fill(email);
-  await page.getByPlaceholder("Parol").fill(password);
-
-  const loginResponsePromise = page.waitForResponse(
-    (response) =>
-      response.url().includes("/api/auth/login") &&
-      response.request().method() === "POST",
-  );
-  await page.getByRole("button", { name: "KIRISH", exact: true }).click();
-  const loginResponse = await loginResponsePromise;
-  const loginBody = await loginResponse
-    .text()
-    .catch(() => "<body unavailable after navigation>");
-
-  expect(
-    loginResponse.ok(),
-    `Login failed with ${loginResponse.status()}: ${loginBody}`,
-  ).toBeTruthy();
-  await expect(page).toHaveURL(/\/kurslarim/, { timeout: 20_000 });
+  await page.goto("/kurslarim");
 }
 
 for (const [label, viewport] of Object.entries(VIEWPORTS)) {
@@ -138,11 +125,14 @@ for (const [label, viewport] of Object.entries(VIEWPORTS)) {
     await page.setViewportSize(viewport);
     // Bu testda onboarding ATAYLAB bosilmaydi: tekshirilayotgan narsa aynan
     // shu modalning layout'i.
-    await signIn(page, { suppressOnboarding: false });
+    await openDashboard(page, { suppressOnboarding: false });
 
     const modal = page.locator(".onboarding-layer");
     const shell = page.locator(".onboarding-shell");
-    await expect(modal).toBeVisible({ timeout: 20_000 });
+    await expect(
+      modal,
+      "onboarding modal ochilmadi — session yoki user roli kutilganidan farq qiladi",
+    ).toBeVisible({ timeout: 30_000 });
 
     for (const [index, step] of ONBOARDING_STEPS.entries()) {
       const position = `${index + 1}/${ONBOARDING_STEPS.length}-qadam`;
@@ -202,13 +192,20 @@ for (const [label, viewport] of Object.entries(VIEWPORTS)) {
 for (const [label, viewport] of Object.entries(NAVBAR_VIEWPORTS)) {
   test(`account menu shares the navbar row at ${label}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await signIn(page, { suppressOnboarding: true });
+    await openDashboard(page, { suppressOnboarding: true });
+
+    const avatar = page.getByRole("button", { name: "Foydalanuvchi menyusi" });
+    // Avatar faqat authenticated holatda render bo'ladi, shuning uchun uni
+    // kutish sessiyaning tayyorligini ham tasdiqlaydi.
+    await expect(
+      avatar,
+      "profil avatari chiqmadi — session tayyor emas",
+    ).toBeVisible({ timeout: 30_000 });
     await expect(page.locator(".onboarding-layer")).toHaveCount(0);
     await waitForHeaderToSettle(page);
 
     const header = page.locator("header").first();
     const bell = page.getByRole("button", { name: "Bildirishnomalar" });
-    const avatar = page.getByRole("button", { name: "Foydalanuvchi menyusi" });
     const signOut = page.getByRole("button", { name: "Chiqish", exact: true });
 
     await expectFullyVisible(bell, "bildirishnoma tugmasi");

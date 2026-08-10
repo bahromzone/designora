@@ -86,12 +86,8 @@ export default function UserAccountMenu() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="pointer-events-none fixed inset-x-0 top-0 z-40"
     >
-      <div
-        className="mx-auto flex h-[72px] max-w-7xl items-center justify-end px-6"
-      >
-        <div
-          className="pointer-events-auto relative mr-[6.75rem] shrink-0 md:mr-[7.75rem]"
-        >
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-end px-6">
+        <div className="pointer-events-auto relative mr-[6.75rem] shrink-0 md:mr-[7.75rem]">
           <button
             type="button"
             aria-label="Foydalanuvchi menyusi"

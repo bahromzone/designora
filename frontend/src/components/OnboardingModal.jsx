@@ -118,6 +118,7 @@ function Icon({ name }) {
       </>
     ),
   };
+
   return (
     <svg
       viewBox="0 0 24 24"
@@ -147,8 +148,6 @@ export default function OnboardingModal() {
     reminder: initial.reminder ?? true,
   });
 
-  // Shaxsiy onboarding faqat oddiy userlar uchun. Instructor, admin va
-  // superadminlar bu student oqimini ko‘rmasligi kerak.
   if (!isAuthenticated || user?.role !== "user" || !open) return null;
 
   const valid = [
@@ -191,7 +190,7 @@ export default function OnboardingModal() {
       );
       if (completed) localStorage.setItem(ONBOARDING_KEYS.completed, "1");
     } catch {
-      /* private mode: continue without persistence */
+      /* private mode */
     }
   }
 
@@ -204,12 +203,13 @@ export default function OnboardingModal() {
   function next() {
     if (!valid) return;
     save(false);
-    if (step < STEPS.length - 1) setStep((value) => value + 1);
-    else {
-      save(true);
-      setOpen(false);
-      toast.success("Shaxsiy o‘qish rejangiz tayyor!");
+    if (step < STEPS.length - 1) {
+      setStep((value) => value + 1);
+      return;
     }
+    save(true);
+    setOpen(false);
+    toast.success("Shaxsiy o‘qish rejangiz tayyor!");
   }
 
   return (
@@ -234,7 +234,6 @@ export default function OnboardingModal() {
             <Icon name="close" />
           </button>
         </header>
-
         <div className="onboarding-layout">
           <aside className="onboarding-aside">
             <div>
@@ -268,7 +267,6 @@ export default function OnboardingModal() {
               Barcha tanlovlarni keyin profil orqali o‘zgartirish mumkin.
             </small>
           </aside>
-
           <main className="onboarding-main">
             <div className="onboarding-progress">
               <i
@@ -308,7 +306,6 @@ export default function OnboardingModal() {
                   </div>
                 </>
               )}
-
               {step === 1 && (
                 <>
                   <p className="onboarding-kicker">2 / 4</p>
@@ -339,7 +336,6 @@ export default function OnboardingModal() {
                   </p>
                 </>
               )}
-
               {step === 2 && (
                 <>
                   <p className="onboarding-kicker">3 / 4</p>
@@ -370,7 +366,6 @@ export default function OnboardingModal() {
                   </div>
                 </>
               )}
-
               {step === 3 && (
                 <>
                   <p className="onboarding-kicker">4 / 4</p>
@@ -430,7 +425,6 @@ export default function OnboardingModal() {
                 </>
               )}
             </div>
-
             <footer className="onboarding-actions">
               <button
                 type="button"

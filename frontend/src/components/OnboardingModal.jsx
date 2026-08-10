@@ -12,10 +12,26 @@ export const ONBOARDING_KEYS = {
 
 const STEPS = ["Maqsad", "Yo‘nalish", "Tajriba", "Reja"];
 const GOALS = [
-  { id: "career", title: "Ishga tayyorlanish", note: "Kuchli portfolio va real loyihalar" },
-  { id: "freelance", title: "Freelance boshlash", note: "Mijozlar uchun amaliy ko‘nikmalar" },
-  { id: "portfolio", title: "Portfolio kuchaytirish", note: "Eng yaxshi ishlarni tizimli yig‘ish" },
-  { id: "hobby", title: "O‘zim uchun o‘rganish", note: "Erkin tempda ijodiy rivojlanish" },
+  {
+    id: "career",
+    title: "Ishga tayyorlanish",
+    note: "Kuchli portfolio va real loyihalar",
+  },
+  {
+    id: "freelance",
+    title: "Freelance boshlash",
+    note: "Mijozlar uchun amaliy ko‘nikmalar",
+  },
+  {
+    id: "portfolio",
+    title: "Portfolio kuchaytirish",
+    note: "Eng yaxshi ishlarni tizimli yig‘ish",
+  },
+  {
+    id: "hobby",
+    title: "O‘zim uchun o‘rganish",
+    note: "Erkin tempda ijodiy rivojlanish",
+  },
 ];
 const INTERESTS = [
   "UI/UX dizayn",
@@ -28,9 +44,21 @@ const INTERESTS = [
   "Frontend",
 ];
 const LEVELS = [
-  { id: "beginner", title: "Yangi boshlayapman", note: "Asoslardan boshlab, izchil yo‘l kerak" },
-  { id: "intermediate", title: "Asoslarni bilaman", note: "Ko‘proq amaliyot va feedback kerak" },
-  { id: "advanced", title: "Tajribam bor", note: "Murakkab loyihalar bilan o‘smoqchiman" },
+  {
+    id: "beginner",
+    title: "Yangi boshlayapman",
+    note: "Asoslardan boshlab, izchil yo‘l kerak",
+  },
+  {
+    id: "intermediate",
+    title: "Asoslarni bilaman",
+    note: "Ko‘proq amaliyot va feedback kerak",
+  },
+  {
+    id: "advanced",
+    title: "Tajribam bor",
+    note: "Murakkab loyihalar bilan o‘smoqchiman",
+  },
 ];
 const HOURS = [2, 4, 6, 8];
 

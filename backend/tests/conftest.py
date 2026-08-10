@@ -22,7 +22,9 @@ import os
 _DEFAULT_TEST_DB = "sqlite+pysqlite:///:memory:"
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", "").strip() or _DEFAULT_TEST_DB
 IS_SQLITE = TEST_DATABASE_URL.startswith("sqlite")
-
+os.environ["TEST_DATABASE_URL"] = TEST_DATABASE_URL
+os.environ["REDIS_URL"] = ""
+os.environ["RATE_LIMIT_STORAGE_URI"] = ""
 # ── Test muhiti o'zgaruvchilari (app import qilinishidan oldin) ──────────────
 # DATABASE_URL setdefault EMAS: testlar hech qachon haqiqiy bazaga tegmasligi
 # uchun majburan test bazasiga yo'naltiriladi.

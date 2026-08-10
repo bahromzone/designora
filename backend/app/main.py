@@ -3,6 +3,7 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+
 import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
+
 from app.admin.admin_panel import setup_admin
 from app.core.config import limiter, settings
 from app.core.middleware import (
@@ -50,6 +52,7 @@ from app.routers import (
     notes,
     notifications,
     pages,
+    payment_history,
     payments,
     portfolio,
     privacy,
@@ -58,6 +61,7 @@ from app.routers import (
     quiz,
     referrals,
     reviews,
+    saved_courses,
     superadmin,
     system,
     token,
@@ -143,12 +147,14 @@ for r in (
     notifications.router,
     pages.router,
     payments.router,
+    payment_history.router,
     portfolio.router,
     privacy.router,
     qa.router,
     quiz.router,
     referrals.router,
     reviews.router,
+    saved_courses.router,
     superadmin.router,
     system.router,
     token.router,
@@ -173,7 +179,6 @@ def home():
 
 @app.get("/healthz")
 def healthz():
-    """Unauthenticated liveness probe for load balancers and containers."""
     return {
         "status": "ok",
         "service": "designora-api",

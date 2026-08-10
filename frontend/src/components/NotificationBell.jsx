@@ -85,9 +85,7 @@ export default function NotificationBell() {
   async function readOne(item) {
     if (item.is_read) return;
     setItems((rows) =>
-      rows.map((row) =>
-        row.id === item.id ? { ...row, is_read: true } : row
-      )
+      rows.map((row) => (row.id === item.id ? { ...row, is_read: true } : row))
     );
     setUnread((count) => Math.max(0, count - 1));
     try {

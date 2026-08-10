@@ -6,13 +6,18 @@ import ReminderSettings from "./ReminderSettings";
 import UserAccountMenu from "./UserAccountMenu";
 
 const POLL_MS = 60000;
+
 function timeAgo(iso) {
   if (!iso) return "";
-  const min = Math.floor(Math.max(0, Date.now() - new Date(iso).getTime()) / 60000);
+  const min = Math.floor(
+    Math.max(0, Date.now() - new Date(iso).getTime()) / 60000
+  );
   if (min < 1) return "hozir";
   if (min < 60) return `${min} daq oldin`;
   const hours = Math.floor(min / 60);
-  return hours < 24 ? `${hours} soat oldin` : `${Math.floor(hours / 24)} kun oldin`;
+  return hours < 24
+    ? `${hours} soat oldin`
+    : `${Math.floor(hours / 24)} kun oldin`;
 }
 
 export default function NotificationBell() {
@@ -23,6 +28,7 @@ export default function NotificationBell() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const wrapRef = useRef(null);
+
   const loadCount = useCallback(async () => {
     if (!token) return;
     try {
@@ -31,12 +37,14 @@ export default function NotificationBell() {
       /* non-critical */
     }
   }, [token]);
+
   useEffect(() => {
     if (!isAuthenticated) return undefined;
     loadCount();
     const id = setInterval(loadCount, POLL_MS);
     return () => clearInterval(id);
   }, [isAuthenticated, loadCount]);
+
   useEffect(() => {
     if (!open) return undefined;
     const onPointerDown = (event) => {
@@ -58,24 +66,29 @@ export default function NotificationBell() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
+
   async function toggle() {
     const next = !open;
     setOpen(next);
     setSettings(false);
-    if (next) {
-      setLoading(true);
-      try {
-        setItems(await notificationsApi.list(token));
-      } catch {
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
+    if (!next) return;
+    setLoading(true);
+    try {
+      setItems(await notificationsApi.list(token));
+    } catch {
+      setItems([]);
+    } finally {
+      setLoading(false);
     }
   }
+
   async function readOne(item) {
     if (item.is_read) return;
-    setItems((rows) => rows.map((row) => (row.id === item.id ? { ...row, is_read: true } : row)));
+    setItems((rows) =>
+      rows.map((row) =>
+        row.id === item.id ? { ...row, is_read: true } : row
+      )
+    );
     setUnread((count) => Math.max(0, count - 1));
     try {
       await notificationsApi.markRead(item.id, token);
@@ -83,6 +96,7 @@ export default function NotificationBell() {
       loadCount();
     }
   }
+
   async function readAll() {
     setItems((rows) => rows.map((row) => ({ ...row, is_read: true })));
     setUnread(0);
@@ -92,13 +106,24 @@ export default function NotificationBell() {
       loadCount();
     }
   }
+
   if (!isAuthenticated) return null;
+
   return (
     <div className="flex items-center gap-3">
       <div ref={wrapRef} className="relative">
-        <button onClick={toggle} aria-label="Bildirishnomalar" aria-expanded={open} className="relative p-2">
+        <button
+          onClick={toggle}
+          aria-label="Bildirishnomalar"
+          aria-expanded={open}
+          className="relative p-2"
+        >
           🔔
-          {unread > 0 && <b className="absolute -right-1 -top-1">{unread > 9 ? "9+" : unread}</b>}
+          {unread > 0 && (
+            <b className="absolute -right-1 -top-1">
+              {unread > 9 ? "9+" : unread}
+            </b>
+          )}
         </button>
         {open && (
           <div className="absolute right-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border bg-white shadow-xl">
@@ -109,25 +134,59 @@ export default function NotificationBell() {
                 <header className="flex items-center justify-between gap-2 border-b px-4 py-3">
                   <strong>Bildirishnomalar</strong>
                   <span className="flex items-center gap-2">
-                    {unread > 0 && <button onClick={readAll} className="text-xs font-semibold text-violet-600 hover:underline">Hammasini o‘qildi</button>}
-                    <button onClick={() => setSettings(true)} aria-label="Reminder sozlamalari">⚙</button>
+                    {unread > 0 && (
+                      <button
+                        onClick={readAll}
+                        className="text-xs font-semibold text-violet-600 hover:underline"
+                      >
+                        Hammasini o‘qildi
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSettings(true)}
+                      aria-label="Reminder sozlamalari"
+                    >
+                      ⚙
+                    </button>
                   </span>
                 </header>
                 <div className="max-h-96 overflow-y-auto">
                   {loading ? (
                     <p className="p-4">Yuklanmoqda...</p>
                   ) : items.length === 0 ? (
-                    <p className="p-4 text-slate-500">Hozircha bildirishnoma yo‘q.</p>
+                    <p className="p-4 text-slate-500">
+                      Hozircha bildirishnoma yo‘q.
+                    </p>
                   ) : (
-                    items.map((item) => item.link ? (
-                      <Link key={item.id} to={item.link} onClick={() => { readOne(item); setOpen(false); }} className={`block border-b px-4 py-3 ${item.is_read ? "" : "bg-violet-50"}`}>
-                        <b>{item.message}</b><small className="block">{timeAgo(item.created_at)}</small>
-                      </Link>
-                    ) : (
-                      <button key={item.id} onClick={() => readOne(item)} className={`block w-full border-b px-4 py-3 text-left ${item.is_read ? "" : "bg-violet-50"}`}>
-                        <b>{item.message}</b><small className="block">{timeAgo(item.created_at)}</small>
-                      </button>
-                    ))
+                    items.map((item) =>
+                      item.link ? (
+                        <Link
+                          key={item.id}
+                          to={item.link}
+                          onClick={() => {
+                            readOne(item);
+                            setOpen(false);
+                          }}
+                          className={`block border-b px-4 py-3 ${item.is_read ? "" : "bg-violet-50"}`}
+                        >
+                          <b>{item.message}</b>
+                          <small className="block">
+                            {timeAgo(item.created_at)}
+                          </small>
+                        </Link>
+                      ) : (
+                        <button
+                          key={item.id}
+                          onClick={() => readOne(item)}
+                          className={`block w-full border-b px-4 py-3 text-left ${item.is_read ? "" : "bg-violet-50"}`}
+                        >
+                          <b>{item.message}</b>
+                          <small className="block">
+                            {timeAgo(item.created_at)}
+                          </small>
+                        </button>
+                      )
+                    )
                   )}
                 </div>
               </div>

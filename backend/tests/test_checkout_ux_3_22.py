@@ -4,7 +4,7 @@ from app.models.coupon import Coupon
 from app.models.Course import Course
 from app.models.order import Order
 from app.models.user import User
-from app.routers.payments import _grant_access
+from app.services.payments.access import grant_access
 
 
 def headers(email):
@@ -59,7 +59,7 @@ def test_paid_order_has_receipt_and_refund_status(client, db_session):
     )
     db_session.add(order)
     db_session.flush()
-    _grant_access(db_session, order)
+    grant_access(db_session, order)
     db_session.commit()
     response = client.get(
         f"/api/payments/orders/{order.id}/receipt", headers=headers(user.email)

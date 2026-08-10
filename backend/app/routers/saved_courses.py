@@ -37,7 +37,9 @@ def _item(row: SavedCourse) -> dict:
 
 
 @router.get("")
-def list_saved_courses(email: str = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_saved_courses(
+    email: str = Depends(get_current_user), db: Session = Depends(get_db)
+):
     user = _user(db, email)
     rows = (
         db.query(SavedCourse)
@@ -50,12 +52,26 @@ def list_saved_courses(email: str = Depends(get_current_user), db: Session = Dep
 
 
 @router.post("/{course_id}", status_code=status.HTTP_201_CREATED)
-def save_course(course_id: int, email: str = Depends(get_current_user), db: Session = Depends(get_db)):
+def save_course(
+    course_id: int,
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     user = _user(db, email)
-    course = db.query(Course).filter(Course.id == course_id, Course.is_active == True).first()  # noqa: E712
+    course = (
+        db.query(Course)
+        .filter(Course.id == course_id, Course.is_active == True)  # noqa: E712
+        .first()
+    )
     if not course:
         raise HTTPException(status_code=404, detail="Kurs topilmadi")
-    row = db.query(SavedCourse).filter(SavedCourse.user_id == user.id, SavedCourse.course_id == course_id).first()
+    row = (
+        db.query(SavedCourse)
+        .filter(
+            SavedCourse.user_id == user.id, SavedCourse.course_id == course_id
+        )
+        .first()
+    )
     if not row:
         row = SavedCourse(user_id=user.id, course_id=course_id)
         db.add(row)
@@ -63,7 +79,14 @@ def save_course(course_id: int, email: str = Depends(get_current_user), db: Sess
             db.commit()
         except Exception:
             db.rollback()
-            row = db.query(SavedCourse).filter(SavedCourse.user_id == user.id, SavedCourse.course_id == course_id).first()
+            row = (
+                db.query(SavedCourse)
+                .filter(
+                    SavedCourse.user_id == user.id,
+                    SavedCourse.course_id == course_id,
+                )
+                .first()
+            )
             if not row:
                 raise
         if row:
@@ -72,9 +95,19 @@ def save_course(course_id: int, email: str = Depends(get_current_user), db: Sess
 
 
 @router.delete("/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
-def unsave_course(course_id: int, email: str = Depends(get_current_user), db: Session = Depends(get_db)):
+def unsave_course(
+    course_id: int,
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     user = _user(db, email)
-    row = db.query(SavedCourse).filter(SavedCourse.user_id == user.id, SavedCourse.course_id == course_id).first()
+    row = (
+        db.query(SavedCourse)
+        .filter(
+            SavedCourse.user_id == user.id, SavedCourse.course_id == course_id
+        )
+        .first()
+    )
     if not row:
         raise HTTPException(status_code=404, detail="Saqlangan kurs topilmadi")
     db.delete(row)

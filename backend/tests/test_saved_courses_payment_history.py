@@ -33,7 +33,10 @@ def test_saved_course_lifecycle(client, db_session):
     created = client.post(f"/api/saved-courses/{course.id}", headers=headers)
     assert created.status_code == 201
     assert created.json()["course_id"] == course.id
-    assert client.post(f"/api/saved-courses/{course.id}", headers=headers).status_code == 201
+    assert (
+        client.post(f"/api/saved-courses/{course.id}", headers=headers).status_code
+        == 201
+    )
     assert len(client.get("/api/saved-courses", headers=headers).json()) == 1
 
     removed = client.delete(f"/api/saved-courses/{course.id}", headers=headers)
@@ -49,14 +52,27 @@ def test_saved_course_is_private(client, db_session):
     client.post(f"/api/saved-courses/{course.id}", headers=_headers(owner))
 
     assert client.get("/api/saved-courses", headers=_headers(other)).json() == []
-    assert client.delete(f"/api/saved-courses/{course.id}", headers=_headers(other)).status_code == 404
+    assert (
+        client.delete(
+            f"/api/saved-courses/{course.id}", headers=_headers(other)
+        ).status_code
+        == 404
+    )
 
 
 def test_payment_history_is_user_scoped(client, db_session):
     owner = _user(db_session, "buyer@example.com")
     other = _user(db_session, "other-buyer@example.com")
     course = _course(db_session)
-    db_session.add(Order(user_id=owner.id, course_id=course.id, amount=100000, status="paid", provider="click"))
+    db_session.add(
+        Order(
+            user_id=owner.id,
+            course_id=course.id,
+            amount=100000,
+            status="paid",
+            provider="click",
+        )
+    )
     db_session.commit()
 
     response = client.get("/api/payments/history", headers=_headers(owner))

@@ -10,7 +10,9 @@ router = APIRouter(prefix="/api/payments", tags=["Payments"])
 
 
 @router.get("/history")
-def payment_history(email: str = Depends(get_current_user), db: Session = Depends(get_db)):
+def payment_history(
+    email: str = Depends(get_current_user), db: Session = Depends(get_db)
+):
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
@@ -30,7 +32,9 @@ def payment_history(email: str = Depends(get_current_user), db: Session = Depend
             "status": order.status,
             "provider": order.provider,
             "discount": order.discount_amount or 0,
-            "created_at": order.created_at.isoformat() if order.created_at else None,
+            "created_at": (
+                order.created_at.isoformat() if order.created_at else None
+            ),
             "paid_at": order.paid_at.isoformat() if order.paid_at else None,
             "receipt_number": order.receipt_number,
         }

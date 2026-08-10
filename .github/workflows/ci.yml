@@ -110,21 +110,19 @@ jobs:
   docker:
     name: Docker build
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - name: Build backend image with retry
+      # Docker Hub'ga to'g'ridan-to'g'ri murojaat runner'larda i/o timeout
+      # berib turadi. Mirror sozlanadi va base imagelar oldindan tortiladi,
+      # shunda build lokal kesh ustida ishlaydi.
+      - name: Configure registry mirror and warm base images
         run: |
-          for attempt in 1 2 3; do
-            docker build -t designora-backend ./backend && exit 0
-            echo "Backend Docker pull/build failed, retrying in 15s (attempt ${attempt}/3)"
-            sleep 15
-          done
-          exit 1
-      - name: Build frontend image with retry
-        run: |
-          for attempt in 1 2 3; do
-            docker build -t designora-frontend ./frontend && exit 0
-            echo "Frontend Docker pull/build failed, retrying in 15s (attempt ${attempt}/3)"
-            sleep 15
-          done
-          exit 1
+          bash scripts/ci_docker_registry.sh \
+            python:3.12-slim \
+            node:22-alpine \
+            nginx:1.27-alpine
+      - name: Build backend image
+        run: bash scripts/docker_build_retry.sh designora-backend ./backend
+      - name: Build frontend image
+        run: bash scripts/docker_build_retry.sh designora-frontend ./frontend

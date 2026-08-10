@@ -27,7 +27,7 @@ const VIEWPORTS = {
   "390x844": { width: 390, height: 844 },
 };
 
-// Navbar auth blokи `hidden md:flex` bo'lgani uchun faqat >= 768px da mavjud.
+// Navbar auth bloki `hidden md:flex` bo'lgani uchun faqat >= 768px da mavjud.
 const NAVBAR_VIEWPORTS = {
   "1920x1080": { width: 1920, height: 1080 },
   "1440x900": { width: 1440, height: 900 },
@@ -192,10 +192,10 @@ for (const [label, viewport] of Object.entries(VIEWPORTS)) {
       await advance.click();
     }
 
-    await expect(
-      modal,
-      "oxirgi qadamdan keyin modal yopilmadi",
-    ).toHaveCount(0, { timeout: 10_000 });
+    await expect(modal, "oxirgi qadamdan keyin modal yopilmadi").toHaveCount(
+      0,
+      { timeout: 10_000 },
+    );
   });
 }
 

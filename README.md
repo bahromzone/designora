@@ -15,7 +15,7 @@ designora/
 │   └── pyproject.toml
 ├── frontend/           # React + Vite ilova
 │   ├── src/            # components, pages, context, lib
-│   └── e2e/            # Playwright critical journey
+│   └── e2e/            # Playwright critical journey va layout gate
 ├── docs/               # arxitektura, API va roadmap
 ├── docker-compose.yml  # db, redis, backend, frontend
 └── .github/workflows/  # CI/CD va browser E2E
@@ -105,6 +105,8 @@ npm run build
 ### Browser E2E
 
 Critical student journey `frontend/e2e/critical-journey.spec.mjs` ichida: login, reload'dan keyin cookie session, enrollment, lesson ochish va dashboard'ga qaytish. GitHub Actions'da `E2E_BASE_URL`, `E2E_EMAIL`, `E2E_PASSWORD`, `E2E_COURSE_ID` secretlari kerak.
+
+Layout regression gate `frontend/e2e/layout-regression.spec.mjs` ichida: onboarding modal navigatsiyasi va navbar profil menyusi bir nechta viewport hamda past balandlikda geometriya invariantlari bilan qulflanadi. Piksel snapshot ataylab ishlatilmaydi, chunki runner'da shrift renderi o'zgaradi va gate flaky bo'lib ishonchini yo'qotadi. O'rniga tekshiriladi: element viewport ichida to'liqmi, o'z konteyneri chegarasida qolganmi, ustini boshqa element to'smaganmi va bir qatordagi elementlar haqiqatan bir qatordami.
 
 ```bash
 cd frontend/e2e

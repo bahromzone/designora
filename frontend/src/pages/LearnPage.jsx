@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import AssignmentSection from "../components/AssignmentSection";
+import CertificateSection from "../components/CertificateSection";
 import LessonSidebar from "../components/LessonSidebar";
 import NotesSection from "../components/NotesSection";
 import QASection from "../components/QASection";
@@ -111,7 +112,7 @@ export default function LearnPage() {
   if (error && !data)
     return (
       <section className="shell py-24" role="alert" data-testid="learn-error">
-        <h1>Darsni ochib bo‘lmadi</h1>
+        <h1>Darsni ochib bo'lmadi</h1>
         <p data-testid="learn-error-message">{error}</p>
         <button onClick={load}>Qayta urinish</button>
       </section>
@@ -120,8 +121,8 @@ export default function LearnPage() {
   if (!data)
     return (
       <section className="shell py-24" role="alert" data-testid="learn-empty">
-        <h1>Kurs ma‘lumoti bo‘sh keldi</h1>
-        <p>Kurs ID‘sini tekshirib, sahifani yangilang.</p>
+        <h1>Kurs ma'lumoti bo'sh keldi</h1>
+        <p>Kurs ID'sini tekshirib, sahifani yangilang.</p>
         <button onClick={load}>Qayta urinish</button>
       </section>
     );
@@ -130,8 +131,8 @@ export default function LearnPage() {
     return (
       <section className="shell py-24" data-testid="learn-not-enrolled">
         <h1>Bu kursga hali yozilmagansiz</h1>
-        <p>To‘liq darslarga kirish uchun avval kursga yoziling.</p>
-        <Link to={`/kurslar/${courseId}`}>Kurs sahifasiga o‘tish</Link>
+        <p>To'liq darslarga kirish uchun avval kursga yoziling.</p>
+        <Link to={`/kurslar/${courseId}`}>Kurs sahifasiga o'tish</Link>
       </section>
     );
 
@@ -141,16 +142,13 @@ export default function LearnPage() {
   return (
     <section className="shell py-16" data-testid="learn-ready">
       <div className="mb-8 flex flex-col gap-4 sm:mb-10">
-        {/* aria-label ataylab yo'q: u ko'rinadigan matndan farq qilsa,
-            accessible name buziladi va getByRole('link', { name })
-            ekrandagi matn bilan mos kelmaydi. */}
         <Link
           to="/kurslarim"
           data-testid="back-to-my-courses"
-          className="group inline-flex w-fit min-h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-6 sm:text-lg"
+          className="group inline-flex w-fit min-h-10 items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-5 sm:text-base"
         >
           <span
-            className="text-xl leading-none transition-transform duration-200 group-hover:-translate-x-1"
+            className="text-lg leading-none transition-transform duration-200 group-hover:-translate-x-1"
             aria-hidden="true"
           >
             ←
@@ -159,7 +157,7 @@ export default function LearnPage() {
         </Link>
         <div className="max-w-4xl">
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-600">
-            {courseCompleted ? "Kurs tugallangan" : "Hozir o‘rganilmoqda"}
+            {courseCompleted ? "Kurs tugallangan" : "Hozir o'rganilmoqda"}
           </p>
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
             {data.title}
@@ -225,6 +223,11 @@ export default function LearnPage() {
           <QuizSection
             courseId={Number(courseId)}
             isEnrolled={data.is_enrolled}
+          />
+          <CertificateSection
+            courseId={Number(courseId)}
+            isEnrolled={data.is_enrolled}
+            progress={data.progress_percent}
           />
         </main>
         <LessonSidebar

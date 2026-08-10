@@ -67,9 +67,7 @@ def save_course(
         raise HTTPException(status_code=404, detail="Kurs topilmadi")
     row = (
         db.query(SavedCourse)
-        .filter(
-            SavedCourse.user_id == user.id, SavedCourse.course_id == course_id
-        )
+        .filter(SavedCourse.user_id == user.id, SavedCourse.course_id == course_id)
         .first()
     )
     if not row:

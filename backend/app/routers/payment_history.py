@@ -32,9 +32,7 @@ def payment_history(
             "status": order.status,
             "provider": order.provider,
             "discount": order.discount_amount or 0,
-            "created_at": (
-                order.created_at.isoformat() if order.created_at else None
-            ),
+            "created_at": (order.created_at.isoformat() if order.created_at else None),
             "paid_at": order.paid_at.isoformat() if order.paid_at else None,
             "receipt_number": order.receipt_number,
         }

@@ -15,7 +15,7 @@ from app.models.coupon import Coupon
 from app.models.Course import Course
 from app.models.order import Order
 from app.models.user import User
-from app.routers.payments import _build_pay_url
+from app.services.payments.checkout_url import build_pay_url
 
 router = APIRouter(prefix="/api/payments", tags=["Checkout UX"])
 PROVIDERS = {"payme", "click"}
@@ -59,7 +59,7 @@ def _order_response(order: Order, *, reused: bool) -> dict:
         "discount": order.discount_amount,
         "provider": order.provider,
         "pay_url": (
-            _build_pay_url(order.provider, order) if order.status == "pending" else None
+            build_pay_url(order.provider, order) if order.status == "pending" else None
         ),
         "reused": reused,
     }
@@ -189,7 +189,7 @@ def retry(
     return {
         "order_id": order.id,
         "status": order.status,
-        "pay_url": _build_pay_url(order.provider, order),
+        "pay_url": build_pay_url(order.provider, order),
     }
 
 

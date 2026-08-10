@@ -72,7 +72,9 @@ function readCompleted() {
 
 function readDraft() {
   try {
-    return JSON.parse(localStorage.getItem(ONBOARDING_KEYS.profile) || "null") || {};
+    return (
+      JSON.parse(localStorage.getItem(ONBOARDING_KEYS.profile) || "null") || {}
+    );
   } catch {
     return {};
   }

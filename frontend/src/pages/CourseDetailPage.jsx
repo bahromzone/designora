@@ -98,10 +98,7 @@ export default function CourseDetailPage() {
         <aside className="card h-fit rounded-2xl p-6 lg:sticky lg:top-24">
           <div className="flex items-start justify-between gap-3">
             <strong className="text-3xl">{formatPrice(course.price)}</strong>
-            <SavedCourseButton
-              courseId={courseId}
-              initialSaved={saved}
-            />
+            <SavedCourseButton courseId={courseId} initialSaved={saved} />
           </div>
           {enrolled ? (
             <Link

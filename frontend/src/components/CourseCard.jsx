@@ -121,9 +121,7 @@ export default function CourseCard({ course, index = 0 }) {
         >
           <span style={{ color: "var(--muted)" }}>{lessonsCount} dars</span>
           <div className="flex items-center gap-3">
-            {course.id != null && (
-              <SavedCourseButton courseId={course.id} />
-            )}
+            {course.id != null && <SavedCourseButton courseId={course.id} />}
             {course.id != null ? (
               <Link
                 className="flex items-center gap-1 transition-colors"

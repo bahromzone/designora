@@ -45,12 +45,21 @@ const data = {
   ],
   assignments: [],
   notifications: [],
-  gamification: { streak_days: 3, points: 120, level: 2, points_to_next_level: 380 },
+  gamification: {
+    streak_days: 3,
+    points: 120,
+    level: 2,
+    points_to_next_level: 380,
+  },
   next_lesson: {
     title: "Ranglar nazariyasi",
     order: 2,
     duration_seconds: 600,
-    course: { title: "UI Design asoslari", course_id: 7, progress_percent: 35 },
+    course: {
+      title: "UI Design asoslari",
+      course_id: 7,
+      progress_percent: 35,
+    },
   },
   summary: {
     average_progress: 35,
@@ -86,11 +95,12 @@ describe("StudentDashboardPage", () => {
     dashboardApi.get.mockResolvedValue({ courses: [] });
     renderDashboard();
 
-    expect(await screen.findByText("Birinchi kursga yoziling!")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Katalogni ko'rish/i })).toHaveAttribute(
-      "href",
-      "/kurslar"
-    );
+    expect(
+      await screen.findByText("Birinchi kursga yoziling!")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Katalogni ko'rish/i })
+    ).toHaveAttribute("href", "/kurslar");
   });
 
   it("shows an error and retries the failed request", async () => {
@@ -101,7 +111,9 @@ describe("StudentDashboardPage", () => {
 
     expect(await screen.findByText("Dashboard ishlamadi")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Qayta urinish" }));
-    expect(await screen.findByText("Birinchi kursga yoziling!")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Birinchi kursga yoziling!")
+    ).toBeInTheDocument();
     expect(dashboardApi.get).toHaveBeenCalledTimes(2);
   });
 
@@ -109,13 +121,16 @@ describe("StudentDashboardPage", () => {
     dashboardApi.get.mockResolvedValue(data);
     renderDashboard();
 
-    expect(await screen.findByText("Salom, Bahromjon 👋")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Salom, Bahromjon 👋")
+    ).toBeInTheDocument();
     expect(screen.getByText("Ranglar nazariyasi")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Darsni davom ettirish/i })).toHaveAttribute(
-      "href",
-      "/organish/7"
-    );
+    expect(
+      screen.getByRole("link", { name: /Darsni davom ettirish/i })
+    ).toHaveAttribute("href", "/organish/7");
     expect(screen.getByText("UI Design asoslari")).toBeInTheDocument();
-    await waitFor(() => expect(discoveryApi.bestselling).toHaveBeenCalledWith(5));
+    await waitFor(() =>
+      expect(discoveryApi.bestselling).toHaveBeenCalledWith(5)
+    );
   });
 });

@@ -3,7 +3,6 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Navbar from "./Navbar";
-import { useAuth } from "../context/AuthContext";
 
 const { authState } = vi.hoisted(() => ({ authState: {} }));
 
@@ -26,8 +25,12 @@ vi.mock("framer-motion", async () => {
   };
 });
 
-vi.mock("./NotificationBell", () => ({ default: () => <button>Bildirishnomalar</button> }));
-vi.mock("./GoogleAuthButton", () => ({ default: ({ label }) => <button>{label}</button> }));
+vi.mock("./NotificationBell", () => ({
+  default: () => <button>Bildirishnomalar</button>,
+}));
+vi.mock("./GoogleAuthButton", () => ({
+  default: ({ label }) => <button>{label}</button>,
+}));
 
 function renderNavbar(authenticated = false) {
   Object.assign(authState, {
@@ -67,7 +70,9 @@ describe("Navbar", () => {
     expect(screen.getAllByText("Mening kurslarim").length).toBeGreaterThan(0);
     expect(screen.getByText("Bahromjon")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Chiqish" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Bildirishnomalar" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Bildirishnomalar" })
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Chiqish" }));
     expect(authState.logout).toHaveBeenCalledTimes(1);
@@ -93,6 +98,8 @@ describe("Navbar", () => {
     expect(blogLinks.length).toBeGreaterThan(1);
 
     fireEvent.click(blogLinks[blogLinks.length - 1]);
-    expect(screen.queryByRole("button", { name: "Chiqish" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Chiqish" })
+    ).not.toBeInTheDocument();
   });
 });

@@ -7,7 +7,10 @@ export default function CertificatesPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    accountApi.certificates().then(setItems).catch((e) => setError(e.message));
+    accountApi
+      .certificates()
+      .then(setItems)
+      .catch((e) => setError(e.message));
   }, []);
 
   return (
@@ -59,7 +62,10 @@ export default function CertificatesPage() {
               Serial: {item.serial || "tayyorlanmoqda"}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <a className="btn-outline" href={`/verify/${item.verification_code}`}>
+              <a
+                className="btn-outline"
+                href={`/verify/${item.verification_code}`}
+              >
                 Tekshirish
               </a>
               {item.pdf_url ? (

@@ -8,7 +8,7 @@ pytest-cov==6.2.1
 pytest-asyncio==1.4.0
 
 # ===== Lint / format =====
-ruff==0.16.1
+ruff==0.16.2
 # black requirements.txt da mavjud (25.12.0)
 
 # ===== Pre-commit =====

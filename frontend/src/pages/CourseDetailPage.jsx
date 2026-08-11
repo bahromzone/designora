@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { coursesApi, formatPrice, learningApi } from "../lib/api";
+
 import { useAuth } from "../context/AuthContext";
+import { coursesApi, formatPrice, learningApi } from "../lib/api";
 
 export default function CourseDetailPage() {
   const { courseId } = useParams();
@@ -21,8 +22,8 @@ export default function CourseDetailPage() {
       return;
     }
     try {
-      const r = await learningApi.learn(courseId);
-      setEnrolled(Boolean(r.is_enrolled));
+      const response = await learningApi.learn(courseId);
+      setEnrolled(Boolean(response.is_enrolled));
     } catch {
       setEnrolled(false);
     }
@@ -45,9 +46,9 @@ export default function CourseDetailPage() {
     return <main className="shell py-20">{error || "Kurs topilmadi"}</main>;
 
   const buy = async () => {
-    if (authLoading || busy) return;
-    if (!isAuthenticated) {
-      navigate(`/?modal=login`, { state: { from: location.pathname } });
+    if (busy) return;
+    if (authLoading || !isAuthenticated) {
+      navigate("/?modal=login", { state: { from: location.pathname } });
       return;
     }
     if ((course.price || 0) > 0) {
@@ -55,6 +56,7 @@ export default function CourseDetailPage() {
       return;
     }
     setBusy(true);
+    setError("");
     try {
       await learningApi.enroll(courseId);
       navigate(`/organish/${courseId}`);
@@ -74,10 +76,10 @@ export default function CourseDetailPage() {
           <h1 className="mt-3 text-5xl font-extrabold">{course.title}</h1>
           <p className="mt-5 text-lg text-gray-600">{course.description}</p>
           <h2 className="mt-10 text-2xl font-bold">Kurs dasturi</h2>
-          {(course.modules || []).map((m) => (
-            <article className="card mt-3 rounded-xl p-4" key={m.id}>
-              <strong>{m.title}</strong>
-              <p>{(m.lessons || []).length} dars</p>
+          {(course.modules || []).map((module) => (
+            <article className="card mt-3 rounded-xl p-4" key={module.id}>
+              <strong>{module.title}</strong>
+              <p>{(module.lessons || []).length} dars</p>
             </article>
           ))}
         </section>
@@ -94,10 +96,16 @@ export default function CourseDetailPage() {
             <button
               className="btn-primary mt-5 w-full justify-center"
               onClick={buy}
-              disabled={authLoading || busy}
+              disabled={busy}
+              aria-busy={busy}
             >
-              Kursga yozilish
+              {busy ? "Yozilmoqda..." : "Kursga yozilish"}
             </button>
+          )}
+          {error && (
+            <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </p>
           )}
           <p className="mt-4 text-sm text-gray-500">
             Aniq narx, promo code, xavfsiz to'lov va chek.

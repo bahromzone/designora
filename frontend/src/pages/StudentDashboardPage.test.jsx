@@ -123,7 +123,11 @@ describe("StudentDashboardPage", () => {
     dashboardApi.get.mockResolvedValue(data);
     renderDashboard();
 
-    expect(await screen.findByText("Salom, Bahromjon 👋")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: /Salom,\s*Bahromjon/,
+      })
+    ).toBeInTheDocument();
     expect(screen.getByText("Ranglar nazariyasi")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Darsni davom ettirish/i })

@@ -75,7 +75,7 @@ export default function ProfilePage() {
         } else {
           setError(
             profileResult.reason?.message ||
-              "Profil ma'lumotlarini yuklab bo'lmadi."
+              "Profil ma’lumotlarini yuklab bo‘lmadi."
           );
         }
         // Statistika yiqilsa ham tahrirlash formasi ochilishi kerak.
@@ -110,7 +110,7 @@ export default function ProfilePage() {
         website: form.website.trim(),
         avatar_url: form.avatar_url.trim(),
       });
-      setMessage("Profil ma'lumotlari saqlandi.");
+      setMessage("Profil ma’lumotlari saqlandi.");
       // Saqlash o'tdi. Sessiya yangilanishi yiqilsa ham buni xato deb
       // ko'rsatmaymiz, aks holda foydalanuvchi saqlanmadi deb o'ylaydi.
       try {

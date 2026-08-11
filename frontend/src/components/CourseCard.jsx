@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { formatDuration } from "../lib/api";
+import SavedCourseButton from "./SavedCourseButton";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -62,10 +64,9 @@ export default function CourseCard({ course, index = 0 }) {
   return (
     <article
       ref={cardRef}
-      className="card-white group overflow-hidden rounded-2xl opacity-0 hover:-translate-y-1 transition-transform duration-300"
+      className="card-white group overflow-hidden rounded-2xl opacity-0 transition-transform duration-300 hover:-translate-y-1"
       style={{ boxShadow: "0 4px 24px rgba(26,18,8,0.08)" }}
     >
-      {/* Image */}
       <div className="relative aspect-[16/10] overflow-hidden bg-surface">
         <img
           ref={imgRef}
@@ -74,7 +75,6 @@ export default function CourseCard({ course, index = 0 }) {
           className="h-full w-full object-cover"
           style={{ willChange: "transform" }}
         />
-        {/* Overlay badges */}
         <div className="absolute left-3 right-3 top-3 flex items-center justify-between gap-2">
           <span
             className="rounded-full px-3 py-1 text-[0.62rem] font-semibold uppercase tracking-widest"
@@ -97,11 +97,10 @@ export default function CourseCard({ course, index = 0 }) {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5 space-y-3">
+      <div className="space-y-3 p-5">
         <div>
           <p className="label mb-1.5">Maxsus yo'nalish</p>
-          <h3 className="font-serif text-2xl font-semibold text-ink leading-snug">
+          <h3 className="font-serif text-2xl font-semibold leading-snug text-ink">
             {course.title}
           </h3>
           <p
@@ -117,25 +116,34 @@ export default function CourseCard({ course, index = 0 }) {
         </p>
 
         <div
-          className="flex items-center justify-between border-t pt-4 text-xs font-medium uppercase tracking-widest"
+          className="flex items-center justify-between gap-3 border-t pt-4 text-xs font-medium uppercase tracking-widest"
           style={{ borderColor: "var(--border)" }}
         >
           <span style={{ color: "var(--muted)" }}>{lessonsCount} dars</span>
-          <span
-            className="flex items-center gap-1 transition-colors"
-            style={{ color: "var(--amber)" }}
-          >
-            Batafsil
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <path
-                d="M2 6.5h9M8 3.5l3 3-3 3"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
+          <div className="flex items-center gap-3">
+            {course.id != null && (
+              <SavedCourseButton courseId={course.id} />
+            )}
+            {course.id != null ? (
+              <Link
+                className="flex items-center gap-1 transition-colors"
+                style={{ color: "var(--amber)" }}
+                to={`/kurslar/${course.id}`}
+              >
+                Batafsil
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path
+                    d="M2 6.5h9M8 3.5l3 3-3 3"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </Link>
+            ) : (
+              <span style={{ color: "var(--amber)" }}>Batafsil</span>
+            )}
+          </div>
         </div>
       </div>
     </article>

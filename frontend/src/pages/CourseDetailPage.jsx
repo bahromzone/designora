@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
+import SavedCourseButton from "../components/SavedCourseButton";
 import { useAuth } from "../context/AuthContext";
+import { accountApi } from "../lib/accountApi";
 import { coursesApi, formatPrice, learningApi } from "../lib/api";
 
 export default function CourseDetailPage() {
@@ -13,12 +15,14 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [enrolled, setEnrolled] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const loadEnrollment = useCallback(async () => {
     if (authLoading) return;
     if (!isAuthenticated) {
       setEnrolled(false);
+      setSaved(false);
       return;
     }
     try {
@@ -26,6 +30,14 @@ export default function CourseDetailPage() {
       setEnrolled(Boolean(response.is_enrolled));
     } catch {
       setEnrolled(false);
+    }
+    try {
+      const savedCourses = await accountApi.savedCourses();
+      setSaved(
+        savedCourses.some((item) => String(item.course_id) === String(courseId))
+      );
+    } catch {
+      setSaved(false);
     }
   }, [courseId, isAuthenticated, authLoading]);
 
@@ -84,7 +96,13 @@ export default function CourseDetailPage() {
           ))}
         </section>
         <aside className="card h-fit rounded-2xl p-6 lg:sticky lg:top-24">
-          <strong className="text-3xl">{formatPrice(course.price)}</strong>
+          <div className="flex items-start justify-between gap-3">
+            <strong className="text-3xl">{formatPrice(course.price)}</strong>
+            <SavedCourseButton
+              courseId={courseId}
+              initialSaved={saved}
+            />
+          </div>
           {enrolled ? (
             <Link
               className="btn-primary mt-5 w-full justify-center"

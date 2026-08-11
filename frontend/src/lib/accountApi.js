@@ -3,6 +3,8 @@ import { request } from "./request";
 export const accountApi = {
   certificates: () => request("/api/certificates/my"),
   savedCourses: () => request("/api/saved-courses"),
+  saveCourse: (courseId) =>
+    request(`/api/saved-courses/${courseId}`, { method: "POST" }),
   removeSavedCourse: (courseId) =>
     request(`/api/saved-courses/${courseId}`, { method: "DELETE" }),
   paymentHistory: () => request("/api/payments/history"),

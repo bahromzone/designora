@@ -15,8 +15,10 @@ vi.mock("framer-motion", async () => {
   const motion = new Proxy(
     {},
     {
-      get: () => ({ children, ...props }) =>
-        React.createElement("div", props, children),
+      get:
+        () =>
+        ({ children, ...props }) =>
+          React.createElement("div", props, children),
     }
   );
   return {

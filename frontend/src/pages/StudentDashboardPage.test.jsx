@@ -24,8 +24,10 @@ vi.mock("framer-motion", async () => {
   const motion = new Proxy(
     {},
     {
-      get: () => ({ children, ...props }) =>
-        React.createElement("div", props, children),
+      get:
+        () =>
+        ({ children, ...props }) =>
+          React.createElement("div", props, children),
     }
   );
   return { motion };
@@ -121,9 +123,7 @@ describe("StudentDashboardPage", () => {
     dashboardApi.get.mockResolvedValue(data);
     renderDashboard();
 
-    expect(
-      await screen.findByText("Salom, Bahromjon 👋")
-    ).toBeInTheDocument();
+    expect(await screen.findByText("Salom, Bahromjon 👋")).toBeInTheDocument();
     expect(screen.getByText("Ranglar nazariyasi")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Darsni davom ettirish/i })

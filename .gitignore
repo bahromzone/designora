@@ -84,3 +84,7 @@ htmlcov/
 
 # ===== Misc =====
 patch_test.txt
+
+# ===== DB dumps =====
+*.sql
+*.dump

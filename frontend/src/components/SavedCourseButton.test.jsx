@@ -6,6 +6,13 @@ import SavedCourseButton from "./SavedCourseButton";
 import { useAuth } from "../context/AuthContext";
 import { accountApi } from "../lib/accountApi";
 
+const { navigateMock } = vi.hoisted(() => ({ navigateMock: vi.fn() }));
+
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
+  return { ...actual, useNavigate: () => navigateMock };
+});
+
 vi.mock("../context/AuthContext", () => ({
   useAuth: vi.fn(),
 }));
@@ -50,8 +57,9 @@ describe("SavedCourseButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Saqlash" }));
 
     expect(accountApi.saveCourse).not.toHaveBeenCalled();
-    expect(window.location.pathname).toBe("/");
-    expect(window.location.search).toBe("?modal=login");
+    expect(navigateMock).toHaveBeenCalledWith("/?modal=login", {
+      state: { from: "/kurslar/7" },
+    });
   });
 
   it("shows a recoverable error when saving fails", async () => {

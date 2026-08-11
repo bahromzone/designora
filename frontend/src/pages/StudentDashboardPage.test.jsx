@@ -128,7 +128,7 @@ describe("StudentDashboardPage", () => {
     expect(
       screen.getByRole("link", { name: /Darsni davom ettirish/i })
     ).toHaveAttribute("href", "/organish/7");
-    expect(screen.getByText("UI Design asoslari")).toBeInTheDocument();
+    expect(screen.getAllByText("UI Design asoslari")).toHaveLength(2);
     await waitFor(() =>
       expect(discoveryApi.bestselling).toHaveBeenCalledWith(5)
     );

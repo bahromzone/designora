@@ -1,3 +1,4 @@
+// prettier-ignore-start
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "./components/AppShell";
@@ -5,70 +6,64 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RoleRoute from "./components/RoleRoute";
 import SearchShortcut from "./components/SearchShortcut";
 
-const AboutPage = lazy(() => import("./pages/AboutPage"));
-const AdminAnalyticsPage = lazy(() => import("./pages/AdminAnalyticsPage"));
-const AdminCoursesPage = lazy(() => import("./pages/AdminCoursesPage"));
-const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
-const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
-const AdminPaymentsPage = lazy(() => import("./pages/AdminPaymentsPage"));
-const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
-const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
-const BlogListPage = lazy(() => import("./pages/BlogListPage"));
-const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
-const CalendarPage = lazy(() => import("./pages/CalendarPage"));
-const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
-const CheckoutResultPage = lazy(() => import("./pages/CheckoutResultPage"));
-const CourseCommunityPage = lazy(() => import("./pages/CourseCommunityPage"));
-const CourseDetailPage = lazy(() => import("./pages/CourseDetailPage"));
-const CoursesPage = lazy(() => import("./pages/CoursesPage"));
-const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
-const ForumListPage = lazy(() => import("./pages/ForumListPage"));
-const ForumThreadPage = lazy(() => import("./pages/ForumThreadPage"));
-const GlobalSearchPage = lazy(() => import("./pages/GlobalSearchPage"));
-const HomePage = lazy(() => import("./pages/HomePage"));
-const InstructorAnalyticsPage = lazy(
-  () => import("./pages/InstructorAnalyticsPage")
-);
-const InstructorApplyPage = lazy(() => import("./pages/InstructorApplyPage"));
-const InstructorApplicationsPage = lazy(
-  () => import("./pages/InstructorApplicationsPage")
-);
-const InstructorCourseEditPage = lazy(
-  () => import("./pages/InstructorCourseEditPage")
-);
-const InstructorDashboardPage = lazy(
-  () => import("./pages/InstructorDashboardPage")
-);
-const InstructorManagePage = lazy(() => import("./pages/InstructorManagePage"));
-const InstructorPage = lazy(() => import("./pages/InstructorPage"));
-const InstructorReviewPage = lazy(() => import("./pages/InstructorReviewPage"));
-const LearnPage = lazy(() => import("./pages/LearnPage"));
-const LearningPathDetailPage = lazy(
-  () => import("./pages/LearningPathDetailPage")
-);
-const LearningPathsPage = lazy(() => import("./pages/LearningPathsPage"));
-const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
-const PortfolioBuilderPage = lazy(() => import("./pages/PortfolioBuilderPage"));
-const PricingPage = lazy(() => import("./pages/PricingPage"));
-const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const PublicPortfolioPage = lazy(() => import("./pages/PublicPortfolioPage"));
-const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
-const StudentDashboardPage = lazy(() => import("./pages/StudentDashboardPage"));
-const SuperadminAuditPage = lazy(() => import("./pages/SuperadminAuditPage"));
-const SuperadminDashboardPage = lazy(
-  () => import("./pages/SuperadminDashboardPage")
-);
-const TermsPage = lazy(() => import("./pages/TermsPage"));
-const VerifyPage = lazy(() => import("./pages/VerifyPage"));
-
+const pages = {
+  About: lazy(() => import("./pages/AboutPage")),
+  AdminAnalytics: lazy(() => import("./pages/AdminAnalyticsPage")),
+  AdminCourses: lazy(() => import("./pages/AdminCoursesPage")),
+  AdminDashboard: lazy(() => import("./pages/AdminDashboardPage")),
+  AdminModeration: lazy(() => import("./pages/AdminModerationPage")),
+  AdminPayments: lazy(() => import("./pages/AdminPaymentsPage")),
+  AdminUsers: lazy(() => import("./pages/AdminUsersPage")),
+  AuthCallback: lazy(() => import("./pages/AuthCallbackPage")),
+  BlogList: lazy(() => import("./pages/BlogListPage")),
+  BlogPost: lazy(() => import("./pages/BlogPostPage")),
+  Calendar: lazy(() => import("./pages/CalendarPage")),
+  Checkout: lazy(() => import("./pages/CheckoutPage")),
+  CheckoutResult: lazy(() => import("./pages/CheckoutResultPage")),
+  Community: lazy(() => import("./pages/CourseCommunityPage")),
+  CourseDetail: lazy(() => import("./pages/CourseDetailPage")),
+  Courses: lazy(() => import("./pages/CoursesPage")),
+  ForgotPassword: lazy(() => import("./pages/ForgotPasswordPage")),
+  ForumList: lazy(() => import("./pages/ForumListPage")),
+  ForumThread: lazy(() => import("./pages/ForumThreadPage")),
+  Search: lazy(() => import("./pages/GlobalSearchPage")),
+  Home: lazy(() => import("./pages/HomePage")),
+  InstructorAnalytics: lazy(() => import("./pages/InstructorAnalyticsPage")),
+  InstructorApply: lazy(() => import("./pages/InstructorApplyPage")),
+  InstructorApplications: lazy(
+    () => import("./pages/InstructorApplicationsPage")
+  ),
+  InstructorEdit: lazy(() => import("./pages/InstructorCourseEditPage")),
+  InstructorDashboard: lazy(() => import("./pages/InstructorDashboardPage")),
+  InstructorManage: lazy(() => import("./pages/InstructorManagePage")),
+  Instructor: lazy(() => import("./pages/InstructorPage")),
+  InstructorReview: lazy(() => import("./pages/InstructorReviewPage")),
+  Learn: lazy(() => import("./pages/LearnPage")),
+  LearningPathDetail: lazy(() => import("./pages/LearningPathDetailPage")),
+  LearningPaths: lazy(() => import("./pages/LearningPathsPage")),
+  NotFound: lazy(() => import("./pages/NotFoundPage")),
+  Portfolio: lazy(() => import("./pages/PortfolioBuilderPage")),
+  Pricing: lazy(() => import("./pages/PricingPage")),
+  Privacy: lazy(() => import("./pages/PrivacyPage")),
+  Profile: lazy(() => import("./pages/ProfilePage")),
+  PublicPortfolio: lazy(() => import("./pages/PublicPortfolioPage")),
+  ResetPassword: lazy(() => import("./pages/ResetPasswordPage")),
+  Saved: lazy(() => import("./pages/SavedCoursesPage")),
+  Certificates: lazy(() => import("./pages/CertificatesPage")),
+  Payments: lazy(() => import("./pages/PaymentHistoryPage")),
+  Settings: lazy(() => import("./pages/SettingsPage")),
+  StudentDashboard: lazy(() => import("./pages/StudentDashboardPage")),
+  SuperadminAudit: lazy(() => import("./pages/SuperadminAuditPage")),
+  SuperadminDashboard: lazy(() => import("./pages/SuperadminDashboardPage")),
+  Terms: lazy(() => import("./pages/TermsPage")),
+  Verify: lazy(() => import("./pages/VerifyPage")),
+};
 const p = (x) => <ProtectedRoute>{x}</ProtectedRoute>;
 const ad = (x) => <RoleRoute roles={["admin", "superadmin"]}>{x}</RoleRoute>;
 const sa = (x) => <RoleRoute roles={["superadmin"]}>{x}</RoleRoute>;
 const ins = (x) => (
   <RoleRoute roles={["instructor", "admin", "superadmin"]}>{x}</RoleRoute>
 );
-
 function RouteFallback() {
   return (
     <div className="shell py-24" role="status" aria-live="polite">
@@ -76,44 +71,38 @@ function RouteFallback() {
     </div>
   );
 }
-
 export default function App() {
+  const P = pages;
   return (
     <AppShell>
       <SearchShortcut />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/qidiruv" element={<GlobalSearchPage />} />
-          <Route path="/kurslar" element={<CoursesPage />} />
-          <Route path="/kurslar/:courseId" element={<CourseDetailPage />} />
-          <Route
-            path="/community/:courseId"
-            element={p(<CourseCommunityPage />)}
-          />
+          <Route path="/" element={<P.Home />} />
+          <Route path="/pricing" element={<P.Pricing />} />
+          <Route path="/qidiruv" element={<P.Search />} />
+          <Route path="/kurslar" element={<P.Courses />} />
+          <Route path="/kurslar/:courseId" element={<P.CourseDetail />} />
+          <Route path="/community/:courseId" element={p(<P.Community />)} />
           <Route
             path="/community/:courseId/thread/:threadId"
-            element={p(<CourseCommunityPage />)}
+            element={p(<P.Community />)}
           />
-          <Route path="/checkout/:courseId" element={p(<CheckoutPage />)} />
-          <Route path="/learning-paths" element={<LearningPathsPage />} />
+          <Route path="/checkout/:courseId" element={p(<P.Checkout />)} />
+          <Route path="/learning-paths" element={<P.LearningPaths />} />
           <Route
             path="/learning-paths/:slug"
-            element={<LearningPathDetailPage />}
+            element={<P.LearningPathDetail />}
           />
-          <Route path="/calendar" element={p(<CalendarPage />)} />
-          <Route path="/blog" element={<BlogListPage />} />
-          <Route path="/blog/:slug" element={<BlogPostPage />} />
-          <Route path="/forum" element={<ForumListPage />} />
-          <Route path="/forum/:threadId" element={<ForumThreadPage />} />
-          <Route
-            path="/instruktor/:instructorId"
-            element={<InstructorPage />}
-          />
-          <Route path="/biz-haqimizda" element={<AboutPage />} />
-          <Route path="/maxfiylik" element={<PrivacyPage />} />
-          <Route path="/shartlar" element={<TermsPage />} />
+          <Route path="/calendar" element={p(<P.Calendar />)} />
+          <Route path="/blog" element={<P.BlogList />} />
+          <Route path="/blog/:slug" element={<P.BlogPost />} />
+          <Route path="/forum" element={<P.ForumList />} />
+          <Route path="/forum/:threadId" element={<P.ForumThread />} />
+          <Route path="/instruktor/:instructorId" element={<P.Instructor />} />
+          <Route path="/biz-haqimizda" element={<P.About />} />
+          <Route path="/maxfiylik" element={<P.Privacy />} />
+          <Route path="/shartlar" element={<P.Terms />} />
           <Route
             path="/kirish"
             element={<Navigate to="/?modal=login" replace />}
@@ -122,15 +111,11 @@ export default function App() {
             path="/royxatdan-otish"
             element={<Navigate to="/?modal=signup" replace />}
           />
-          <Route path="/verify/:code" element={<VerifyPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/auth/callback" element={<AuthCallbackPage />} />
-          <Route
-            path="/portfolio/u/:userId"
-            element={<PublicPortfolioPage />}
-          />
-          {/* Legacy yo'llar: eski havolalar 404'ga tushmasligi uchun. */}
+          <Route path="/verify/:code" element={<P.Verify />} />
+          <Route path="/forgot-password" element={<P.ForgotPassword />} />
+          <Route path="/reset-password" element={<P.ResetPassword />} />
+          <Route path="/auth/callback" element={<P.AuthCallback />} />
+          <Route path="/portfolio/u/:userId" element={<P.PublicPortfolio />} />
           <Route
             path="/dashboard"
             element={<Navigate to="/kurslarim" replace />}
@@ -143,60 +128,62 @@ export default function App() {
             path="/admin/profile"
             element={<Navigate to="/profil" replace />}
           />
-          <Route path="/kurslarim" element={p(<StudentDashboardPage />)} />
-          <Route path="/organish/:courseId" element={p(<LearnPage />)} />
+          <Route path="/kurslarim" element={p(<P.StudentDashboard />)} />
+          <Route path="/organish/:courseId" element={p(<P.Learn />)} />
           <Route
             path="/tolov/natija/:orderId"
-            element={p(<CheckoutResultPage />)}
+            element={p(<P.CheckoutResult />)}
           />
-          <Route path="/profil" element={p(<ProfilePage />)} />
-          <Route path="/portfolio" element={p(<PortfolioBuilderPage />)} />
+          <Route path="/profil" element={p(<P.Profile />)} />
+          <Route
+            path="/profil/sertifikatlarim"
+            element={p(<P.Certificates />)}
+          />
+          <Route path="/profil/saqlangan" element={p(<P.Saved />)} />
+          <Route path="/profil/tolovlar" element={p(<P.Payments />)} />
+          <Route path="/profil/sozlamalar" element={p(<P.Settings />)} />
+          <Route path="/portfolio" element={p(<P.Portfolio />)} />
           <Route
             path="/instruktor-boshlash"
-            element={p(<InstructorApplyPage />)}
+            element={p(<P.InstructorApply />)}
           />
           <Route
             path="/instruktor-panel"
-            element={ins(<InstructorDashboardPage />)}
+            element={ins(<P.InstructorDashboard />)}
           />
           <Route
             path="/instruktor-analytics"
-            element={ins(<InstructorAnalyticsPage />)}
+            element={ins(<P.InstructorAnalytics />)}
           />
           <Route
             path="/instruktor-boshqaruv"
-            element={ins(<InstructorManagePage />)}
+            element={ins(<P.InstructorManage />)}
           />
           <Route
             path="/instruktor/kurs/:courseId"
-            element={ins(<InstructorCourseEditPage />)}
+            element={ins(<P.InstructorEdit />)}
           />
           <Route
             path="/instruktor/review/:assignmentId"
-            element={ins(<InstructorReviewPage />)}
+            element={ins(<P.InstructorReview />)}
           />
-          <Route path="/admin" element={ad(<AdminDashboardPage />)} />
-          <Route path="/admin/courses" element={ad(<AdminCoursesPage />)} />
-          <Route path="/admin/users" element={ad(<AdminUsersPage />)} />
+          <Route path="/admin" element={ad(<P.AdminDashboard />)} />
+          <Route path="/admin/courses" element={ad(<P.AdminCourses />)} />
+          <Route path="/admin/users" element={ad(<P.AdminUsers />)} />
           <Route
             path="/admin/instructor-applications"
-            element={ad(<InstructorApplicationsPage />)}
+            element={ad(<P.InstructorApplications />)}
           />
-          <Route path="/admin/payments" element={ad(<AdminPaymentsPage />)} />
-          <Route
-            path="/admin/moderation"
-            element={ad(<AdminModerationPage />)}
-          />
-          <Route path="/admin/analytics" element={ad(<AdminAnalyticsPage />)} />
-          <Route path="/superadmin" element={sa(<SuperadminDashboardPage />)} />
-          <Route path="/superadmin/users" element={sa(<AdminUsersPage />)} />
-          <Route
-            path="/superadmin/audit"
-            element={sa(<SuperadminAuditPage />)}
-          />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="/admin/payments" element={ad(<P.AdminPayments />)} />
+          <Route path="/admin/moderation" element={ad(<P.AdminModeration />)} />
+          <Route path="/admin/analytics" element={ad(<P.AdminAnalytics />)} />
+          <Route path="/superadmin" element={sa(<P.SuperadminDashboard />)} />
+          <Route path="/superadmin/users" element={sa(<P.AdminUsers />)} />
+          <Route path="/superadmin/audit" element={sa(<P.SuperadminAudit />)} />
+          <Route path="*" element={<P.NotFound />} />
         </Routes>
       </Suspense>
     </AppShell>
   );
 }
+// prettier-ignore-end

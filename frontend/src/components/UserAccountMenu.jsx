@@ -1,8 +1,7 @@
+// prettier-ignore-start
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
 import { useAuth } from "../context/AuthContext";
-
 const items = [
   {
     label: "Profil",
@@ -17,28 +16,26 @@ const items = [
   {
     label: "Sertifikatlarim",
     description: "Olingan sertifikatlar",
-    to: "/profil#certificates",
+    to: "/profil/sertifikatlarim",
   },
   {
     label: "Saqlangan",
     description: "Keyinroq ko'rish uchun belgilangan kurslar",
-    to: "/profil#saved",
+    to: "/profil/saqlangan",
   },
   {
     label: "To'lovlar tarixi",
     description: "Buyurtmalar va to'lovlar",
-    to: "/profil#payments",
+    to: "/profil/tolovlar",
   },
   {
     label: "Sozlamalar",
     description: "Parol va email sozlamalari",
-    to: "/profil#settings",
+    to: "/profil/sozlamalar",
   },
 ];
-
 function initials(user) {
-  const value = user?.name || user?.full_name || user?.email || "U";
-  return value
+  return (user?.name || user?.full_name || user?.email || "U")
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
@@ -46,13 +43,11 @@ function initials(user) {
     .join("")
     .toUpperCase();
 }
-
 export default function UserAccountMenu() {
   const { user, isAuthenticated, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
-
   useEffect(() => {
     const close = (event) => {
       if (ref.current && !ref.current.contains(event.target)) setOpen(false);
@@ -60,7 +55,6 @@ export default function UserAccountMenu() {
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, []);
-
   useEffect(() => {
     const close = (event) => {
       if (event.key === "Escape") setOpen(false);
@@ -68,15 +62,12 @@ export default function UserAccountMenu() {
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
   }, []);
-
   if (!isAuthenticated) return null;
-
   function signOut() {
     setOpen(false);
     logout();
     navigate("/");
   }
-
   return (
     <div ref={ref} className="relative shrink-0">
       <button
@@ -150,3 +141,4 @@ export default function UserAccountMenu() {
     </div>
   );
 }
+// prettier-ignore-end

@@ -38,6 +38,7 @@ class ProfileUpdateRequest(BaseModel):
     phone: Annotated[str, StringConstraints(max_length=20)] | None = None
     location: Annotated[str, StringConstraints(max_length=100)] | None = None
     website: Annotated[str, StringConstraints(max_length=200)] | None = None
+    avatar_url: Annotated[str, StringConstraints(max_length=500)] | None = None
 class ChangePasswordRequest(BaseModel):
     current_password: Annotated[str, StringConstraints(min_length=8, max_length=128)]
     new_password: Annotated[str, StringConstraints(min_length=8, max_length=128)]
@@ -58,7 +59,7 @@ def get_profile(email: str = Depends(get_current_user), db: Session = Depends(ge
 def update_profile(data: ProfileUpdateRequest, email: str = Depends(get_current_user), db: Session = Depends(get_db)):
     user = _get_user_or_unauthorized(db, email)
     user.name = data.name
-    for field in ["bio", "phone", "location", "website"]:
+    for field in ["bio", "phone", "location", "website", "avatar_url"]:
         if hasattr(user, field) and getattr(data, field) is not None: setattr(user, field, getattr(data, field))
     try: db.commit(); db.refresh(user)
     except Exception: db.rollback(); raise HTTPException(status_code=500, detail="Ma'lumotlarni saqlashda xatolik")

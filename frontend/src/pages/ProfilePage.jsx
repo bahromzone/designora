@@ -113,8 +113,8 @@ export default function ProfilePage() {
                   className="mt-2 max-w-2xl text-sm leading-7"
                   style={{ color: "var(--ink-60)" }}
                 >
-                  Baholangan topshiriqlarni professional case study’ga aylantiring
-                  va bitta public havola bilan ulashing.
+                  Baholangan topshiriqlarni professional case study’ga
+                  aylantiring va bitta public havola bilan ulashing.
                 </p>
               </div>
               <Link to="/portfolio" className="btn-primary">

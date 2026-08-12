@@ -31,7 +31,7 @@ export default function SettingsPage() {
           phone: profile.phone || "",
           location: profile.location || "",
           website: profile.website || "",
-        }),
+        })
       )
       .catch((e) => setError(e.message));
   }, []);

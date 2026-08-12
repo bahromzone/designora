@@ -107,7 +107,9 @@ def update_profile(
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="Ma'lumotlarni saqlashda xatolik")
-    return JSONResponse({"message": "Profil muvaffaqiyatli yangilandi", "name": user.name})
+    return JSONResponse(
+        {"message": "Profil muvaffaqiyatli yangilandi", "name": user.name}
+    )
 
 
 @router.post("/change-password")
@@ -155,7 +157,9 @@ def get_stats(email: str = Depends(get_current_user), db: Session = Depends(get_
         progress_rows = []
 
     courses_enrolled = len(progress_rows)
-    courses_completed = sum(1 for progress, _ in progress_rows if progress.percent >= 100)
+    courses_completed = sum(
+        1 for progress, _ in progress_rows if progress.percent >= 100
+    )
     total_minutes = (
         db.query(func.sum(Progress.minutes_spent))
         .filter(Progress.user_id == user.id)
@@ -174,9 +178,7 @@ def get_stats(email: str = Depends(get_current_user), db: Session = Depends(get_
             ),
             "thumbnail_url": getattr(course, "thumbnail_url", None),
             "last_activity": (
-                progress.last_activity.isoformat()
-                if progress.last_activity
-                else None
+                progress.last_activity.isoformat() if progress.last_activity else None
             ),
         }
         for progress, course in progress_rows

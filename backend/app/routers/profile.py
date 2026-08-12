@@ -1,10 +1,12 @@
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, StringConstraints, field_validator
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
 from app.core.password import hash_password, verify_password
 from app.core.security import get_current_user
@@ -13,11 +15,17 @@ from app.models.certificate import Certificate
 from app.models.Course import Course
 from app.models.progress import Progress
 from app.models.user import User
+
 router = APIRouter(prefix="/api/profile", tags=["Profile"])
+
+
 def _get_user_or_unauthorized(db: Session, email: str) -> User:
     user = db.query(User).filter(User.email == email).first()
-    if not user: raise HTTPException(status_code=401, detail="Unauthorized")
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return user
+
+
 class ProfileResponse(BaseModel):
     id: int
     name: str
@@ -31,76 +39,251 @@ class ProfileResponse(BaseModel):
     location: str | None = None
     website: str | None = None
     avatar_url: str | None = None
-    class Config: from_attributes = True
+
+    class Config:
+        from_attributes = True
+
+
 class ProfileUpdateRequest(BaseModel):
     name: Annotated[str, StringConstraints(min_length=2, max_length=100)]
     bio: Annotated[str, StringConstraints(max_length=500)] | None = None
     phone: Annotated[str, StringConstraints(max_length=20)] | None = None
     location: Annotated[str, StringConstraints(max_length=100)] | None = None
     website: Annotated[str, StringConstraints(max_length=200)] | None = None
+
+
 class ChangePasswordRequest(BaseModel):
     current_password: Annotated[str, StringConstraints(min_length=8, max_length=128)]
     new_password: Annotated[str, StringConstraints(min_length=8, max_length=128)]
+
     @field_validator("new_password")
     @classmethod
-    def password_strength(cls, v):
-        if not any(c.isupper() for c in v): raise ValueError("Kamida 1 ta katta harf kerak")
-        if not any(c.isdigit() for c in v): raise ValueError("Kamida 1 ta raqam kerak")
-        return v
+    def password_strength(cls, value: str) -> str:
+        if not any(char.isupper() for char in value):
+            raise ValueError("Kamida 1 ta katta harf kerak")
+        if not any(char.isdigit() for char in value):
+            raise ValueError("Kamida 1 ta raqam kerak")
+        return value
+
+
 class ProgressUpdateRequest(BaseModel):
     percent: int
     minutes_spent: int | None = 0
+
+
 @router.get("/me", response_model=ProfileResponse)
 def get_profile(email: str = Depends(get_current_user), db: Session = Depends(get_db)):
     user = _get_user_or_unauthorized(db, email)
-    return ProfileResponse(id=user.id, name=user.name or "", email=user.email, role=getattr(user, "role", "user") or "user", provider=getattr(user, "provider", None) or "local", is_active=getattr(user, "is_active", True) or True, created_at=getattr(user, "created_at", None), bio=getattr(user, "bio", None), phone=getattr(user, "phone", None), location=getattr(user, "location", None), website=getattr(user, "website", None), avatar_url=getattr(user, "avatar_url", None))
+    return ProfileResponse(
+        id=user.id,
+        name=user.name or "",
+        email=user.email,
+        role=getattr(user, "role", "user") or "user",
+        provider=getattr(user, "provider", None) or "local",
+        is_active=getattr(user, "is_active", True) or True,
+        created_at=getattr(user, "created_at", None),
+        bio=getattr(user, "bio", None),
+        phone=getattr(user, "phone", None),
+        location=getattr(user, "location", None),
+        website=getattr(user, "website", None),
+        avatar_url=getattr(user, "avatar_url", None),
+    )
+
+
 @router.patch("/update")
-def update_profile(data: ProfileUpdateRequest, email: str = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_profile(
+    data: ProfileUpdateRequest,
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     user = _get_user_or_unauthorized(db, email)
     user.name = data.name
     for field in ["bio", "phone", "location", "website"]:
-        if hasattr(user, field) and getattr(data, field) is not None: setattr(user, field, getattr(data, field))
-    try: db.commit(); db.refresh(user)
-    except Exception: db.rollback(); raise HTTPException(status_code=500, detail="Ma'lumotlarni saqlashda xatolik")
+        if hasattr(user, field) and getattr(data, field) is not None:
+            setattr(user, field, getattr(data, field))
+    try:
+        db.commit()
+        db.refresh(user)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Ma'lumotlarni saqlashda xatolik")
     return JSONResponse({"message": "Profil muvaffaqiyatli yangilandi", "name": user.name})
+
+
 @router.post("/change-password")
-def change_password(data: ChangePasswordRequest, email: str = Depends(get_current_user), db: Session = Depends(get_db)):
+def change_password(
+    data: ChangePasswordRequest,
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     user = _get_user_or_unauthorized(db, email)
-    if user.provider != "local": raise HTTPException(status_code=400, detail=f"Siz {user.provider} orqali kirganingiz uchun parolni bu yerda o'zgartira olmaysiz")
-    if not user.password: raise HTTPException(status_code=400, detail="Parol o'rnatilmagan")
-    if not verify_password(data.current_password, user.password): raise HTTPException(status_code=400, detail="Joriy parol noto'g'ri")
-    if verify_password(data.new_password, user.password): raise HTTPException(status_code=400, detail="Yangi parol joriy paroldan farq qilishi kerak")
+    if user.provider != "local":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Siz {user.provider} orqali kirganingiz uchun parolni bu yerda o'zgartira olmaysiz",
+        )
+    if not user.password:
+        raise HTTPException(status_code=400, detail="Parol o'rnatilmagan")
+    if not verify_password(data.current_password, user.password):
+        raise HTTPException(status_code=400, detail="Joriy parol noto'g'ri")
+    if verify_password(data.new_password, user.password):
+        raise HTTPException(
+            status_code=400,
+            detail="Yangi parol joriy paroldan farq qilishi kerak",
+        )
     user.password = hash_password(data.new_password)
-    try: db.commit()
-    except Exception: db.rollback(); raise HTTPException(status_code=500, detail="Parolni saqlashda xatolik")
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Parolni saqlashda xatolik")
     return JSONResponse({"message": "Parol muvaffaqiyatli o'zgartirildi"})
+
+
 @router.get("/stats")
 def get_stats(email: str = Depends(get_current_user), db: Session = Depends(get_db)):
     user = _get_user_or_unauthorized(db, email)
-    try: progress_rows = db.query(Progress, Course).join(Course, Progress.course_id == Course.id).filter(Progress.user_id == user.id).all()
-    except Exception: db.rollback(); progress_rows = []
-    courses_enrolled = len(progress_rows); courses_completed = sum(1 for p, _ in progress_rows if p.percent >= 100)
-    total_minutes = db.query(func.sum(Progress.minutes_spent)).filter(Progress.user_id == user.id).scalar() or 0
-    courses_list = [{"id": course.id, "title": course.title, "category": course.category or "general", "progress": prog.percent, "is_completed": prog.percent >= 100, "hours_spent": round((getattr(prog, "minutes_spent", None) or 0) / 60, 1), "thumbnail_url": getattr(course, "thumbnail_url", None), "last_activity": prog.last_activity.isoformat() if prog.last_activity else None} for prog, course in progress_rows]
-    courses_list.sort(key=lambda x: x["last_activity"] or "", reverse=True)
-    today = datetime.now(UTC).date(); activity = []
-    for i in range(6, -1, -1):
-        day = today - timedelta(days=i); day_start = datetime(day.year, day.month, day.day, tzinfo=UTC); day_end = day_start + timedelta(days=1)
-        day_minutes = db.query(func.sum(Progress.minutes_spent)).filter(Progress.user_id == user.id, Progress.last_activity >= day_start, Progress.last_activity < day_end).scalar() or 0
+    try:
+        progress_rows = (
+            db.query(Progress, Course)
+            .join(Course, Progress.course_id == Course.id)
+            .filter(Progress.user_id == user.id)
+            .all()
+        )
+    except Exception:
+        db.rollback()
+        progress_rows = []
+
+    courses_enrolled = len(progress_rows)
+    courses_completed = sum(1 for progress, _ in progress_rows if progress.percent >= 100)
+    total_minutes = (
+        db.query(func.sum(Progress.minutes_spent))
+        .filter(Progress.user_id == user.id)
+        .scalar()
+        or 0
+    )
+    courses_list = [
+        {
+            "id": course.id,
+            "title": course.title,
+            "category": course.category or "general",
+            "progress": progress.percent,
+            "is_completed": progress.percent >= 100,
+            "hours_spent": round(
+                (getattr(progress, "minutes_spent", None) or 0) / 60, 1
+            ),
+            "thumbnail_url": getattr(course, "thumbnail_url", None),
+            "last_activity": (
+                progress.last_activity.isoformat()
+                if progress.last_activity
+                else None
+            ),
+        }
+        for progress, course in progress_rows
+    ]
+    courses_list.sort(key=lambda item: item["last_activity"] or "", reverse=True)
+
+    today = datetime.now(UTC).date()
+    activity = []
+    for index in range(6, -1, -1):
+        day = today - timedelta(days=index)
+        day_start = datetime(day.year, day.month, day.day, tzinfo=UTC)
+        day_end = day_start + timedelta(days=1)
+        day_minutes = (
+            db.query(func.sum(Progress.minutes_spent))
+            .filter(
+                Progress.user_id == user.id,
+                Progress.last_activity >= day_start,
+                Progress.last_activity < day_end,
+            )
+            .scalar()
+            or 0
+        )
         activity.append({"date": day.isoformat(), "minutes": day_minutes})
-    return {"courses_enrolled": courses_enrolled, "courses_completed": courses_completed, "hours_learned": round(total_minutes / 60, 1), "certificates": db.query(Certificate).filter(Certificate.user_id == user.id).count(), "pending_assignments": db.query(Assignment).filter(Assignment.user_id == user.id, Assignment.is_completed == False).count(), "points": user.points or 0, "streak_days": user.streak_days or 0, "level": user.level or 1, "courses": courses_list, "activity": activity}
+
+    return {
+        "courses_enrolled": courses_enrolled,
+        "courses_completed": courses_completed,
+        "hours_learned": round(total_minutes / 60, 1),
+        "certificates": db.query(Certificate)
+        .filter(Certificate.user_id == user.id)
+        .count(),
+        "pending_assignments": db.query(Assignment)
+        .filter(Assignment.user_id == user.id, Assignment.is_completed == False)
+        .count(),
+        "points": user.points or 0,
+        "streak_days": user.streak_days or 0,
+        "level": user.level or 1,
+        "courses": courses_list,
+        "activity": activity,
+    }
+
+
 @router.patch("/progress/{course_id}")
-def update_progress(course_id: int, data: ProgressUpdateRequest, email: str = Depends(get_current_user), db: Session = Depends(get_db)):
-    user = _get_user_or_unauthorized(db, email); course = db.query(Course).filter(Course.id == course_id, Course.is_active == True).first()
-    if not course: raise HTTPException(status_code=404, detail="Kurs topilmadi")
-    progress = db.query(Progress).filter(Progress.user_id == user.id, Progress.course_id == course_id).first()
-    if not progress: progress = Progress(user_id=user.id, course_id=course_id, percent=0, minutes_spent=0); db.add(progress)
-    progress.percent = min(max(data.percent, 0), 100); progress.minutes_spent = (getattr(progress, "minutes_spent", None) or 0) + (data.minutes_spent or 0); progress.last_activity = datetime.now(UTC)
+def update_progress(
+    course_id: int,
+    data: ProgressUpdateRequest,
+    email: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = _get_user_or_unauthorized(db, email)
+    course = (
+        db.query(Course)
+        .filter(Course.id == course_id, Course.is_active == True)
+        .first()
+    )
+    if not course:
+        raise HTTPException(status_code=404, detail="Kurs topilmadi")
+
+    progress = (
+        db.query(Progress)
+        .filter(Progress.user_id == user.id, Progress.course_id == course_id)
+        .first()
+    )
+    if not progress:
+        progress = Progress(
+            user_id=user.id, course_id=course_id, percent=0, minutes_spent=0
+        )
+        db.add(progress)
+
+    progress.percent = min(max(data.percent, 0), 100)
+    progress.minutes_spent = (getattr(progress, "minutes_spent", None) or 0) + (
+        data.minutes_spent or 0
+    )
+    progress.last_activity = datetime.now(UTC)
     if progress.percent >= 100:
-        existing_cert = db.query(Certificate).filter(Certificate.user_id == user.id, Certificate.course_id == course_id).first()
-        if not existing_cert: db.add(Certificate(user_id=user.id, course_id=course_id, title=f"{course.title} sertifikati", issued_at=datetime.now(UTC))); user.points = (user.points or 0) + 100 + (data.minutes_spent or 0)
-        else: user.points = (user.points or 0) + (data.minutes_spent or 0)
-    else: user.points = (user.points or 0) + (data.minutes_spent or 0)
-    try: db.commit()
-    except Exception: db.rollback(); raise HTTPException(status_code=500, detail="Saqlashda xatolik")
-    return JSONResponse({"message": "Progress yangilandi", "percent": progress.percent, "points": user.points})
+        existing_cert = (
+            db.query(Certificate)
+            .filter(
+                Certificate.user_id == user.id,
+                Certificate.course_id == course_id,
+            )
+            .first()
+        )
+        if not existing_cert:
+            db.add(
+                Certificate(
+                    user_id=user.id,
+                    course_id=course_id,
+                    title=f"{course.title} sertifikati",
+                    issued_at=datetime.now(UTC),
+                )
+            )
+            user.points = (user.points or 0) + 100 + (data.minutes_spent or 0)
+        else:
+            user.points = (user.points or 0) + (data.minutes_spent or 0)
+    else:
+        user.points = (user.points or 0) + (data.minutes_spent or 0)
+
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Saqlashda xatolik")
+    return JSONResponse(
+        {
+            "message": "Progress yangilandi",
+            "percent": progress.percent,
+            "points": user.points,
+        }
+    )

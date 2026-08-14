@@ -15,6 +15,21 @@ const ROLE_LABELS = {
   user: "Talaba",
 };
 
+const UZBEK_MONTHS = [
+  "yanvar",
+  "fevral",
+  "mart",
+  "aprel",
+  "may",
+  "iyun",
+  "iyul",
+  "avgust",
+  "sentabr",
+  "oktabr",
+  "noyabr",
+  "dekabr",
+];
+
 const TEXT_FIELDS = [
   ["name", "Ism-familiya", "Ismingiz va familiyangiz"],
   ["avatar_url", "Avatar URL", "https://..."],
@@ -40,12 +55,10 @@ function toFormValues(profile) {
   return next;
 }
 
-function formatDate(value) {
-  return new Date(value).toLocaleDateString("uz-UZ", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+function formatUzbekDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return `${date.getDate()}-${UZBEK_MONTHS[date.getMonth()]} ${date.getFullYear()}-yil`;
 }
 
 export default function ProfilePage() {
@@ -96,11 +109,11 @@ export default function ProfilePage() {
     event.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Faqat rasm faylini tanlang.");
+      setError("Faqat JPG, PNG, WEBP yoki GIF rasm tanlang.");
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      setError("Avatar hajmi 2 MB dan oshmasligi kerak.");
+      setError("Rasm hajmi 2 MB dan oshmasligi kerak.");
       return;
     }
     setUploading(true);
@@ -157,29 +170,29 @@ export default function ProfilePage() {
           style={{ borderColor: "var(--border)" }}
         >
           <div className="flex flex-col items-center text-center">
-            <div
-              className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full text-2xl font-bold text-white"
-              style={{ background: "var(--amber)" }}
-            >
-              {avatarSrc && !avatarBroken ? (
-                <img
-                  key={avatarSrc}
-                  src={avatarSrc}
-                  alt="Profil avatari"
-                  className="h-full w-full object-cover"
-                  onError={() => setAvatarBroken(true)}
-                />
-              ) : (
-                displayName.charAt(0).toUpperCase()
-              )}
-            </div>
             <button
               type="button"
-              className="mt-3 text-sm font-bold text-violet-600 hover:underline disabled:opacity-50"
+              className="profile-avatar-upload"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading || loading}
+              aria-label="Profil rasmini almashtirish"
             >
-              {uploading ? "Yuklanmoqda..." : "Profil rasmini yuklash"}
+              <span className="profile-avatar-frame">
+                {avatarSrc && !avatarBroken ? (
+                  <img
+                    key={avatarSrc}
+                    src={avatarSrc}
+                    alt="Profil avatari"
+                    className="h-full w-full object-cover"
+                    onError={() => setAvatarBroken(true)}
+                  />
+                ) : (
+                  displayName.charAt(0).toUpperCase()
+                )}
+                <span className="profile-avatar-overlay">
+                  {uploading ? "Yuklanmoqda..." : "Rasmni almashtirish"}
+                </span>
+              </span>
             </button>
             <input
               ref={fileInputRef}
@@ -189,9 +202,6 @@ export default function ProfilePage() {
               onChange={uploadAvatar}
               aria-label="Profil rasmi fayli"
             />
-            <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
-              JPG, PNG, WEBP yoki GIF, maksimum 2 MB
-            </p>
             <p className="label mt-4">Profil</p>
             <h1 className="font-serif text-xl font-semibold text-ink">
               {displayName}
@@ -210,7 +220,7 @@ export default function ProfilePage() {
             <div className="flex justify-between text-sm">
               <span style={{ color: "var(--muted)" }}>Qo‘shilgan</span>
               <span className="font-semibold text-ink">
-                {user?.created_at ? formatDate(user.created_at) : "—"}
+                {user?.created_at ? formatUzbekDate(user.created_at) : "—"}
               </span>
             </div>
           </div>

@@ -109,7 +109,11 @@ export default function ProfilePage() {
       const result = await accountApi.uploadAvatar(file);
       setField("avatar_url", result.avatar_url);
       setMessage("Profil rasmi yuklandi. O‘zgarishlar saqlandi.");
-      await refreshProfile?.();
+      try {
+        await refreshProfile?.();
+      } catch {
+        // Upload tugadi; profilni yangilash vaqtinchalik yiqilsa ham rasm saqlandi.
+      }
     } catch (e) {
       setError(e.message || "Profil rasmini yuklab bo‘lmadi.");
     } finally {
@@ -132,7 +136,11 @@ export default function ProfilePage() {
         avatar_url: form.avatar_url.trim(),
       });
       setMessage("Profil ma’lumotlari saqlandi.");
-      await refreshProfile?.();
+      try {
+        await refreshProfile?.();
+      } catch {
+        // Profil saqlandi; sessiya refresh'i keyinroq qayta tiklanadi.
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -288,7 +296,10 @@ export default function ProfilePage() {
                     />
                   </label>
                 </div>
-                <button className="btn-primary mt-6" disabled={saving || uploading}>
+                <button
+                  className="btn-primary mt-6"
+                  disabled={saving || uploading}
+                >
                   {saving ? "Saqlanmoqda..." : "Saqlash"}
                 </button>
               </>

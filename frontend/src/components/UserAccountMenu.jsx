@@ -47,20 +47,6 @@ function initials(user) {
     .toUpperCase();
 }
 
-function Avatar({ user, className, fallbackClassName, onError }) {
-  const src = resolveMediaUrl(user?.avatar_url);
-  return src ? (
-    <img
-      src={src}
-      alt=""
-      className={className}
-      onError={onError}
-    />
-  ) : (
-    <span className={fallbackClassName}>{initials(user)}</span>
-  );
-}
-
 export default function UserAccountMenu() {
   const { user, isAuthenticated, logout } = useAuth();
   const [open, setOpen] = useState(false);

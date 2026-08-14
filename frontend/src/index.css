@@ -273,6 +273,14 @@ header.fixed::before {
   transform: scale(1);
 }
 
+/* Faqat rasmlarda qora bilan belgilangan eyebrow yozuvlari yashirildi. */
+.shell > p.label:first-child,
+.shell > div > aside > div:first-child > .label,
+.student-dashboard > .dashboard-heading > div:first-child > .dashboard-eyebrow,
+.w-full > section:first-of-type span.text-xs.font-bold.uppercase.tracking-widest {
+  display: none;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }

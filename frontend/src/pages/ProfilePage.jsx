@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import GamificationSection from "../components/GamificationSection";
 import ReferralSection from "../components/ReferralSection";
 import { useAuth } from "../context/AuthContext";
+import { accountApi } from "../lib/accountApi";
 import { authApi } from "../lib/api";
+import { resolveMediaUrl } from "../lib/media";
 
 const ROLE_LABELS = {
   superadmin: "Superadmin",
@@ -12,6 +14,31 @@ const ROLE_LABELS = {
   instructor: "Instruktor",
   user: "Talaba",
 };
+
+const TEXT_FIELDS = [
+  ["name", "Ism-familiya", "Ismingiz va familiyangiz"],
+  ["avatar_url", "Avatar URL", "https://..."],
+  ["phone", "Telefon", "+998 90 123 45 67"],
+  ["location", "Joylashuv", "Toshkent"],
+  ["website", "Veb-sayt", "https://portfolio.uz"],
+];
+
+const EMPTY_FORM = {
+  name: "",
+  avatar_url: "",
+  phone: "",
+  location: "",
+  website: "",
+  bio: "",
+};
+
+function toFormValues(profile) {
+  const next = { ...EMPTY_FORM };
+  Object.keys(EMPTY_FORM).forEach((key) => {
+    next[key] = profile?.[key] ?? "";
+  });
+  return next;
+}
 
 function formatDate(value) {
   return new Date(value).toLocaleDateString("uz-UZ", {
@@ -22,19 +49,105 @@ function formatDate(value) {
 }
 
 export default function ProfilePage() {
-  const { token, user } = useAuth();
+  const { user, refreshProfile } = useAuth();
+  const [form, setForm] = useState(EMPTY_FORM);
   const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [avatarBroken, setAvatarBroken] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (!token) return;
-    authApi
-      .dashboard(token)
-      .then(setDashboard)
-      .catch((e) => setError(e.message));
-  }, [token]);
+    let active = true;
+    Promise.allSettled([accountApi.profile(), authApi.dashboard()]).then(
+      ([profileResult, statsResult]) => {
+        if (!active) return;
+        if (profileResult.status === "fulfilled") {
+          setForm(toFormValues(profileResult.value));
+        } else {
+          setError(
+            profileResult.reason?.message ||
+              "Profil ma’lumotlarini yuklab bo‘lmadi."
+          );
+        }
+        if (statsResult.status === "fulfilled") setDashboard(statsResult.value);
+        setLoading(false);
+      }
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const displayName = user?.name || user?.full_name || "Designora student";
+  const displayName =
+    form.name || user?.name || user?.full_name || "Designora student";
+  const avatarSrc = resolveMediaUrl(form.avatar_url);
+
+  function setField(key, value) {
+    if (key === "avatar_url") setAvatarBroken(false);
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function uploadAvatar(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Faqat rasm faylini tanlang.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Avatar hajmi 2 MB dan oshmasligi kerak.");
+      return;
+    }
+    setUploading(true);
+    setMessage("");
+    setError("");
+    try {
+      const result = await accountApi.uploadAvatar(file);
+      setField("avatar_url", result.avatar_url);
+      setMessage("Profil rasmi yuklandi. O‘zgarishlar saqlandi.");
+      try {
+        await refreshProfile?.();
+      } catch {
+        // Upload tugadi; profilni yangilash vaqtinchalik yiqilsa ham rasm saqlandi.
+      }
+    } catch (e) {
+      setError(e.message || "Profil rasmini yuklab bo‘lmadi.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function saveProfile(event) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage("");
+    setError("");
+    try {
+      await accountApi.updateProfile({
+        name: form.name.trim(),
+        bio: form.bio.trim(),
+        phone: form.phone.trim(),
+        location: form.location.trim(),
+        website: form.website.trim(),
+        avatar_url: form.avatar_url.trim(),
+      });
+      setMessage("Profil ma’lumotlari saqlandi.");
+      try {
+        await refreshProfile?.();
+      } catch {
+        // Profil saqlandi; sessiya refresh'i keyinroq qayta tiklanadi.
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <section className="shell py-16 sm:py-20">
@@ -45,11 +158,40 @@ export default function ProfilePage() {
         >
           <div className="flex flex-col items-center text-center">
             <div
-              className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white"
+              className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full text-2xl font-bold text-white"
               style={{ background: "var(--amber)" }}
             >
-              {displayName.charAt(0).toUpperCase()}
+              {avatarSrc && !avatarBroken ? (
+                <img
+                  key={avatarSrc}
+                  src={avatarSrc}
+                  alt="Profil avatari"
+                  className="h-full w-full object-cover"
+                  onError={() => setAvatarBroken(true)}
+                />
+              ) : (
+                displayName.charAt(0).toUpperCase()
+              )}
             </div>
+            <button
+              type="button"
+              className="mt-3 text-sm font-bold text-violet-600 hover:underline disabled:opacity-50"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || loading}
+            >
+              {uploading ? "Yuklanmoqda..." : "Profil rasmini yuklash"}
+            </button>
+            <input
+              ref={fileInputRef}
+              className="sr-only"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={uploadAvatar}
+              aria-label="Profil rasmi fayli"
+            />
+            <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+              JPG, PNG, WEBP yoki GIF, maksimum 2 MB
+            </p>
             <p className="label mt-4">Profil</p>
             <h1 className="font-serif text-xl font-semibold text-ink">
               {displayName}
@@ -83,46 +225,90 @@ export default function ProfilePage() {
             <Link
               to={`/portfolio/u/${user.id}`}
               target="_blank"
+              rel="noreferrer"
               className="block text-center text-sm font-semibold"
               style={{ color: "var(--muted)" }}
             >
               Public portfolio ↗
             </Link>
           )}
+        </aside>
+
+        <div className="space-y-6">
+          {message && (
+            <p
+              role="status"
+              className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+            >
+              {message}
+            </p>
+          )}
           {error && (
             <p
-              className="rounded-xl px-4 py-2.5 text-xs"
-              style={{ background: "#fff0ef", color: "#c0392b" }}
+              role="alert"
+              className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
             >
               {error}
             </p>
           )}
-        </aside>
-        <div className="space-y-6">
-          <div
+
+          <form
+            onSubmit={saveProfile}
             className="rounded-2xl border p-6"
             style={{ borderColor: "var(--border)" }}
           >
-            <p className="label mb-2">Keyingi qadam</p>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="font-serif text-lg font-semibold text-ink">
-                  Eng yaxshi ishlaringizni ko‘rsating
-                </h2>
-                <p
-                  className="mt-2 max-w-2xl text-sm leading-7"
-                  style={{ color: "var(--ink-60)" }}
+            <p className="label">Shaxsiy ma’lumotlar</p>
+            <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
+              Ism-familiya, bio va aloqa ma’lumotlaringiz shu yerda saqlanadi.
+            </p>
+            {loading ? (
+              <p role="status" className="mt-6 text-sm">
+                Ma’lumotlar yuklanmoqda...
+              </p>
+            ) : (
+              <>
+                <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                  {TEXT_FIELDS.map(([key, label, placeholder]) => (
+                    <label className="block" key={key}>
+                      <span className="mb-2 block text-sm font-semibold text-ink">
+                        {label}
+                      </span>
+                      <input
+                        className="input-field"
+                        type="text"
+                        value={form[key]}
+                        placeholder={placeholder}
+                        onChange={(event) => setField(key, event.target.value)}
+                        required={key === "name"}
+                        minLength={key === "name" ? 2 : undefined}
+                        maxLength={key === "name" ? 100 : 500}
+                      />
+                    </label>
+                  ))}
+                  <label className="block sm:col-span-2">
+                    <span className="mb-2 block text-sm font-semibold text-ink">
+                      Bio
+                    </span>
+                    <textarea
+                      className="input-field min-h-28 resize-y"
+                      value={form.bio}
+                      maxLength={500}
+                      onChange={(event) => setField("bio", event.target.value)}
+                    />
+                  </label>
+                </div>
+                <button
+                  className="btn-primary mt-6"
+                  disabled={saving || uploading}
                 >
-                  Baholangan topshiriqlarni professional case study’ga
-                  aylantiring va bitta public havola bilan ulashing.
-                </p>
-              </div>
-              <Link to="/portfolio" className="btn-primary">
-                Portfolio yaratish
-              </Link>
-            </div>
-          </div>
+                  {saving ? "Saqlanmoqda..." : "Saqlash"}
+                </button>
+              </>
+            )}
+          </form>
+
           <GamificationSection />
+
           <div
             className="rounded-2xl border p-6"
             style={{ borderColor: "var(--border)" }}
@@ -154,6 +340,7 @@ export default function ProfilePage() {
               </p>
             )}
           </div>
+
           <ReferralSection />
         </div>
       </div>

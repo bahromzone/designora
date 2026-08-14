@@ -50,6 +50,7 @@ class ProfileUpdateRequest(BaseModel):
     phone: Annotated[str, StringConstraints(max_length=20)] | None = None
     location: Annotated[str, StringConstraints(max_length=100)] | None = None
     website: Annotated[str, StringConstraints(max_length=200)] | None = None
+    avatar_url: Annotated[str, StringConstraints(max_length=500)] | None = None
 
 
 class ChangePasswordRequest(BaseModel):
@@ -98,7 +99,7 @@ def update_profile(
 ):
     user = _get_user_or_unauthorized(db, email)
     user.name = data.name
-    for field in ["bio", "phone", "location", "website"]:
+    for field in ["bio", "phone", "location", "website", "avatar_url"]:
         if hasattr(user, field) and getattr(data, field) is not None:
             setattr(user, field, getattr(data, field))
     try:
@@ -122,7 +123,10 @@ def change_password(
     if user.provider != "local":
         raise HTTPException(
             status_code=400,
-            detail=f"Siz {user.provider} orqali kirganingiz uchun parolni bu yerda o'zgartira olmaysiz",
+            detail=(
+                f"Siz {user.provider} orqali kirganingiz uchun parolni bu yerda "
+                "o'zgartira olmaysiz"
+            ),
         )
     if not user.password:
         raise HTTPException(status_code=400, detail="Parol o'rnatilmagan")

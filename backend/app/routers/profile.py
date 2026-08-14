@@ -73,9 +73,7 @@ class ProgressUpdateRequest(BaseModel):
 
 
 @router.get("/me", response_model=ProfileResponse)
-def get_profile(
-    email: str = Depends(get_current_user), db: Session = Depends(get_db)
-):
+def get_profile(email: str = Depends(get_current_user), db: Session = Depends(get_db)):
     user = _get_user_or_unauthorized(db, email)
     return ProfileResponse(
         id=user.id,
@@ -109,9 +107,7 @@ def update_profile(
         db.refresh(user)
     except Exception:
         db.rollback()
-        raise HTTPException(
-            status_code=500, detail="Ma'lumotlarni saqlashda xatolik"
-        )
+        raise HTTPException(status_code=500, detail="Ma'lumotlarni saqlashda xatolik")
     return JSONResponse(
         {"message": "Profil muvaffaqiyatli yangilandi", "name": user.name}
     )

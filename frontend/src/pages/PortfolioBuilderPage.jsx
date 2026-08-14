@@ -113,10 +113,10 @@ export default function PortfolioBuilderPage() {
   }
 
   async function remove(id) {
-    if (!window.confirm("Loyihani portfolio'dan o'chirasizmi?")) return;
+    if (!window.confirm("Loyihani portfolio'dan o‘chirasizmi?")) return;
     try {
       await portfolioApi.remove(id, token);
-      toast.success("Loyiha o'chirildi");
+      toast.success("Loyiha o‘chirildi");
       await load();
     } catch (err) {
       toast.error(err.message);
@@ -131,13 +131,13 @@ export default function PortfolioBuilderPage() {
 
   if (loading)
     return (
-      <section className="portfolio-builder">
+      <section className="portfolio-page" aria-busy="true">
         <div className="portfolio-skeleton" />
       </section>
     );
   if (error)
     return (
-      <section className="portfolio-builder">
+      <section className="portfolio-page">
         <div className="portfolio-error">
           <h1>Portfolio ochilmadi</h1>
           <p>{error}</p>
@@ -147,188 +147,193 @@ export default function PortfolioBuilderPage() {
     );
 
   return (
-    <section className="portfolio-builder">
-      <header className="portfolio-builder-head">
+    <main className="portfolio-page">
+      <header className="portfolio-header">
         <div>
-          <p>Portfolio studio</p>
+          <p>Portfolio studiyasi</p>
           <h1>Ishlaringiz gapirsin.</h1>
           <span>
             Baholangan loyihalarni professional case study’ga aylantiring.
           </span>
         </div>
         {userId && (
-          <Link to={`/portfolio/${userId}`} target="_blank">
+          <Link to={`/portfolio/u/${userId}`} target="_blank" rel="noreferrer">
             Public ko‘rinish <b>↗</b>
           </Link>
         )}
       </header>
 
-      <div className="portfolio-builder-grid">
-        <form className="portfolio-editor" onSubmit={save}>
-          <div className="editor-top">
-            <div>
-              <small>{selected ? "Loyihani tahrirlash" : "Yangi loyiha"}</small>
-              <h2>{selected ? form.title : "Portfolio’ga qo‘shish"}</h2>
-            </div>
-            {(selected || form.title) && (
-              <button type="button" onClick={reset}>
-                Tozalash
+      <div className="portfolio-builder">
+        <aside className="portfolio-list">
+          <div>
+            <strong>Loyihalar</strong>
+            <small>{projects.length} ta</small>
+          </div>
+          {projects.length ? (
+            projects.map((project, index) => (
+              <button
+                type="button"
+                key={project.id}
+                className={selected === project.id ? "is-active" : ""}
+                onClick={() => edit(project)}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <i>
+                  <strong>{project.title}</strong>
+                  <small>{project.is_public ? "Ommaviy" : "Qoralama"}</small>
+                </i>
               </button>
-            )}
-          </div>
-          {!selected && eligible.some((item) => item.available) && (
-            <div className="portfolio-sources">
-              <span>Baholangan ishlardan tanlang</span>
-              <div>
-                {eligible
-                  .filter((item) => item.available)
-                  .map((item) => (
-                    <button
-                      type="button"
-                      key={item.submission_id}
-                      onClick={() => chooseSource(item)}
-                      className={
-                        form.submission_id === item.submission_id
-                          ? "is-active"
-                          : ""
-                      }
-                    >
-                      <b>
-                        {item.grade}/{item.max_score}
-                      </b>
-                      <i>{item.title}</i>
-                    </button>
-                  ))}
-              </div>
-            </div>
+            ))
+          ) : (
+            <p className="portfolio-list-empty">Hali loyiha yo‘q</p>
           )}
-          <label>
-            <span>Loyiha nomi</span>
-            <input
-              value={form.title}
-              onChange={(event) => field("title", event.target.value)}
-              maxLength={180}
-              required
-              placeholder="Masalan: Navoiy teatrining yangi vizual identifikatsiyasi"
-            />
-          </label>
-          <label>
-            <span>Qisqa mazmun</span>
-            <textarea
-              value={form.summary || ""}
-              onChange={(event) => field("summary", event.target.value)}
-              maxLength={500}
-              rows={3}
-              placeholder="Muammo, yondashuv va natijani 2-3 gapda ayting."
-            />
-            <small>{(form.summary || "").length}/500</small>
-          </label>
-          <label>
-            <span>Case study hikoyasi</span>
-            <textarea
-              value={form.story || ""}
-              onChange={(event) => field("story", event.target.value)}
-              maxLength={5000}
-              rows={8}
-              placeholder="Kontekst → jarayon → qarorlar → natija"
-            />
-            <small>{(form.story || "").length}/5000</small>
-          </label>
-          <div className="portfolio-fields">
-            <label>
-              <span>Cover rasm URL</span>
-              <input
-                type="url"
-                value={form.cover_url || ""}
-                onChange={(event) => field("cover_url", event.target.value)}
-                placeholder="https://..."
-              />
-            </label>
-            <label>
-              <span>Loyiha havolasi</span>
-              <input
-                type="url"
-                value={form.project_url || ""}
-                onChange={(event) => field("project_url", event.target.value)}
-                placeholder="Figma, Behance yoki Drive"
-              />
-            </label>
+        </aside>
+
+        <form className="portfolio-editor" onSubmit={save}>
+          <div className="portfolio-cover">
+            <span>{form.is_public ? "Ommaviy loyiha" : "Qoralama loyiha"}</span>
           </div>
           <div className="portfolio-fields">
-            <label>
-              <span>Ko‘nikmalar</span>
+            <div className="editor-heading">
+              <div>
+                <small>{selected ? "Loyihani tahrirlash" : "Yangi loyiha"}</small>
+                <h2>{selected ? form.title : "Portfolio’ga qo‘shish"}</h2>
+              </div>
+              {(selected || form.title) && (
+                <button type="button" className="editor-reset" onClick={reset}>
+                  Tozalash
+                </button>
+              )}
+            </div>
+            {!selected && eligible.some((item) => item.available) && (
+              <div className="portfolio-sources">
+                <span>Baholangan ishlardan tanlang</span>
+                <div>
+                  {eligible
+                    .filter((item) => item.available)
+                    .map((item) => (
+                      <button
+                        type="button"
+                        key={item.submission_id}
+                        onClick={() => chooseSource(item)}
+                        className={
+                          form.submission_id === item.submission_id
+                            ? "is-active"
+                            : ""
+                        }
+                      >
+                        <b>
+                          {item.grade}/{item.max_score}
+                        </b>
+                        <i>{item.title}</i>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+            <label className="portfolio-title">
+              <span>Loyiha nomi</span>
               <input
-                value={(form.skills || []).join(", ")}
-                onChange={(event) =>
-                  field("skills", splitTags(event.target.value))
-                }
-                placeholder="Branding, Art direction"
+                value={form.title}
+                onChange={(event) => field("title", event.target.value)}
+                maxLength={180}
+                required
+                placeholder="Masalan: Navoiy teatrining yangi vizual identifikatsiyasi"
               />
             </label>
-            <label>
-              <span>Vositalar</span>
+            <div className="portfolio-two">
+              <label>
+                <span>Qisqa mazmun</span>
+                <textarea
+                  value={form.summary || ""}
+                  onChange={(event) => field("summary", event.target.value)}
+                  maxLength={500}
+                  rows={5}
+                  placeholder="Muammo, yondashuv va natijani 2-3 gapda ayting."
+                />
+                <small>{(form.summary || "").length}/500</small>
+              </label>
+              <label>
+                <span>Case study hikoyasi</span>
+                <textarea
+                  value={form.story || ""}
+                  onChange={(event) => field("story", event.target.value)}
+                  maxLength={5000}
+                  rows={5}
+                  placeholder="Kontekst → jarayon → qarorlar → natija"
+                />
+                <small>{(form.story || "").length}/5000</small>
+              </label>
+            </div>
+            <div className="portfolio-two">
+              <label>
+                <span>Cover rasm URL</span>
+                <input
+                  type="url"
+                  value={form.cover_url || ""}
+                  onChange={(event) => field("cover_url", event.target.value)}
+                  placeholder="https://..."
+                />
+              </label>
+              <label>
+                <span>Loyiha havolasi</span>
+                <input
+                  type="url"
+                  value={form.project_url || ""}
+                  onChange={(event) => field("project_url", event.target.value)}
+                  placeholder="Figma, Behance yoki Drive"
+                />
+              </label>
+            </div>
+            <div className="portfolio-two">
+              <label>
+                <span>Ko‘nikmalar</span>
+                <input
+                  value={(form.skills || []).join(", ")}
+                  onChange={(event) =>
+                    field("skills", splitTags(event.target.value))
+                  }
+                  placeholder="Branding, Art direction"
+                />
+              </label>
+              <label>
+                <span>Vositalar</span>
+                <input
+                  value={(form.tools || []).join(", ")}
+                  onChange={(event) =>
+                    field("tools", splitTags(event.target.value))
+                  }
+                  placeholder="Figma, Illustrator"
+                />
+              </label>
+            </div>
+            <label className="portfolio-publish">
+              <span>
+                <strong>Ommaviy qilish</strong>
+                <small>Hamma ko‘ra oladigan portfolio sahifasida chiqadi</small>
+              </span>
               <input
-                value={(form.tools || []).join(", ")}
-                onChange={(event) =>
-                  field("tools", splitTags(event.target.value))
-                }
-                placeholder="Figma, Illustrator"
+                type="checkbox"
+                checked={form.is_public}
+                onChange={(event) => field("is_public", event.target.checked)}
               />
+              <i />
             </label>
           </div>
-          <label className="publish-switch">
-            <span>
-              <b>Public qilish</b>
-              <small>Hamma ko‘ra oladigan portfolio sahifasida chiqadi</small>
-            </span>
-            <input
-              type="checkbox"
-              checked={form.is_public}
-              onChange={(event) => field("is_public", event.target.checked)}
-            />
-            <i />
-          </label>
-          <div className="portfolio-editor-actions">
-            <p>Avval draft saqlab, tayyor bo‘lganda public qiling.</p>
-            <button type="submit" disabled={saving}>
+          <footer>
+            <button type="button" className="portfolio-delete" onClick={reset}>
+              Bekor qilish
+            </button>
+            <button type="submit" className="portfolio-save" disabled={saving}>
               {saving
                 ? "Saqlanmoqda..."
                 : selected
                   ? "O‘zgarishlarni saqlash"
                   : "Loyiha yaratish"}
-              <b>→</b>
+              <span aria-hidden>→</span>
             </button>
-          </div>
+          </footer>
         </form>
-
-        <aside className="portfolio-preview">
-          <div className="preview-label">
-            <span>Live preview</span>
-            <small>{form.is_public ? "Public" : "Draft"}</small>
-          </div>
-          <article>
-            <div className="preview-cover">
-              {form.cover_url ? (
-                <img src={form.cover_url} alt="" />
-              ) : (
-                <span>Cover qo‘shing</span>
-              )}
-            </div>
-            <p>{(form.skills || [])[0] || "Design project"}</p>
-            <h2>{form.title || "Loyiha nomi"}</h2>
-            <div className="preview-tags">
-              {[...(form.skills || []), ...(form.tools || [])]
-                .slice(0, 5)
-                .map((tag) => (
-                  <span key={tag}>{tag}</span>
-                ))}
-            </div>
-            <p className="preview-summary">
-              {form.summary ||
-                "Loyiha haqida qisqa, aniq mazmun shu yerda ko‘rinadi."}
-            </p>
-          </article>
-        </aside>
       </div>
 
       <section className="portfolio-library">
@@ -338,7 +343,7 @@ export default function PortfolioBuilderPage() {
             <h2>Portfolio kutubxonasi</h2>
           </div>
           <span>
-            {projects.length} loyiha, {publicCount} public
+            {projects.length} loyiha, {publicCount} ta ommaviy
           </span>
         </header>
         {projects.length ? (
@@ -356,13 +361,17 @@ export default function PortfolioBuilderPage() {
                   )}
                 </div>
                 <div>
-                  <small>{project.is_public ? "Public" : "Draft"}</small>
+                  <small>{project.is_public ? "Ommaviy" : "Qoralama"}</small>
                   <h3>{project.title}</h3>
                   <p>{project.summary || "Tavsif qo‘shilmagan"}</p>
                 </div>
                 <div className="project-actions">
-                  <button onClick={() => edit(project)}>Tahrirlash</button>
-                  <button onClick={() => remove(project.id)}>O‘chirish</button>
+                  <button type="button" onClick={() => edit(project)}>
+                    Tahrirlash
+                  </button>
+                  <button type="button" onClick={() => remove(project.id)}>
+                    O‘chirish
+                  </button>
                 </div>
               </article>
             ))}
@@ -374,6 +383,6 @@ export default function PortfolioBuilderPage() {
           </div>
         )}
       </section>
-    </section>
+    </main>
   );
 }

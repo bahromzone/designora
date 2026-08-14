@@ -73,7 +73,9 @@ class ProgressUpdateRequest(BaseModel):
 
 
 @router.get("/me", response_model=ProfileResponse)
-def get_profile(email: str = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_profile(
+    email: str = Depends(get_current_user), db: Session = Depends(get_db)
+):
     user = _get_user_or_unauthorized(db, email)
     return ProfileResponse(
         id=user.id,
@@ -125,7 +127,10 @@ def change_password(
     if user.provider != "local":
         raise HTTPException(
             status_code=400,
-            detail=f"Siz {user.provider} orqali kirganingiz uchun parolni bu yerda o'zgartira olmaysiz",
+            detail=(
+                f"Siz {user.provider} orqali kirganingiz uchun parolni bu yerda "
+                "o'zgartira olmaysiz"
+            ),
         )
     if not user.password:
         raise HTTPException(status_code=400, detail="Parol o'rnatilmagan")

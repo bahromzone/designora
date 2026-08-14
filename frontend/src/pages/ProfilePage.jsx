@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import GamificationSection from "../components/GamificationSection";
@@ -6,6 +6,7 @@ import ReferralSection from "../components/ReferralSection";
 import { useAuth } from "../context/AuthContext";
 import { accountApi } from "../lib/accountApi";
 import { authApi } from "../lib/api";
+import { resolveMediaUrl } from "../lib/media";
 
 const ROLE_LABELS = {
   superadmin: "Superadmin",
@@ -14,12 +15,8 @@ const ROLE_LABELS = {
   user: "Talaba",
 };
 
-// [maydon, yorliq, placeholder]
-// type="url" ataylab ishlatilmaydi: brauzer "designora.uz" ni rad etib,
-// formani jimgina yubormay qo'yadi. Backend faqat uzunlikni tekshiradi.
 const TEXT_FIELDS = [
-  ["name", "Ism", "Ismingiz"],
-  ["avatar_url", "Avatar URL", "https://..."],
+  ["name", "Ism-familiya", "Ismingiz va familiyangiz"],
   ["phone", "Telefon", "+998 90 123 45 67"],
   ["location", "Joylashuv", "Toshkent"],
   ["website", "Veb-sayt", "https://portfolio.uz"],
@@ -34,8 +31,6 @@ const EMPTY_FORM = {
   bio: "",
 };
 
-// Backend to'ldirilmagan maydonlarni null qaytaradi. null'ni to'g'ridan-to'g'ri
-// input'ga bersak React controlled input'ni uncontrolled'ga aylantiradi.
 function toFormValues(profile) {
   const next = { ...EMPTY_FORM };
   Object.keys(EMPTY_FORM).forEach((key) => {
@@ -58,13 +53,12 @@ export default function ProfilePage() {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [avatarBroken, setAvatarBroken] = useState(false);
+  const fileInputRef = useRef(null);
 
-  // MUHIM: bu yerda AuthContext'dan `token` olinmaydi. Sessiya httpOnly
-  // cookie'da va context token qaytarmaydi, shuning uchun `if (!token) return`
-  // yuklashni hech qachon tugatmaydi va forma abadiy spinner'da qoladi.
   useEffect(() => {
     let active = true;
     Promise.allSettled([accountApi.profile(), authApi.dashboard()]).then(
@@ -78,7 +72,6 @@ export default function ProfilePage() {
               "Profil ma’lumotlarini yuklab bo‘lmadi."
           );
         }
-        // Statistika yiqilsa ham tahrirlash formasi ochilishi kerak.
         if (statsResult.status === "fulfilled") setDashboard(statsResult.value);
         setLoading(false);
       }
@@ -90,10 +83,38 @@ export default function ProfilePage() {
 
   const displayName =
     form.name || user?.name || user?.full_name || "Designora student";
+  const avatarSrc = resolveMediaUrl(form.avatar_url);
 
   function setField(key, value) {
     if (key === "avatar_url") setAvatarBroken(false);
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function uploadAvatar(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Faqat rasm faylini tanlang.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Avatar hajmi 2 MB dan oshmasligi kerak.");
+      return;
+    }
+    setUploading(true);
+    setMessage("");
+    setError("");
+    try {
+      const result = await accountApi.uploadAvatar(file);
+      setField("avatar_url", result.avatar_url);
+      setMessage("Profil rasmi yuklandi. O‘zgarishlar saqlandi.");
+      await refreshProfile?.();
+    } catch (e) {
+      setError(e.message || "Profil rasmini yuklab bo‘lmadi.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function saveProfile(event) {
@@ -111,13 +132,7 @@ export default function ProfilePage() {
         avatar_url: form.avatar_url.trim(),
       });
       setMessage("Profil ma’lumotlari saqlandi.");
-      // Saqlash o'tdi. Sessiya yangilanishi yiqilsa ham buni xato deb
-      // ko'rsatmaymiz, aks holda foydalanuvchi saqlanmadi deb o'ylaydi.
-      try {
-        await refreshProfile?.();
-      } catch {
-        // e'tiborsiz qoldiriladi
-      }
+      await refreshProfile?.();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -137,10 +152,10 @@ export default function ProfilePage() {
               className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full text-2xl font-bold text-white"
               style={{ background: "var(--amber)" }}
             >
-              {form.avatar_url && !avatarBroken ? (
+              {avatarSrc && !avatarBroken ? (
                 <img
-                  key={form.avatar_url}
-                  src={form.avatar_url}
+                  key={avatarSrc}
+                  src={avatarSrc}
                   alt="Profil avatari"
                   className="h-full w-full object-cover"
                   onError={() => setAvatarBroken(true)}
@@ -149,6 +164,25 @@ export default function ProfilePage() {
                 displayName.charAt(0).toUpperCase()
               )}
             </div>
+            <button
+              type="button"
+              className="mt-3 text-sm font-bold text-violet-600 hover:underline disabled:opacity-50"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || loading}
+            >
+              {uploading ? "Yuklanmoqda..." : "Profil rasmini yuklash"}
+            </button>
+            <input
+              ref={fileInputRef}
+              className="sr-only"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={uploadAvatar}
+              aria-label="Profil rasmi fayli"
+            />
+            <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+              JPG, PNG, WEBP yoki GIF, maksimum 2 MB
+            </p>
             <p className="label mt-4">Profil</p>
             <h1 className="font-serif text-xl font-semibold text-ink">
               {displayName}
@@ -216,7 +250,7 @@ export default function ProfilePage() {
           >
             <p className="label">Shaxsiy ma’lumotlar</p>
             <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-              Ism, avatar, bio va aloqa ma’lumotlaringiz shu yerda saqlanadi.
+              Ism-familiya, bio va aloqa ma’lumotlaringiz shu yerda saqlanadi.
             </p>
             {loading ? (
               <p role="status" className="mt-6 text-sm">
@@ -238,7 +272,7 @@ export default function ProfilePage() {
                         onChange={(event) => setField(key, event.target.value)}
                         required={key === "name"}
                         minLength={key === "name" ? 2 : undefined}
-                        maxLength={key === "name" ? 100 : 200}
+                        maxLength={key === "name" ? 100 : 500}
                       />
                     </label>
                   ))}
@@ -254,7 +288,7 @@ export default function ProfilePage() {
                     />
                   </label>
                 </div>
-                <button className="btn-primary mt-6" disabled={saving}>
+                <button className="btn-primary mt-6" disabled={saving || uploading}>
                   {saving ? "Saqlanmoqda..." : "Saqlash"}
                 </button>
               </>

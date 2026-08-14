@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { resolveMediaUrl } from "../lib/media";
+
 const items = [
   {
     label: "Profil",
@@ -34,6 +36,7 @@ const items = [
     to: "/profil/sozlamalar",
   },
 ];
+
 function initials(user) {
   return (user?.name || user?.full_name || user?.email || "U")
     .split(/\s+/)
@@ -43,11 +46,29 @@ function initials(user) {
     .join("")
     .toUpperCase();
 }
+
+function Avatar({ user, className, fallbackClassName, onError }) {
+  const src = resolveMediaUrl(user?.avatar_url);
+  return src ? (
+    <img
+      src={src}
+      alt=""
+      className={className}
+      onError={onError}
+    />
+  ) : (
+    <span className={fallbackClassName}>{initials(user)}</span>
+  );
+}
+
 export default function UserAccountMenu() {
   const { user, isAuthenticated, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [avatarBroken, setAvatarBroken] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
+  const avatarSrc = resolveMediaUrl(user?.avatar_url);
+
   useEffect(() => {
     const close = (event) => {
       if (ref.current && !ref.current.contains(event.target)) setOpen(false);
@@ -55,6 +76,7 @@ export default function UserAccountMenu() {
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, []);
+
   useEffect(() => {
     const close = (event) => {
       if (event.key === "Escape") setOpen(false);
@@ -62,12 +84,18 @@ export default function UserAccountMenu() {
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
   }, []);
+
+  useEffect(() => setAvatarBroken(false), [avatarSrc]);
+
   if (!isAuthenticated) return null;
+
   function signOut() {
     setOpen(false);
     logout();
     navigate("/");
   }
+
+  const showAvatar = avatarSrc && !avatarBroken;
   return (
     <div ref={ref} className="relative shrink-0">
       <button
@@ -77,11 +105,12 @@ export default function UserAccountMenu() {
         onClick={() => setOpen((value) => !value)}
         className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-violet-500 to-indigo-600 text-[10px] font-bold text-white shadow-md ring-1 ring-slate-200 transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
       >
-        {user?.avatar_url ? (
+        {showAvatar ? (
           <img
-            src={user.avatar_url}
+            src={avatarSrc}
             alt=""
             className="h-full w-full object-cover"
+            onError={() => setAvatarBroken(true)}
           />
         ) : (
           initials(user)
@@ -94,11 +123,12 @@ export default function UserAccountMenu() {
         >
           <div className="flex items-center gap-3 border-b border-slate-100 px-3 pb-3 pt-2">
             <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-violet-100 font-bold text-violet-700">
-              {user?.avatar_url ? (
+              {showAvatar ? (
                 <img
-                  src={user.avatar_url}
+                  src={avatarSrc}
                   alt=""
                   className="h-full w-full object-cover"
+                  onError={() => setAvatarBroken(true)}
                 />
               ) : (
                 initials(user)

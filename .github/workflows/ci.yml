@@ -1,9 +1,21 @@
 name: CI
+run-name: CI (${{ github.event_name }})
+
+# MUHIM: bu yerda `pull_request.branches: [main]` filtri BO'LMASLIGI kerak.
+# Filtr bo'lganda main'ga qaratilmagan PR'larda CI umuman ishga tushmaydi va
+# PR yolg'ondan "Ready to merge" ko'rinadi. e2e.yml da bu qoida allaqachon
+# amal qiladi, CI ham unga moslashtirildi.
+#
+# workflow_dispatch majburiy: GitHub incidenti paytida push va pull_request
+# eventlari yo'qoladi va GitHub ularni qayta o'ynatmaydi. Qo'lda ishga
+# tushirish imkoni bo'lmasa, PR checksiz qoladi va ko'r-ko'rona merge
+# qilinadi.
 on:
+  pull_request:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+
 jobs:
   backend:
     name: Backend (lint + migration + test)

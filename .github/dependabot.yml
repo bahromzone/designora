@@ -1,5 +1,15 @@
-# Dependabot — bog'liqliklarni avtomatik yangilash
-# Major versiyalar alohida PR bo'lib, har biri mustaqil CI'dan o'tadi.
+# Dependabot — bog'liqliklarni yangilash siyosati
+#
+# QOIDA: Dependabot o'zboshimchalik bilan PR ochmaydi.
+# open-pull-requests-limit: 0 rejadagi (version-update) PR'larni o'chiradi.
+# Xavfsizlik (security) update'lari bu limitdan qat'i nazar keladi — ular kerak.
+#
+# Yangilanishlarni ko'rmoqchi bo'lsang:
+#   Insights > Dependency graph > Dependabot > "Check for updates",
+#   yoki kerakli ekosistemada limitni vaqtincha 5 ga ko'tar.
+#
+# Major (breaking) versiyalar hamma joyda ignore qilingan: ular faqat qo'lda,
+# ongli ravishda va alohida PR bilan kiritiladi.
 # https://docs.github.com/code-security/dependabot
 version: 2
 updates:
@@ -7,11 +17,15 @@ updates:
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 0
     labels:
       - "dependencies"
       - "backend"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       backend-patch-minor:
         update-types:
@@ -24,11 +38,15 @@ updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: "monthly"
+    open-pull-requests-limit: 0
     labels:
       - "dependencies"
       - "frontend"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       frontend-patch-minor:
         update-types:
@@ -41,7 +59,12 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    open-pull-requests-limit: 0
     labels:
       - "dependencies"
       - "ci"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"

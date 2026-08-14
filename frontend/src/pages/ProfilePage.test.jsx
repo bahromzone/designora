@@ -10,7 +10,11 @@ import { authApi } from "../lib/api";
 vi.mock("../context/AuthContext", () => ({ useAuth: vi.fn() }));
 
 vi.mock("../lib/accountApi", () => ({
-  accountApi: { profile: vi.fn(), updateProfile: vi.fn() },
+  accountApi: {
+    profile: vi.fn(),
+    updateProfile: vi.fn(),
+    uploadAvatar: vi.fn(),
+  },
 }));
 
 vi.mock("../lib/api", () => ({ authApi: { dashboard: vi.fn() } }));
@@ -19,17 +23,13 @@ vi.mock("../components/GamificationSection", () => ({ default: () => null }));
 vi.mock("../components/ReferralSection", () => ({ default: () => null }));
 
 const AVATAR = "https://cdn.designora.uz/avatars/1.png";
-
 const refreshProfile = vi.fn();
-
 const user = {
   id: 5,
   name: "Bahromjon",
   email: "bahrom@example.com",
   role: "user",
 };
-
-// Backend to'ldirilmagan maydonlarni null qaytaradi.
 const profile = {
   name: "Bahromjon",
   bio: null,
@@ -53,30 +53,41 @@ describe("ProfilePage", () => {
     vi.clearAllMocks();
     accountApi.profile.mockResolvedValue(profile);
     accountApi.updateProfile.mockResolvedValue({ message: "ok" });
+    accountApi.uploadAvatar.mockResolvedValue({ avatar_url: "/static/avatar.png" });
     authApi.dashboard.mockResolvedValue({ metrics: [] });
     refreshProfile.mockResolvedValue(user);
   });
 
   it("yuklashni tugatib, tahrirlash formasini ochadi", async () => {
-    // Regressiya: AuthContext `token` qaytarmaydi. Effekt token'ga bog'langan
-    // bo'lsa, forma abadiy "yuklanmoqda" holatida qolardi.
     renderProfile();
 
     expect(screen.getByRole("status")).toHaveTextContent(
       "Ma’lumotlar yuklanmoqda..."
     );
-
-    expect(await screen.findByLabelText("Ism")).toHaveValue("Bahromjon");
-    // null qiymatlar bo'sh satrga aylanadi, aks holda input uncontrolled bo'ladi.
+    expect(await screen.findByLabelText("Ism-familiya")).toHaveValue(
+      "Bahromjon"
+    );
     expect(screen.getByLabelText("Bio")).toHaveValue("");
     expect(screen.getByLabelText("Avatar URL")).toHaveValue("");
     expect(screen.getByRole("button", { name: "Saqlash" })).toBeEnabled();
   });
 
+  it("avatar faylini yuklab, profilni yangilaydi", async () => {
+    renderProfile();
+    await screen.findByLabelText("Ism-familiya");
+    const file = new File(["image"], "avatar.png", { type: "image/png" });
+    fireEvent.change(screen.getByLabelText("Profil rasmi fayli"), {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => expect(accountApi.uploadAvatar).toHaveBeenCalledWith(file));
+    expect(await screen.findByText("Profil rasmi yuklandi. O‘zgarishlar saqlandi.")).toBeInTheDocument();
+    expect(refreshProfile).toHaveBeenCalledTimes(1);
+  });
+
   it("avatar bilan birga tozalangan qiymatlarni saqlaydi", async () => {
     renderProfile();
-
-    fireEvent.change(await screen.findByLabelText("Ism"), {
+    fireEvent.change(await screen.findByLabelText("Ism-familiya"), {
       target: { value: "  Yangi Ism  " },
     });
     fireEvent.change(screen.getByLabelText("Avatar URL"), {
@@ -103,8 +114,7 @@ describe("ProfilePage", () => {
   it("saqlash yiqilganda xatoni ko'rsatib, formani ochiq qoldiradi", async () => {
     accountApi.updateProfile.mockRejectedValueOnce(new Error("Server xatosi"));
     renderProfile();
-
-    await screen.findByLabelText("Ism");
+    await screen.findByLabelText("Ism-familiya");
     fireEvent.click(screen.getByRole("button", { name: "Saqlash" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Server xatosi");
@@ -119,9 +129,7 @@ describe("ProfilePage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Profil yuklanmadi"
     );
-    expect(
-      screen.queryByText("Ma’lumotlar yuklanmoqda...")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Ma’lumotlar yuklanmoqda...")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Saqlash" })).toBeInTheDocument();
   });
 
@@ -129,10 +137,8 @@ describe("ProfilePage", () => {
     authApi.dashboard.mockRejectedValueOnce(new Error("stats down"));
     renderProfile();
 
-    expect(await screen.findByLabelText("Ism")).toHaveValue("Bahromjon");
-    expect(
-      screen.getByText("Boshqaruv maydoni tayyorlanmoqda...")
-    ).toBeInTheDocument();
+    expect(await screen.findByLabelText("Ism-familiya")).toHaveValue("Bahromjon");
+    expect(screen.getByText("Boshqaruv maydoni tayyorlanmoqda...")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 

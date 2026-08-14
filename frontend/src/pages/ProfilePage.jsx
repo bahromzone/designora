@@ -17,6 +17,7 @@ const ROLE_LABELS = {
 
 const TEXT_FIELDS = [
   ["name", "Ism-familiya", "Ismingiz va familiyangiz"],
+  ["avatar_url", "Avatar URL", "https://..."],
   ["phone", "Telefon", "+998 90 123 45 67"],
   ["location", "Joylashuv", "Toshkent"],
   ["website", "Veb-sayt", "https://portfolio.uz"],

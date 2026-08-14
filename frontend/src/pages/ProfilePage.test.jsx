@@ -53,7 +53,9 @@ describe("ProfilePage", () => {
     vi.clearAllMocks();
     accountApi.profile.mockResolvedValue(profile);
     accountApi.updateProfile.mockResolvedValue({ message: "ok" });
-    accountApi.uploadAvatar.mockResolvedValue({ avatar_url: "/static/avatar.png" });
+    accountApi.uploadAvatar.mockResolvedValue({
+      avatar_url: "/static/avatar.png",
+    });
     authApi.dashboard.mockResolvedValue({ metrics: [] });
     refreshProfile.mockResolvedValue(user);
   });
@@ -80,8 +82,12 @@ describe("ProfilePage", () => {
       target: { files: [file] },
     });
 
-    await waitFor(() => expect(accountApi.uploadAvatar).toHaveBeenCalledWith(file));
-    expect(await screen.findByText("Profil rasmi yuklandi. O‘zgarishlar saqlandi.")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(accountApi.uploadAvatar).toHaveBeenCalledWith(file)
+    );
+    expect(
+      await screen.findByText("Profil rasmi yuklandi. O‘zgarishlar saqlandi.")
+    ).toBeInTheDocument();
     expect(refreshProfile).toHaveBeenCalledTimes(1);
   });
 
@@ -129,7 +135,9 @@ describe("ProfilePage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Profil yuklanmadi"
     );
-    expect(screen.queryByText("Ma’lumotlar yuklanmoqda...")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Ma’lumotlar yuklanmoqda...")
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Saqlash" })).toBeInTheDocument();
   });
 
@@ -137,8 +145,12 @@ describe("ProfilePage", () => {
     authApi.dashboard.mockRejectedValueOnce(new Error("stats down"));
     renderProfile();
 
-    expect(await screen.findByLabelText("Ism-familiya")).toHaveValue("Bahromjon");
-    expect(screen.getByText("Boshqaruv maydoni tayyorlanmoqda...")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Ism-familiya")).toHaveValue(
+      "Bahromjon"
+    );
+    expect(
+      screen.getByText("Boshqaruv maydoni tayyorlanmoqda...")
+    ).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 

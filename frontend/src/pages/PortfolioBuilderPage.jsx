@@ -196,7 +196,9 @@ export default function PortfolioBuilderPage() {
           <div className="portfolio-fields">
             <div className="editor-heading">
               <div>
-                <small>{selected ? "Loyihani tahrirlash" : "Yangi loyiha"}</small>
+                <small>
+                  {selected ? "Loyihani tahrirlash" : "Yangi loyiha"}
+                </small>
                 <h2>{selected ? form.title : "Portfolio’ga qo‘shish"}</h2>
               </div>
               {(selected || form.title) && (

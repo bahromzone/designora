@@ -277,7 +277,9 @@ header.fixed::before {
 .shell > p.label:first-child,
 .shell > div > aside > div:first-child > .label,
 .student-dashboard > .dashboard-heading > div:first-child > .dashboard-eyebrow,
-.w-full > section:first-of-type span.text-xs.font-bold.uppercase.tracking-widest {
+.w-full
+  > section:first-of-type
+  span.text-xs.font-bold.uppercase.tracking-widest {
   display: none;
 }
 

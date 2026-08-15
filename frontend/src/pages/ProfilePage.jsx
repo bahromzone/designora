@@ -52,6 +52,7 @@ function toFormValues(profile) {
   Object.keys(EMPTY_FORM).forEach((key) => {
     next[key] = profile?.[key] ?? "";
   });
+  next.phone = String(next.phone).replace(/\D/g, "");
   return next;
 }
 
@@ -287,7 +288,9 @@ export default function ProfilePage() {
                         onChange={(event) => setField(key, event.target.value)}
                         required={key === "name"}
                         minLength={key === "name" ? 2 : undefined}
-                        maxLength={key === "name" ? 100 : key === "phone" ? 15 : 500}
+                        maxLength={
+                          key === "name" ? 100 : key === "phone" ? 15 : 500
+                        }
                       />
                     </label>
                   ))}

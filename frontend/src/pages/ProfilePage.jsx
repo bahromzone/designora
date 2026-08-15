@@ -33,7 +33,7 @@ const UZBEK_MONTHS = [
 const TEXT_FIELDS = [
   ["name", "Ism-familiya", "Ismingiz va familiyangiz"],
   ["avatar_url", "Avatar URL", "https://..."],
-  ["phone", "Telefon", "+998 90 123 45 67"],
+  ["phone", "Telefon", "998901234567"],
   ["location", "Joylashuv", "Toshkent"],
   ["website", "Veb-sayt", "https://portfolio.uz"],
 ];
@@ -52,6 +52,7 @@ function toFormValues(profile) {
   Object.keys(EMPTY_FORM).forEach((key) => {
     next[key] = profile?.[key] ?? "";
   });
+  next.phone = String(next.phone).replace(/\D/g, "");
   return next;
 }
 
@@ -101,7 +102,8 @@ export default function ProfilePage() {
 
   function setField(key, value) {
     if (key === "avatar_url") setAvatarBroken(false);
-    setForm((current) => ({ ...current, [key]: value }));
+    const nextValue = key === "phone" ? value.replace(/\D/g, "") : value;
+    setForm((current) => ({ ...current, [key]: nextValue }));
   }
 
   async function uploadAvatar(event) {
@@ -245,14 +247,6 @@ export default function ProfilePage() {
         </aside>
 
         <div className="space-y-6">
-          {message && (
-            <p
-              role="status"
-              className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-            >
-              {message}
-            </p>
-          )}
           {error && (
             <p
               role="alert"
@@ -285,13 +279,18 @@ export default function ProfilePage() {
                       </span>
                       <input
                         className="input-field"
-                        type="text"
+                        type={key === "phone" ? "tel" : "text"}
+                        inputMode={key === "phone" ? "numeric" : undefined}
+                        pattern={key === "phone" ? "[0-9]*" : undefined}
+                        autoComplete={key === "phone" ? "tel" : undefined}
                         value={form[key]}
                         placeholder={placeholder}
                         onChange={(event) => setField(key, event.target.value)}
                         required={key === "name"}
                         minLength={key === "name" ? 2 : undefined}
-                        maxLength={key === "name" ? 100 : 500}
+                        maxLength={
+                          key === "name" ? 100 : key === "phone" ? 15 : 500
+                        }
                       />
                     </label>
                   ))}
@@ -307,12 +306,23 @@ export default function ProfilePage() {
                     />
                   </label>
                 </div>
-                <button
-                  className="btn-primary mt-6"
-                  disabled={saving || uploading}
-                >
-                  {saving ? "Saqlanmoqda..." : "Saqlash"}
-                </button>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <button
+                    className="btn-primary"
+                    disabled={saving || uploading}
+                  >
+                    {saving ? "Saqlanmoqda..." : "Saqlash"}
+                  </button>
+                  {message && (
+                    <p
+                      role="status"
+                      aria-live="polite"
+                      className="text-sm font-medium text-emerald-700"
+                    >
+                      {message}
+                    </p>
+                  )}
+                </div>
               </>
             )}
           </form>

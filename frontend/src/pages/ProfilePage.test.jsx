@@ -112,9 +112,29 @@ describe("ProfilePage", () => {
       })
     );
     expect(refreshProfile).toHaveBeenCalledTimes(1);
-    expect(
-      await screen.findByText("Profil ma’lumotlari saqlandi.")
-    ).toBeInTheDocument();
+    const status = await screen.findByText("Profil ma’lumotlari saqlandi.");
+    expect(status).toBeInTheDocument();
+    expect(status.parentElement).toContainElement(
+      screen.getByRole("button", { name: "Saqlash" })
+    );
+  });
+
+  it("telefon maydonida faqat raqamlarni qoldiradi", async () => {
+    renderProfile();
+    const phone = await screen.findByLabelText("Telefon");
+
+    fireEvent.change(phone, { target: { value: "+998 (90) 123-45-67abc" } });
+
+    expect(phone).toHaveValue("998901234567");
+    expect(phone).toHaveAttribute("inputmode", "numeric");
+    expect(phone).toHaveAttribute("pattern", "[0-9]*");
+
+    fireEvent.click(screen.getByRole("button", { name: "Saqlash" }));
+    await waitFor(() =>
+      expect(accountApi.updateProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ phone: "998901234567" })
+      )
+    );
   });
 
   it("saqlash yiqilganda xatoni ko'rsatib, formani ochiq qoldiradi", async () => {

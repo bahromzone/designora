@@ -3,28 +3,30 @@ import { useCallback, useEffect, useState } from "react";
 import { referralApi } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { Spinner } from "./ui";
 
 export default function ReferralSection() {
-  const { token, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const toast = useToast();
 
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isAuthenticated);
   const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await referralApi.myCode(token);
+      const res = await referralApi.myCode();
       setData(res);
     } catch {
       setData(null);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     load();
@@ -57,16 +59,19 @@ export default function ReferralSection() {
       </p>
 
       {loading ? (
-        <div className="flex justify-center py-8">
-          <Spinner />
-        </div>
+        <p
+          role="status"
+          className="mt-5 text-sm"
+          style={{ color: "var(--muted)" }}
+        >
+          Taklif kodingiz yuklanmoqda...
+        </p>
       ) : !data ? (
         <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>
           Referral kodini yuklab bo'lmadi.
         </p>
       ) : (
         <>
-          {/* Kod + nusxa */}
           <div className="mt-5 flex items-center gap-3">
             <code
               className="flex-1 rounded-xl border px-4 py-3 text-lg font-bold tracking-widest text-ink"
@@ -85,7 +90,6 @@ export default function ReferralSection() {
             </button>
           </div>
 
-          {/* Statistika */}
           <div className="mt-6 grid grid-cols-3 gap-4">
             {[
               { label: "Taklif qilingan", value: data.total_referred || 0 },

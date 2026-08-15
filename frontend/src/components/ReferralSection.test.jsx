@@ -27,33 +27,27 @@ describe("ReferralSection", () => {
     });
   });
 
-  it(
-    "cookie sessiya bilan referral kodini yuklaydi va loading holatini tugatadi",
-    async () => {
-      render(<ReferralSection />);
+  it("cookie sessiya bilan referral kodini yuklaydi va loading holatini tugatadi", async () => {
+    render(<ReferralSection />);
 
-      expect(screen.getByRole("status")).toHaveTextContent(
-        "Taklif kodingiz yuklanmoqda..."
-      );
-      expect(await screen.findByText("DESIGN24")).toBeInTheDocument();
-      expect(referralApi.myCode).toHaveBeenCalledWith();
-      expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    }
-  );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Taklif kodingiz yuklanmoqda..."
+    );
+    expect(await screen.findByText("DESIGN24")).toBeInTheDocument();
+    expect(referralApi.myCode).toHaveBeenCalledWith();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
 
-  it(
-    "so'rov yiqilganda cheksiz loading o'rniga xatoni ko'rsatadi",
-    async () => {
-      referralApi.myCode.mockRejectedValueOnce(new Error("offline"));
+  it("so'rov yiqilganda cheksiz loading o'rniga xatoni ko'rsatadi", async () => {
+    referralApi.myCode.mockRejectedValueOnce(new Error("offline"));
 
-      render(<ReferralSection />);
+    render(<ReferralSection />);
 
-      expect(
-        await screen.findByText("Referral kodini yuklab bo'lmadi.")
-      ).toBeInTheDocument();
-      expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    }
-  );
+    expect(
+      await screen.findByText("Referral kodini yuklab bo'lmadi.")
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
 
   it("autentifikatsiyasiz foydalanuvchiga bo'limni ko'rsatmaydi", () => {
     useAuth.mockReturnValue({ isAuthenticated: false });

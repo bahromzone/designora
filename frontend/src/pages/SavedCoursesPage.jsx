@@ -6,6 +6,7 @@ import { formatPrice } from "../lib/api";
 export default function SavedCoursesPage() {
   const [items, setItems] = useState(null);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [removing, setRemoving] = useState(null);
   useEffect(() => {
     accountApi
@@ -15,13 +16,16 @@ export default function SavedCoursesPage() {
   }, []);
   async function remove(courseId) {
     setRemoving(courseId);
+    setError("");
+    setSuccess("");
     try {
       await accountApi.removeSavedCourse(courseId);
       setItems((current) =>
         current.filter((item) => item.course_id !== courseId)
       );
+      setSuccess("Kurs saqlanganlar ro‘yxatidan olib tashlandi.");
     } catch (e) {
-      setError(e.message);
+      setError(`Kursni olib tashlab bo‘lmadi: ${e.message}`);
     } finally {
       setRemoving(null);
     }
@@ -38,6 +42,11 @@ export default function SavedCoursesPage() {
       >
         Sizga qiziq tuyulgan kurslar shu yerda yo‘qolib ketmaydi.
       </p>
+      {success && (
+        <p className="mt-8 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+          {success}
+        </p>
+      )}
       {error && (
         <p className="mt-8 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
@@ -87,7 +96,7 @@ export default function SavedCoursesPage() {
                   onClick={() => remove(item.course_id)}
                   disabled={removing === item.course_id}
                 >
-                  {removing === item.course_id ? "..." : "Olib tashlash"}
+                  {removing === item.course_id ? "Olib tashlanmoqda..." : "Olib tashlash"}
                 </button>
               </span>
             </div>

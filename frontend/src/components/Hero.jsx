@@ -122,7 +122,9 @@ function DashboardMockup() {
             <circle cx="8" cy="13" r="1" fill="currentColor" stroke="none" />
           </svg>
         </div>
-        <p className="text-xs font-semibold text-ink">Mentor bilan bog'laning</p>
+        <p className="text-xs font-semibold text-ink">
+          Mentor bilan bog'laning
+        </p>
       </motion.div>
     </div>
   );

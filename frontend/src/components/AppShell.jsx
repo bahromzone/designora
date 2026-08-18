@@ -48,6 +48,24 @@ const BOTTOM_LINKS = [
   { label: "Shartlar", to: "/shartlar" },
 ];
 
+const SOCIAL_LINKS = [
+  {
+    label: "Telegram",
+    href: "https://t.me/mydesignora",
+    icon: "✈",
+  },
+  {
+    label: "Instagram",
+    href: "https://instagram.com/mydesignora",
+    icon: "◎",
+  },
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/@ourdesignora",
+    icon: "▶",
+  },
+];
+
 export default function AppShell({ children }) {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
@@ -79,26 +97,55 @@ export default function AppShell({ children }) {
       </AnimatePresence>
       <footer className="relative z-10 mt-24 bg-[#0e0e10] text-white">
         <div className="mx-auto max-w-7xl px-6 py-16">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3">
-            {FOOTER_COLUMNS.map((col) => (
-              <div key={col.title}>
-                <h4 className="mb-5 text-base font-bold text-white">
-                  {col.title}
-                </h4>
-                <ul className="space-y-3">
-                  {col.links.map((link) => (
-                    <li key={link.label}>
-                      <Link
-                        to={link.to}
-                        className="text-sm text-white/60 transition-colors duration-200 hover:text-white"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+          <div className="grid gap-x-8 gap-y-12 md:grid-cols-[1.3fr_2fr]">
+            <div>
+              <Link to="/" className="inline-flex items-center gap-3 text-white">
+                <span
+                  aria-hidden="true"
+                  className="grid h-9 w-9 place-items-center rounded-xl border border-white/25 text-sm font-bold"
+                >
+                  D
+                </span>
+                <span className="text-xl font-semibold tracking-[0.18em]">
+                  DESIGNORA
+                </span>
+              </Link>
+              <div className="mt-7 flex items-center gap-3">
+                {SOCIAL_LINKS.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-sm font-semibold text-white/75 transition hover:-translate-y-0.5 hover:border-white/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-300"
+                  >
+                    {social.icon}
+                  </a>
+                ))}
               </div>
-            ))}
+            </div>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3">
+              {FOOTER_COLUMNS.map((col) => (
+                <div key={col.title}>
+                  <h4 className="mb-5 text-base font-bold text-white">
+                    {col.title}
+                  </h4>
+                  <ul className="space-y-3">
+                    {col.links.map((link) => (
+                      <li key={link.label}>
+                        <Link
+                          to={link.to}
+                          className="text-sm text-white/60 transition-colors duration-200 hover:text-white"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="mt-14 border-t border-white/10" />
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/60">

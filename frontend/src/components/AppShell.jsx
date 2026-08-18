@@ -52,19 +52,60 @@ const SOCIAL_LINKS = [
   {
     label: "Telegram",
     href: "https://t.me/mydesignora",
-    icon: "✈",
+    icon: "telegram",
   },
   {
     label: "Instagram",
     href: "https://instagram.com/mydesignora",
-    icon: "◎",
+    icon: "instagram",
   },
   {
     label: "YouTube",
     href: "https://www.youtube.com/@ourdesignora",
-    icon: "▶",
+    icon: "youtube",
   },
 ];
+
+function SocialIcon({ name }) {
+  if (name === "telegram") {
+    return (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-[18px] w-[18px] fill-current"
+      >
+        <path d="M21.66 3.15a1.27 1.27 0 0 0-1.3-.19L2.94 9.68c-.72.28-1.16.7-1.2 1.16-.03.45.35.84 1.04 1.09l4.38 1.53 1.69 5.15c.2.61.52.94.94.99h.1c.38 0 .72-.25 1.03-.74l2.39-3.78 4.53 3.34c.42.31.84.4 1.22.25.45-.17.76-.62.88-1.27l2.43-12.93c.11-.59-.14-1.05-.71-1.32ZM9.72 13.05l7.75-4.88-6.35 6.19-.75 2.36-.65-3.67Z" />
+      </svg>
+    );
+  }
+
+  if (name === "instagram") {
+    return (
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-[18px] w-[18px] fill-none stroke-current"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4.25" />
+        <circle cx="17.4" cy="6.7" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[19px] w-[19px] fill-current"
+    >
+      <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.54 12 3.54 12 3.54s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.19C0 8.08 0 12 0 12s0 3.92.5 5.81a3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14C24 15.92 24 12 24 12s0-3.92-.5-5.81ZM9.55 15.57V8.43L15.82 12l-6.27 3.57Z" />
+    </svg>
+  );
+}
 
 export default function AppShell({ children }) {
   const location = useLocation();
@@ -118,9 +159,10 @@ export default function AppShell({ children }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.label}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-sm font-semibold text-white/75 transition hover:-translate-y-0.5 hover:border-white/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-300"
+                    title={social.label}
+                    className="grid h-11 w-11 place-items-center rounded-full border border-white/20 text-white/75 transition duration-200 hover:-translate-y-0.5 hover:border-white/60 hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-300"
                   >
-                    {social.icon}
+                    <SocialIcon name={social.icon} />
                   </a>
                 ))}
               </div>

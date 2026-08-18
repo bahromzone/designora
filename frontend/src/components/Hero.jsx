@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 
 /* ── Dashboard Mockup (right side) ────────────────────────── */
@@ -10,13 +10,11 @@ function DashboardMockup() {
       className="relative w-full max-w-[28rem] mx-auto"
       style={{ filter: "drop-shadow(0 32px 80px rgba(26,18,8,0.18))" }}
     >
-      {/* Main card */}
       <motion.div
         className="card-white rounded-2xl p-5 overflow-hidden"
         animate={{ y: [0, -8, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       >
-        {/* Top row */}
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-xs font-semibold tracking-widest uppercase text-muted">
@@ -26,13 +24,10 @@ function DashboardMockup() {
               Har darajaga mos
             </p>
           </div>
-          {/* Toggle pill */}
           <div className="flex h-8 w-16 items-center rounded-full bg-amber p-1">
             <div className="h-6 w-6 rounded-full bg-white shadow-sm ml-auto" />
           </div>
         </div>
-
-        {/* Avatar row */}
         <div className="flex items-center gap-2 mb-4">
           <div className="flex -space-x-2">
             {["#c4703a", "#2c4a3e", "#8b6f5e", "#4a7c6e", "#d4956e"].map(
@@ -50,8 +45,6 @@ function DashboardMockup() {
           </div>
           <p className="text-xs text-muted ml-1">faol o'quvchilar</p>
         </div>
-
-        {/* Budget bar */}
         <div className="rounded-xl bg-surface p-3 mb-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs text-muted font-medium">Haftalik progress</p>
@@ -68,16 +61,12 @@ function DashboardMockup() {
             />
           </div>
         </div>
-
-        {/* Alert pill */}
         <div className="flex items-center gap-2 rounded-full bg-amber/10 px-3 py-1.5 mb-4 w-fit">
           <div className="h-1.5 w-1.5 rounded-full bg-amber animate-pulse" />
           <p className="text-xs font-semibold text-amber">
             Baholash testlari — 99%
           </p>
         </div>
-
-        {/* Weekly recommendations */}
         <div className="rounded-xl border border-border p-3">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold text-ink">
@@ -111,8 +100,6 @@ function DashboardMockup() {
           </div>
         </div>
       </motion.div>
-
-      {/* Report a Bug / floating pill */}
       <motion.div
         className="absolute -bottom-5 left-6 flex items-center gap-2.5 card-white rounded-full px-4 py-2.5 shadow-card"
         animate={{ y: [0, -6, 0] }}
@@ -135,9 +122,7 @@ function DashboardMockup() {
             <circle cx="8" cy="13" r="1" fill="currentColor" stroke="none" />
           </svg>
         </div>
-        <p className="text-xs font-semibold text-ink">
-          Mentor bilan bog'laning
-        </p>
+        <p className="text-xs font-semibold text-ink">Mentor bilan bog'laning</p>
       </motion.div>
     </div>
   );
@@ -149,6 +134,15 @@ const STATS = [
   { label: "O'quvchi bahosi", value: "4.9", num: 4.9, suffix: "" },
 ];
 
+const HERO_COPY = [
+  "Ilhomingizga shakl bering.",
+  "Har bir g‘oya ko‘rinishga loyiq.",
+  "Dizaynni his qiling. Natijani yarating.",
+  "Siz tasavvur qiling, biz yo‘l ko‘rsatamiz.",
+  "Oddiy fikrdan kuchli loyiha sari.",
+  "Ijodingiz uchun yangi makon.",
+];
+
 export default function Hero({ isAuthenticated }) {
   const rootRef = useRef(null);
   const badgeRef = useRef(null);
@@ -158,6 +152,15 @@ export default function Hero({ isAuthenticated }) {
   const statsRef = useRef(null);
   const rightRef = useRef(null);
   const countersRef = useRef([]);
+  const [copyIndex, setCopyIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCopyIndex((index) => (index + 1) % HERO_COPY.length);
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -168,17 +171,12 @@ export default function Hero({ isAuthenticated }) {
         { opacity: 0, y: 14, scale: 0.92 },
         { opacity: 1, y: 0, scale: 1, duration: 0.5 }
       );
-
-      const chars = h1Ref.current?.querySelectorAll(".char");
-      if (chars?.length) {
-        tl.fromTo(
-          chars,
-          { opacity: 0, y: "110%", rotateX: -45 },
-          { opacity: 1, y: "0%", rotateX: 0, duration: 0.65, stagger: 0.014 },
-          "-=0.25"
-        );
-      }
-
+      tl.fromTo(
+        h1Ref.current,
+        { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.65 },
+        "-=0.25"
+      );
       tl.fromTo(
         subRef.current,
         { opacity: 0, y: 18 },
@@ -204,7 +202,6 @@ export default function Hero({ isAuthenticated }) {
         0.2
       );
 
-      // Counters
       countersRef.current.forEach((el, i) => {
         if (!el) return;
         const s = STATS[i];
@@ -232,19 +229,10 @@ export default function Hero({ isAuthenticated }) {
     return () => ctx.revert();
   }, []);
 
-  const words = [
-    { text: "Moodboarddan", gold: false },
-    { text: "bozorga", gold: false },
-    { text: "qadar", gold: false },
-    { text: "dizayn.", gold: true },
-  ];
-
   return (
-    <section ref={rootRef} className="shell pt-12 pb-20 sm:pt-20 sm:pb-28">
+    <section ref={rootRef} className="shell pt-32 pb-20 sm:pt-40 sm:pb-28">
       <div className="grid gap-12 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
-        {/* ── Left ── */}
         <div className="max-w-2xl">
-          {/* Badge */}
           <div
             ref={badgeRef}
             className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold opacity-0"
@@ -262,7 +250,6 @@ export default function Hero({ isAuthenticated }) {
             Premium fashion platform
           </div>
 
-          {/* Headline */}
           <h1
             ref={h1Ref}
             className="mt-6 font-serif font-semibold text-ink"
@@ -273,24 +260,23 @@ export default function Hero({ isAuthenticated }) {
               perspective: "600px",
             }}
           >
-            {words.map((w, wi) => (
-              <span
-                key={wi}
-                className={`mr-[0.18em] inline-block ${wi === 2 ? "sketch-underline" : ""}`}
-                style={{ overflow: "hidden", paddingBottom: "0.06em" }}
-              >
-                <span style={{ color: w.gold ? "var(--amber)" : "var(--ink)" }}>
-                  {w.text.split("").map((ch, ci) => (
-                    <span key={ci} className="char">
-                      {ch}
-                    </span>
-                  ))}
-                </span>
-              </span>
-            ))}
+            <span className="block">Moodboarddan bozorga qadar</span>
+            <span className="mt-2 block min-h-[1.9em] text-amber">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={copyIndex}
+                  className="block"
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -18 }}
+                  transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {HERO_COPY[copyIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </h1>
 
-          {/* Sub */}
           <p
             ref={subRef}
             className="mt-6 max-w-lg text-base leading-8 opacity-0"
@@ -301,7 +287,6 @@ export default function Hero({ isAuthenticated }) {
             tayyor.
           </p>
 
-          {/* Buttons */}
           <div
             ref={btnsRef}
             className="mt-8 flex flex-wrap items-center gap-3 opacity-0"
@@ -317,12 +302,11 @@ export default function Hero({ isAuthenticated }) {
             </a>
           </div>
 
-          {/* Stats */}
-          <div ref={statsRef} className="mt-10 grid grid-cols-3 gap-4 max-w-lg">
+          <div ref={statsRef} className="mt-10 grid max-w-lg grid-cols-3 gap-4">
             {STATS.map((s, i) => (
               <div
                 key={s.label}
-                className="card rounded-2xl px-4 py-4 hover:-translate-y-0.5 transition-transform"
+                className="card rounded-2xl px-4 py-4 transition-transform hover:-translate-y-0.5"
               >
                 <p className="label">{s.label}</p>
                 <p
@@ -337,8 +321,7 @@ export default function Hero({ isAuthenticated }) {
           </div>
         </div>
 
-        {/* ── Right: mockup ── */}
-        <div ref={rightRef} className="hidden lg:block opacity-0 pb-8">
+        <div ref={rightRef} className="hidden pb-8 opacity-0 lg:block">
           <DashboardMockup />
         </div>
       </div>

@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
 import WaveAnimation from "../components/WaveAnimation";
@@ -30,7 +31,28 @@ const FIRST_COHORT_FACTS = [
   { value: "Portfolio", label: "4 loyiha bilan yakun" },
 ];
 
+const HERO_COPY = [
+  "Portfolio yarating.",
+  "Ilhomingizga shakl bering.",
+  "Har bir g‘oya ko‘rinishga loyiq.",
+  "Natijani yarating.",
+  "Kuchli loyiha sari yuring.",
+  "Ijodingizga yangi makon oching.",
+];
+
 export default function HomePage() {
+  const [copyIndex, setCopyIndex] = useState(0);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCopyIndex((currentIndex) =>
+        (currentIndex + 1) % HERO_COPY.length
+      );
+    }, 3000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   return (
     <div className="relative w-full bg-[var(--bg-light)]">
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
@@ -56,8 +78,22 @@ export default function HomePage() {
               className="mb-6 text-5xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-7xl"
             >
               Dizaynni o'rganing. <br />
-              <span className="inline-block pb-2 text-violet-600">
-                Portfolio yarating.
+              <span
+                className="inline-grid min-h-[2.2em] overflow-hidden pb-2 align-top text-violet-600"
+                aria-live="polite"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={copyIndex}
+                    className="col-start-1 row-start-1 inline-block"
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -24 }}
+                    transition={{ duration: 0.45, ease: premiumEasing }}
+                  >
+                    {HERO_COPY[copyIndex]}
+                  </motion.span>
+                </AnimatePresence>
               </span>
             </motion.h1>
             <motion.p

@@ -24,21 +24,27 @@ const fadeUp = {
   },
 };
 
+const FIRST_COHORT_FACTS = [
+  { value: "1-oqim", label: "Birinchi guruh" },
+  { value: "30 ta joy", label: "Cheklangan qabul" },
+  { value: "Portfolio", label: "4 loyiha bilan yakun" },
+];
+
 export default function HomePage() {
   return (
-    <div className="w-full bg-[var(--bg-light)] relative">
+    <div className="relative w-full bg-[var(--bg-light)]">
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
 
-      <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden px-6 pt-20">
-        <div className="absolute top-0 right-0 w-[120%] h-[120%] -mr-[30%] -mt-[25%] pointer-events-none z-0 scale-110 animate-stripe">
+      <section className="relative flex min-h-[95vh] items-center justify-center overflow-hidden px-6 pt-20">
+        <div className="animate-stripe pointer-events-none absolute right-0 top-0 z-0 -mr-[30%] -mt-[25%] h-[120%] w-[120%] scale-110">
           <WaveAnimation />
         </div>
         <motion.div
           animate={{ x: [0, 30, -20, 0], y: [0, -30, 20, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[10%] left-[-10%] w-[40rem] h-[40rem] bg-pink-400/10 blur-[120px] rounded-full pointer-events-none z-0"
+          className="pointer-events-none absolute left-[-10%] top-[10%] z-0 h-[40rem] w-[40rem] rounded-full bg-pink-400/10 blur-[120px]"
         />
-        <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center relative z-10">
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-2">
           <motion.div
             initial="hidden"
             animate="visible"
@@ -47,37 +53,33 @@ export default function HomePage() {
           >
             <motion.div
               variants={fadeUp}
-              className="inline-block px-4 py-1.5 rounded-full border border-pink-100 bg-white shadow-sm mb-6"
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white px-4 py-1.5 shadow-sm"
             >
-              <span className="text-xs font-bold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-500">
-                Ta'limning kelajagi
+              <span className="h-2 w-2 rounded-full bg-violet-600" />
+              <span className="text-xs font-bold uppercase tracking-widest text-violet-700">
+                Birinchi oqim ochildi
               </span>
             </motion.div>
             <motion.h1
               variants={fadeUp}
-              className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6 text-slate-900"
+              className="mb-6 text-5xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-7xl"
             >
-              Mahoratingizni yuksaltiring <br />
-              <motion.span
-                animate={{
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                className="bg-[length:200%_auto] text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 inline-block pb-2"
-              >
-                Designora.
-              </motion.span>
+              Dizaynni o'rganing. <br />
+              <span className="inline-block pb-2 text-violet-600">
+                Portfolio yarating.
+              </span>
             </motion.h1>
             <motion.p
               variants={fadeUp}
-              className="text-lg md:text-xl text-slate-600 mb-10 max-w-xl mx-auto lg:mx-0"
+              className="mx-auto mb-10 max-w-xl text-lg text-slate-600 md:text-xl lg:mx-0"
             >
-              Oddiy videodarslarni unuting. Soha yetakchilaridan kinematik
-              sifatdagi jonli masterklasslar orqali amaliy bilim oling.
+              8 haftalik amaliy dastur, to'rtta portfolio loyihasi va har
+              bosqichda mentor tekshiruvi. Birinchi oqim 30 ishtirokchi bilan
+              boshlanadi.
             </motion.p>
             <motion.div
               variants={fadeUp}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+              className="flex flex-col justify-center gap-4 sm:flex-row lg:justify-start"
             >
               <Link to="/?modal=signup">
                 <motion.span
@@ -87,10 +89,9 @@ export default function HomePage() {
                   }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="relative inline-block px-8 py-4 rounded-full text-white font-bold text-lg overflow-hidden group bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"
+                  className="relative inline-block overflow-hidden rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 px-8 py-4 text-lg font-bold text-white"
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <span className="relative z-10">Hozir boshlash</span>
+                  Birinchi oqimga qo'shilish
                 </motion.span>
               </Link>
               <Link to="/kurslar">
@@ -98,29 +99,29 @@ export default function HomePage() {
                   whileHover={{ scale: 1.03, backgroundColor: "#f8fafc" }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="inline-block px-8 py-4 rounded-full glass-panel text-slate-900 font-bold text-lg transition-colors"
+                  className="glass-panel inline-block rounded-full px-8 py-4 text-lg font-bold text-slate-900 transition-colors"
                 >
-                  Kurslarni ko'rish
+                  Dasturlarni ko'rish
                 </motion.span>
               </Link>
             </motion.div>
             <motion.div
               variants={fadeUp}
-              className="mt-12 flex items-center justify-center lg:justify-start gap-8 border-t border-gray-200 pt-8"
+              className="mt-12 grid grid-cols-1 gap-0 border-y border-gray-200 text-left sm:grid-cols-3 sm:border-y-0 sm:border-t"
             >
-              <div>
-                <p className="text-3xl font-bold text-slate-900">12,000+</p>
-                <p className="text-sm text-slate-500 font-medium">
-                  Faol o'quvchilar
-                </p>
-              </div>
-              <div className="w-px h-10 bg-gray-200" />
-              <div>
-                <p className="text-3xl font-bold text-slate-900">4.9/5</p>
-                <p className="text-sm text-slate-500 font-medium">
-                  O'rtacha baho
-                </p>
-              </div>
+              {FIRST_COHORT_FACTS.map((fact) => (
+                <div
+                  key={fact.value}
+                  className="border-b border-gray-200 py-5 sm:border-b-0 sm:border-r sm:px-5 sm:first:pl-0 sm:last:border-r-0"
+                >
+                  <p className="text-2xl font-bold text-slate-900">
+                    {fact.value}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-slate-500">
+                    {fact.label}
+                  </p>
+                </div>
+              ))}
             </motion.div>
           </motion.div>
         </div>
@@ -132,63 +133,52 @@ export default function HomePage() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 1 }}
-          className="max-w-7xl mx-auto px-6 text-center"
+          className="mx-auto max-w-7xl px-6 text-center"
         >
-          <p className="text-xs font-bold text-slate-400 tracking-widest uppercase mb-6">
+          <p className="mb-6 text-xs font-bold uppercase tracking-widest text-slate-400">
             Platformadagi yo'nalishlar
           </p>
-          <div className="flex flex-wrap justify-center gap-10 md:gap-20 opacity-40 grayscale font-serif text-2xl md:text-3xl font-bold text-slate-800">
-            {[
-              "UI/UX",
-              "Moda dizayni",
-              "Brending",
-              "Styling",
-              "Grafik dizayn",
-            ].map((logo) => (
-              <motion.span
-                key={logo}
-                whileHover={{ scale: 1.05, opacity: 0.8 }}
-                transition={{ duration: 0.2 }}
-                className="cursor-pointer"
-              >
-                {logo}
-              </motion.span>
-            ))}
+          <div className="flex flex-wrap justify-center gap-10 font-serif text-2xl font-bold text-slate-800 opacity-40 grayscale md:gap-20 md:text-3xl">
+            {["UI/UX", "Moda dizayni", "Brending", "Styling", "Grafik dizayn"].map(
+              (direction) => (
+                <motion.span
+                  key={direction}
+                  whileHover={{ scale: 1.05, opacity: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {direction}
+                </motion.span>
+              )
+            )}
           </div>
         </motion.div>
       </section>
 
       <EngagementSection />
 
-      <section className="py-16 px-6 max-w-7xl mx-auto">
+      <section className="mx-auto max-w-7xl px-6 py-16">
         <RecommendationSection
-          title="Ko'p sotilgan kurslar"
-          subtitle="O'quvchilar eng ko'p tanlagan dasturlar"
+          title="Birinchi oqim dasturlari"
+          subtitle="Amaliy loyiha va mentor feedbackiga qurilgan yo'nalishlar"
           fetcher={() => discoveryApi.bestselling(6)}
           limit={3}
         />
       </section>
 
-      <section className="py-32 px-6 max-w-7xl mx-auto relative">
-        <style>{`.cta-glass { background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 40px 100px rgba(79, 70, 229, 0.1); }`}</style>
+      <section className="relative mx-auto max-w-7xl px-6 py-32">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: premiumEasing }}
-          className="cta-glass rounded-[32px] p-12 md:p-20 text-center relative overflow-hidden"
+          className="relative overflow-hidden rounded-[32px] border border-violet-100 bg-white p-12 text-center shadow-[0_40px_100px_rgba(79,70,229,0.1)] md:p-20"
         >
-          <motion.div
-            animate={{ x: [0, -40, 40, 0], y: [0, 40, -40, 0] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute -bottom-20 -right-20 w-80 h-80 bg-indigo-200/20 blur-[100px] rounded-full"
-          />
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight max-w-2xl mx-auto relative z-10">
-            Raqamli ta'limingizni <br /> yangi bosqichga olib chiqing.
+          <h2 className="relative z-10 mx-auto mb-6 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-5xl">
+            Birinchi oqimni biz bilan boshlang.
           </h2>
-          <p className="text-lg text-slate-600 mb-10 max-w-md mx-auto relative z-10">
-            Minglab mutaxassislar qatoriga qo'shiling va yangi ko'nikmalarni
-            chuqur amaliyot orqali egallang.
+          <p className="relative z-10 mx-auto mb-10 max-w-lg text-lg text-slate-600">
+            30 ta joy, 8 haftalik amaliy dastur va portfolio uchun to'rtta
+            yakunlangan loyiha.
           </p>
           <Link to="/?modal=signup" className="relative z-10 inline-block">
             <motion.span
@@ -197,10 +187,9 @@ export default function HomePage() {
                 boxShadow: "0 20px 40px -10px rgba(124,58,237,0.45)",
               }}
               whileTap={{ scale: 0.98 }}
-              className="relative inline-block px-8 py-4 rounded-full text-white font-bold text-lg shadow-lg group overflow-hidden bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"
+              className="inline-block rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 px-8 py-4 text-lg font-bold text-white shadow-lg"
             >
-              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <span className="relative z-10">To'liq kirish olish</span>
+              Joyni band qilish
             </motion.span>
           </Link>
         </motion.div>

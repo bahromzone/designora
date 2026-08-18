@@ -99,7 +99,10 @@ export default function AppShell({ children }) {
         <div className="mx-auto max-w-7xl px-6 py-16">
           <div className="grid gap-x-8 gap-y-12 md:grid-cols-[1.3fr_2fr]">
             <div>
-              <Link to="/" className="inline-flex items-center gap-3 text-white">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-3 text-white"
+              >
                 <span
                   aria-hidden="true"
                   className="grid h-9 w-9 place-items-center rounded-xl border border-white/25 text-sm font-bold"

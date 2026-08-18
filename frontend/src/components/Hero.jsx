@@ -159,7 +159,7 @@ export default function Hero({ isAuthenticated }) {
   useEffect(() => {
     const interval = window.setInterval(() => {
       setCopyIndex((index) => (index + 1) % HERO_COPY.length);
-    }, 3000);
+    }, 3000 );
 
     return () => window.clearInterval(interval);
   }, []);

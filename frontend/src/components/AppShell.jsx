@@ -101,17 +101,14 @@ export default function AppShell({ children }) {
             <div>
               <Link
                 to="/"
-                className="inline-flex items-center gap-3 text-white"
+                aria-label="Designora bosh sahifasi"
+                className="inline-flex items-center"
               >
-                <span
-                  aria-hidden="true"
-                  className="grid h-9 w-9 place-items-center rounded-xl border border-white/25 text-sm font-bold"
-                >
-                  D
-                </span>
-                <span className="text-xl font-semibold tracking-[0.18em]">
-                  DESIGNORA
-                </span>
+                <img
+                  src="/brand-logo-dark.svg"
+                  alt=""
+                  className="h-auto w-40 brightness-0 invert"
+                />
               </Link>
               <div className="mt-7 flex items-center gap-3">
                 {SOCIAL_LINKS.map((social) => (

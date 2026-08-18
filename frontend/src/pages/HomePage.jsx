@@ -45,9 +45,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      setCopyIndex((currentIndex) =>
-        (currentIndex + 1) % HERO_COPY.length
-      );
+      setCopyIndex((currentIndex) => (currentIndex + 1) % HERO_COPY.length);
     }, 3000);
 
     return () => window.clearInterval(intervalId);

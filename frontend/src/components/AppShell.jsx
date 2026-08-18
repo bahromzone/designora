@@ -105,9 +105,9 @@ export default function AppShell({ children }) {
                 className="inline-flex items-center"
               >
                 <img
-                  src="/brand-logo-dark.svg"
-                  alt=""
-                  className="h-auto w-40 brightness-0 invert"
+                  src="https://u308473473.p.clickup-attachments.com/u308473473/a583d09d-9759-464c-8cf7-7f72b854c0cd/designora-footer-logo-clean.png?view=open"
+                  alt="Designora"
+                  className="h-auto w-56 max-w-full object-contain object-left"
                 />
               </Link>
               <div className="mt-7 flex items-center gap-3">

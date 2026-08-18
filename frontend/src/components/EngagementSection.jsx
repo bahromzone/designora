@@ -182,7 +182,10 @@ export default function EngagementSection() {
             </h3>
             <div className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
               {LEARNING_STEPS.map((step) => (
-                <div key={step.number} className="grid grid-cols-[2.5rem_1fr] gap-4 py-5">
+                <div
+                  key={step.number}
+                  className="grid grid-cols-[2.5rem_1fr] gap-4 py-5"
+                >
                   <span className="pt-1 text-xs font-bold tracking-widest text-violet-600">
                     {step.number}
                   </span>
@@ -219,8 +222,8 @@ export default function EngagementSection() {
               Shaffof va halol start
             </p>
             <p className="mt-2 max-w-2xl text-lg font-semibold leading-7 text-slate-950">
-              Birinchi bitiruvchilar chiqqach, aynan ularning tasdiqlangan ishlari
-              va fikrlarini shu yerda ko'rsatamiz.
+              Birinchi bitiruvchilar chiqqach, aynan ularning tasdiqlangan
+              ishlari va fikrlarini shu yerda ko'rsatamiz.
             </p>
           </div>
           <Link

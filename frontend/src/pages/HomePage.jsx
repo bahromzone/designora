@@ -51,15 +51,6 @@ export default function HomePage() {
             variants={staggerContainer}
             className="text-center lg:text-left"
           >
-            <motion.div
-              variants={fadeUp}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white px-4 py-1.5 shadow-sm"
-            >
-              <span className="h-2 w-2 rounded-full bg-violet-600" />
-              <span className="text-xs font-bold uppercase tracking-widest text-violet-700">
-                Birinchi oqim ochildi
-              </span>
-            </motion.div>
             <motion.h1
               variants={fadeUp}
               className="mb-6 text-5xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-7xl"

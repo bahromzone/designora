@@ -7,7 +7,7 @@ export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const navigate = useNavigate();
-  const { loginWithToken } = useAuth();
+  const { refreshProfile } = useAuth();
 
   const [form, setForm] = useState({ password: "", confirm: "" });
   const [error, setError] = useState("");
@@ -40,10 +40,7 @@ export default function ResetPasswordPage() {
     setSubmitting(true);
     try {
       const res = await resetPassword(token, form.password);
-      // Backend yangi access-token qaytaradi — foydalanuvchini darhol kiritamiz.
-      if (res?.access_token) {
-        loginWithToken(res.access_token);
-      }
+      await refreshProfile();
       navigate(res?.redirect ?? "/profil", { replace: true });
     } catch (err) {
       setError(err.message || "Token yaroqsiz yoki muddati o'tgan.");

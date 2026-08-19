@@ -22,7 +22,7 @@ jobs:
   critical-journey:
     name: Critical student journey
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend/e2e
@@ -38,6 +38,7 @@ jobs:
       # shuning uchun bu job ham registry uzilishiga qarshi himoyalanadi.
       - name: Configure registry mirror and warm base images
         working-directory: .
+        timeout-minutes: 3
         run: |
           bash scripts/ci_docker_registry.sh \
             python:3.12-slim \
@@ -71,10 +72,12 @@ jobs:
 
       - name: Build and start local E2E stack
         working-directory: .
+        timeout-minutes: 6
         run: docker compose up -d --build
 
       - name: Wait for the local API
         working-directory: .
+        timeout-minutes: 3
         run: |
           for attempt in $(seq 1 60); do
             if curl --fail --silent http://localhost:8000/healthz >/dev/null; then
@@ -87,6 +90,7 @@ jobs:
 
       - name: Wait for the local frontend
         working-directory: .
+        timeout-minutes: 3
         run: |
           for attempt in $(seq 1 60); do
             if curl --fail --silent http://localhost:5173/ >/dev/null; then
@@ -99,6 +103,7 @@ jobs:
 
       - name: Seed deterministic user and courses
         working-directory: .
+        timeout-minutes: 2
         run: |
           seed_output="$(docker compose exec -T backend python -m scripts.seed_e2e)"
           for key in E2E_EMAIL E2E_PASSWORD E2E_COURSE_ID E2E_PAID_COURSE_ID; do
@@ -111,13 +116,16 @@ jobs:
           echo "E2E_API_URL=http://localhost:8000" >> "$GITHUB_ENV"
 
       - name: Install E2E dependencies
+        timeout-minutes: 2
         run: npm install --no-fund --no-audit
 
       - name: Install Chromium
+        timeout-minutes: 4
         run: npx playwright install --with-deps chromium
 
       - name: Run critical journey
         id: browser-e2e
+        timeout-minutes: 6
         run: |
           set -o pipefail
           npm test 2>&1 | tee "$RUNNER_TEMP/e2e.log"
@@ -184,4 +192,5 @@ jobs:
       - name: Tear down local E2E stack
         if: ${{ always() }}
         working-directory: .
+        timeout-minutes: 2
         run: docker compose down -v --remove-orphans

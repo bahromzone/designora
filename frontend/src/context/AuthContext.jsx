@@ -12,11 +12,24 @@ import { bumpAuthEpoch, currentAuthEpoch } from "../lib/authEpoch";
 
 const AuthContext = createContext(null);
 
-// Backend rolga qarab `redirect` qaytaradi; bu faqat zaxira qiymat.
-// App.jsx dagi haqiqiy <Route> bilan mos bo'lishi shart.
 const DEFAULT_POST_AUTH_PATH = "/kurslarim";
+const ROLE_DASHBOARD_PATHS = {
+  admin: "/admin",
+  superadmin: "/superadmin",
+  instructor: "/instruktor-panel",
+  user: DEFAULT_POST_AUTH_PATH,
+};
 
-export function AuthProvider({ children }) {
+function dashboardPathForRole(role) {
+  const normalizedRole = String(role || "user").trim().toLowerCase();
+  return ROLE_DASHBOARD_PATHS[normalizedRole] || DEFAULT_POST_AUTH_PATH;
+}
+
+function isKnownPostAuthPath(path) {
+  return Object.values(ROLE_DASHBOARD_PATHS).includes(path);
+}
+
+export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const authVersion = useRef(0);
@@ -26,9 +39,6 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const onInvalid = (event) => {
-      // Eski epoch'dan kelgan 401 — e'tiborsiz qoldiramiz. Aks holda
-      // login'dan oldin boshlangan anonim /api/profile/me so'rovi keyin
-      // kelib, yangi sessiyani darhol o'chirib tashlaydi.
       const eventEpoch = event?.detail?.epoch;
       if (eventEpoch !== undefined && eventEpoch !== currentAuthEpoch()) return;
       authVersion.current += 1;
@@ -70,12 +80,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   function handlePostAuthRedirect(response) {
-    const nextPath =
-      response?.redirect || location.state?.from || DEFAULT_POST_AUTH_PATH;
-    // Ilgari bu yerda window.location.replace() bor edi: u to'liq sahifa
-    // reload qilib, auth restore'ni noldan ishga tushirardi. Natijada
-    // login'dan keyin darhol 401 poygasi va flaky redirect paydo bo'lardi.
-    // Client-side navigatsiya sessiyani va React holatini saqlab qoladi.
+    const rolePath = dashboardPathForRole(response?.user?.role);
+    const responsePath = response?.redirect;
+    const requestedPath = location.state?.from;
+    const nextPath = isKnownPostAuthPath(responsePath)
+      ? responsePath
+      : isKnownPostAuthPath(requestedPath)
+        ? requestedPath
+        : rolePath;
     navigate(nextPath, { replace: true });
   }
 
@@ -83,7 +95,6 @@ export function AuthProvider({ children }) {
     const version = ++authVersion.current;
     const response = await authApi.login(credentials);
     if (authVersion.current !== version) return response;
-    // Yangi sessiya — bundan oldingi barcha 401'lar endi eskirgan.
     bumpAuthEpoch();
     setUser(response.user);
     setLoading(false);
@@ -102,9 +113,6 @@ export function AuthProvider({ children }) {
     return response;
   }
 
-  // Google callback sahifasi chaqiradi. Token almashinuvi yo'q: backend
-  // httpOnly access va refresh cookie'larini o'rnatib bo'lgan, bu yerda
-  // faqat sessiya tasdiqlanadi.
   const completeOAuthLogin = useCallback(async () => {
     authVersion.current += 1;
     bumpAuthEpoch();

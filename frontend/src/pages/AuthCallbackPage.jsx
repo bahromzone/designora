@@ -4,10 +4,12 @@ import { useAuth } from "../context/AuthContext";
 
 const FAILURE_PATH = "/?modal=login&error=oauth_failed";
 const FAILURE_DELAY_MS = 1500;
-
-// Backend `next` ni rolga qarab yuboradi. Ro'yxat App.jsx dagi haqiqiy
-// <Route path="..."> bilan mos bo'lishi shart, aks holda foydalanuvchi
-// jimgina bosh sahifaga tushib qoladi.
+const ROLE_DASHBOARD_PATHS = {
+  admin: "/admin",
+  superadmin: "/superadmin",
+  instructor: "/instruktor-panel",
+  user: "/kurslarim",
+};
 const ALLOWED_REDIRECTS = new Set([
   "/",
   "/kurslarim",
@@ -16,14 +18,25 @@ const ALLOWED_REDIRECTS = new Set([
   "/instruktor-panel",
 ]);
 
-export function safeRedirect(path) {
-  return ALLOWED_REDIRECTS.has(path) ? path : "/";
+function roleDashboard(role) {
+  const normalizedRole = String(role || "user")
+    .trim()
+    .toLowerCase();
+  return ROLE_DASHBOARD_PATHS[normalizedRole] || ROLE_DASHBOARD_PATHS.user;
+}
+
+export function safeRedirect(path, role) {
+  if (
+    ALLOWED_REDIRECTS.has(path) &&
+    !(path === "/" && role && role !== "user")
+  ) {
+    return path;
+  }
+  return roleDashboard(role);
 }
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
-  // `window.location.search` emas: router bilan bitta manba, test qilsa
-  // bo'ladi va MemoryRouter ostida ham to'g'ri ishlaydi.
   const { search } = useLocation();
   const { completeOAuthLogin } = useAuth();
   const [error, setError] = useState("");
@@ -31,29 +44,16 @@ export default function AuthCallbackPage() {
   const failureTimeout = useRef(null);
 
   useEffect(() => {
-    // StrictMode (dev) har bir effektni mount -> cleanup -> mount tartibida
-    // ikki marta ishga tushiradi. Bu ref oqim faqat bir marta bajarilishini
-    // kafolatlaydi.
     if (!handled.current) {
       handled.current = true;
 
-      const redirectPath = safeRedirect(
-        new URLSearchParams(search).get("next") || "/"
-      );
+      const requestedPath = new URLSearchParams(search).get("next") || "/";
 
-      // DIQQAT: bu yerda "active" bayrog'i yo'q va qayta qo'shilmasligi kerak.
-      // Ilgari cleanup uni false qilardi, StrictMode'ning ikkinchi mount'i esa
-      // `handled` sababli darhol qaytardi. Natijada backend cookie'larni
-      // o'rnatib, /api/profile/me 200 qaytargan bo'lsa ham navigate() hech
-      // qachon chaqirilmasdi va sahifa abadiy "Google orqali kirilmoqda..."
-      // holatida qotib qolardi.
-      //
-      // URL'dan token o'qilmaydi: backend access va refresh cookie'larini
-      // allaqachon o'rnatgan. Bu yerda faqat sessiya haqiqatan ishlayotgani
-      // tasdiqlanadi, shundan keyingina redirect qilamiz.
       completeOAuthLogin()
-        .then(() => {
-          navigate(redirectPath, { replace: true });
+        .then((profile) => {
+          navigate(safeRedirect(requestedPath, profile?.role), {
+            replace: true,
+          });
         })
         .catch(() => {
           setError("Google orqali kirishda sessiyani tasdiqlab bo'lmadi.");
@@ -63,8 +63,6 @@ export default function AuthCallbackPage() {
         });
     }
 
-    // Cleanup har doim ro'yxatdan o'tadi (guard ichida emas), aks holda
-    // unmount'dan keyin timeout ishlab ketardi.
     return () => {
       if (failureTimeout.current) {
         clearTimeout(failureTimeout.current);

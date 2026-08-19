@@ -34,9 +34,21 @@ def test_register_success(client):
     assert body["redirect"] == "/kurslarim"
 
 
+def test_register_normalizes_email(client):
+    resp = client.post(
+        "/api/auth/register",
+        json=_register_payload(email="Mixed.Case@Example.COM"),
+    )
+    assert resp.status_code == 200
+    assert resp.json()["user"]["email"] == "mixed.case@example.com"
+
+
 def test_register_duplicate_email(client):
     client.post("/api/auth/register", json=_register_payload())
-    resp = client.post("/api/auth/register", json=_register_payload())
+    resp = client.post(
+        "/api/auth/register",
+        json=_register_payload(email="TEST@EXAMPLE.COM"),
+    )
     assert resp.status_code == 400
 
 
@@ -71,6 +83,27 @@ def test_login_success(client):
     assert resp.json()["redirect"] == "/kurslarim"
     assert "access_token" not in resp.json()
     assert client.cookies.get("refresh_token")
+
+
+def test_login_matches_legacy_mixed_case_email(client, db_session):
+    db_session.add(
+        User(
+            email="Legacy.User@Example.COM",
+            name="Legacy",
+            role="user",
+            provider="local",
+            password=hash_password(VALID_PASSWORD),
+        )
+    )
+    db_session.commit()
+
+    resp = client.post(
+        "/api/auth/login",
+        json={"email": "legacy.user@example.com", "password": VALID_PASSWORD},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["success"] is True
 
 
 @pytest.mark.parametrize(
@@ -127,7 +160,7 @@ def test_production_login_accepts_csrf_and_does_not_require_missing_captcha(
     resp = client.post(
         "/api/auth/login",
         headers={"X-CSRF-Token": csrf_token},
-        json={"email": "production@example.com", "password": VALID_PASSWORD},
+        json={"email": "PRODUCTION@EXAMPLE.COM", "password": VALID_PASSWORD},
     )
 
     assert resp.status_code == 200
@@ -151,7 +184,6 @@ def test_login_unknown_user(client):
     assert resp.status_code == 401
 
 
-# ── Streak mantiqi (birlik testlari) ─────────────────────────────────────────
 def test_streak_first_login(db_session):
     user = User(email="s1@example.com", name="S1", streak_days=0)
     db_session.add(user)

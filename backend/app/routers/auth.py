@@ -14,11 +14,7 @@ from app.core.config import limiter, settings
 from app.core.database import get_db
 from app.core.email import send_email
 from app.core.password import hash_password, verify_password
-from app.core.security import (
-    INACTIVE_ACCOUNT_DETAIL,
-    create_access_token,
-    get_current_user_optional,
-)
+from app.core.security import INACTIVE_ACCOUNT_DETAIL, create_access_token, get_current_user_optional
 from app.models.password_reset import PasswordReset
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
@@ -35,41 +31,21 @@ def _is_production() -> bool:
     return settings.ENVIRONMENT == "production"
 
 
+def _normalized_email(value: str) -> str:
+    return str(value).strip().casefold()
+
+
 def _serialize_user(user: User) -> dict:
-    return {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "role": user.role,
-        "is_active": getattr(user, "is_active", True),
-    }
+    return {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "is_active": getattr(user, "is_active", True)}
 
 
 def _set_refresh_cookie(response: Response, token: str) -> None:
-    response.set_cookie(
-        key=_REFRESH_COOKIE,
-        value=token,
-        httponly=True,
-        secure=_is_production(),
-        max_age=token_service.REFRESH_TOKEN_TTL_DAYS * 24 * 3600,
-        samesite="strict",
-        path="/api/auth",
-    )
+    response.set_cookie(key=_REFRESH_COOKIE, value=token, httponly=True, secure=_is_production(), max_age=token_service.REFRESH_TOKEN_TTL_DAYS * 24 * 3600, samesite="strict", path="/api/auth")
 
 
-def _issue_refresh_token(
-    db: Session, user: User, request: Request | None = None
-) -> str:
+def _issue_refresh_token(db: Session, user: User, request: Request | None = None) -> str:
     raw = token_service.generate_refresh_token()
-    db.add(
-        RefreshToken(
-            user_id=user.id,
-            token_hash=token_service.hash_token(raw),
-            expires_at=token_service.refresh_expiry(),
-            user_agent=(request.headers.get("user-agent") if request else "")[:255]
-            or None,
-        )
-    )
+    db.add(RefreshToken(user_id=user.id, token_hash=token_service.hash_token(raw), expires_at=token_service.refresh_expiry(), user_agent=(request.headers.get("user-agent") if request else "")[:255] or None))
     return raw
 
 
@@ -79,10 +55,7 @@ async def verify_recaptcha(token: str) -> bool:
     if not token:
         return False
     async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://www.google.com/recaptcha/api/siteverify",
-            data={"secret": settings.RECAPTCHA_SECRET_KEY, "response": token},
-        )
+        response = await client.post("https://www.google.com/recaptcha/api/siteverify", data={"secret": settings.RECAPTCHA_SECRET_KEY, "response": token})
         return response.json().get("success", False)
 
 
@@ -144,60 +117,35 @@ class ResetPasswordRequest(BaseModel):
 
 @router.post("/register")
 @limiter.limit("5/minute")
-async def register(
-    request: Request, data: RegisterRequest, db: Session = Depends(get_db)
-):
+async def register(request: Request, data: RegisterRequest, db: Session = Depends(get_db)):
     if not await verify_recaptcha(data.recaptcha_token):
         raise HTTPException(status_code=400, detail="reCAPTCHA noto'g'ri")
-    if db.query(User).filter(User.email == data.email).first():
+    email = _normalized_email(data.email)
+    if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=400, detail="Bu email allaqachon mavjud")
-    user = User(
-        name=data.username, email=data.email, password=hash_password(data.password)
-    )
+    user = User(name=data.username, email=email, password=hash_password(data.password))
     db.add(user)
     db.commit()
     db.refresh(user)
     token = create_access_token(user.email)
     refresh_token = _issue_refresh_token(db, user, request)
     db.commit()
-    payload = {
-        "message": "Ro'yxatdan o'tish muvaffaqiyatli",
-        "redirect": dashboard_path_for_role(user.role),
-        "user": _serialize_user(user),
-    }
+    payload = {"message": "Ro'yxatdan o'tish muvaffaqiyatli", "redirect": dashboard_path_for_role(user.role), "user": _serialize_user(user)}
     response = JSONResponse(payload)
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        secure=_is_production(),
-        max_age=3600,
-        samesite="strict",
-    )
+    response.set_cookie(key="access_token", value=token, httponly=True, secure=_is_production(), max_age=3600, samesite="strict")
     _set_refresh_cookie(response, refresh_token)
     return response
 
 
 @router.post("/login")
 @limiter.limit("5/minute")
-async def login(
-    request: Request,
-    data: LoginRequest,
-    response: Response,
-    db: Session = Depends(get_db),
-    csrf_protect: CsrfProtect = Depends(),
-):
+async def login(request: Request, data: LoginRequest, response: Response, db: Session = Depends(get_db), csrf_protect: CsrfProtect = Depends()):
     if _is_production():
         await csrf_protect.validate_csrf(request)
-    # Password login must not depend on a CAPTCHA token the frontend does not
-    # render or submit. CSRF and the shared 5/minute limiter remain enforced.
-    user = db.query(User).filter(User.email == data.email).first()
-    logger.info("Login attempt: %s", data.email)
-    if (
-        not user
-        or not user.password
-        or not verify_password(data.password, user.password)
-    ):
+    email = _normalized_email(data.email)
+    user = db.query(User).filter(User.email == email).first()
+    logger.info("Login attempt: %s", email)
+    if not user or not user.password or not verify_password(data.password, user.password):
         raise HTTPException(status_code=401, detail="Login yoki parol xato")
     if not user.is_active:
         raise HTTPException(status_code=403, detail=INACTIVE_ACCOUNT_DETAIL)
@@ -205,20 +153,9 @@ async def login(
     token = create_access_token(user.email)
     refresh_token = _issue_refresh_token(db, user, request)
     db.commit()
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        secure=_is_production(),
-        max_age=3600,
-        samesite="strict",
-    )
+    response.set_cookie(key="access_token", value=token, httponly=True, secure=_is_production(), max_age=3600, samesite="strict")
     _set_refresh_cookie(response, refresh_token)
-    return {
-        "success": True,
-        "redirect": dashboard_path_for_role(user.role),
-        "user": _serialize_user(user),
-    }
+    return {"success": True, "redirect": dashboard_path_for_role(user.role), "user": _serialize_user(user)}
 
 
 @router.get("/csrf-token")
@@ -253,58 +190,31 @@ def logout(request: Request):
 
 @public_router.get("/reset-password")
 def reset_password_page(request: Request, token: str):
-    return RedirectResponse(
-        url=f"{settings.FRONTEND_URL}/reset-password?token={token}", status_code=302
-    )
+    return RedirectResponse(url=f"{settings.FRONTEND_URL}/reset-password?token={token}", status_code=302)
 
 
 @router.post("/forgot-password")
-def forgot_password(
-    request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)
-):
-    same_response = {
-        "message": (
-            "Agar email tizimda mavjud bo'lsa, parolni tiklash havolasi yuborildi"
-        )
-    }
-    user = db.query(User).filter(User.email == data.email).first()
+def forgot_password(request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    same_response = {"message": "Agar email tizimda mavjud bo'lsa, parolni tiklash havolasi yuborildi"}
+    email = _normalized_email(data.email)
+    user = db.query(User).filter(User.email == email).first()
     if not user or not user.is_active:
         return same_response
     token = str(uuid4())
     db.query(PasswordReset).filter(PasswordReset.user_id == user.id).delete()
-    db.add(
-        PasswordReset(user_id=user.id, token=token, expires_at=PasswordReset.expiry())
-    )
+    db.add(PasswordReset(user_id=user.id, token=token, expires_at=PasswordReset.expiry()))
     db.commit()
     base_url = str(request.base_url).rstrip("/")
     link = f"{base_url}/reset-password?token={token}"
-    send_email(
-        to=user.email,
-        subject="Parolni tiklash | Designora",
-        body=(
-            "<h3>Parolni tiklash</h3>"
-            "<p>Quyidagi havola orqali yangi parol o'rnating:</p>"
-            f'<a href="{link}">{link}</a>'
-            "<p>Havola 30 daqiqa amal qiladi.</p>"
-        ),
-    )
+    send_email(to=user.email, subject="Parolni tiklash | Designora", body=("<h3>Parolni tiklash</h3><p>Quyidagi havola orqali yangi parol o'rnating:</p>" f'<a href="{link}">{link}</a><p>Havola 30 daqiqa amal qiladi.</p>'))
     return same_response
 
 
 @router.post("/reset-password")
 def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
-    reset = (
-        db.query(PasswordReset)
-        .filter(
-            PasswordReset.token == data.token,
-            PasswordReset.expires_at > datetime.now(UTC),
-        )
-        .first()
-    )
+    reset = db.query(PasswordReset).filter(PasswordReset.token == data.token, PasswordReset.expires_at > datetime.now(UTC)).first()
     if not reset:
-        raise HTTPException(
-            status_code=400, detail="Token yaroqsiz yoki muddati o'tgan"
-        )
+        raise HTTPException(status_code=400, detail="Token yaroqsiz yoki muddati o'tgan")
     user = db.query(User).filter(User.id == reset.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
@@ -316,19 +226,8 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     access_token = create_access_token(user.email)
     refresh_token = _issue_refresh_token(db, user)
     db.commit()
-    payload = {
-        "message": "Parol muvaffaqiyatli o'zgartirildi",
-        "redirect": dashboard_path_for_role(user.role),
-        "user": _serialize_user(user),
-    }
+    payload = {"message": "Parol muvaffaqiyatli o'zgartirildi", "redirect": dashboard_path_for_role(user.role), "user": _serialize_user(user)}
     response = JSONResponse(payload)
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=_is_production(),
-        max_age=3600,
-        samesite="strict",
-    )
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=_is_production(), max_age=3600, samesite="strict")
     _set_refresh_cookie(response, refresh_token)
     return response

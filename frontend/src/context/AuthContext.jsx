@@ -46,6 +46,7 @@ export function AuthProvider({ children }) {
       if (eventEpoch !== undefined && eventEpoch !== currentAuthEpoch()) return;
       authVersion.current += 1;
       setUser(null);
+      setLoading(false);
     };
     window.addEventListener("designora-session-invalidated", onInvalid);
     return () =>
@@ -68,9 +69,7 @@ export function AuthProvider({ children }) {
             setUser(profile);
           }
         } catch {
-          if (active && authVersion.current === restoreVersion) {
-            setUser(null);
-          }
+          if (active && authVersion.current === restoreVersion) setUser(null);
         }
       } finally {
         if (active && authVersion.current === restoreVersion) setLoading(false);
@@ -135,12 +134,22 @@ export function AuthProvider({ children }) {
     bumpAuthEpoch();
     authApi.logoutAll().catch(() => {});
     setUser(null);
+    setLoading(false);
   }
 
   async function refreshProfile() {
-    const profile = await authApi.profile();
-    setUser(profile);
-    return profile;
+    const version = ++authVersion.current;
+    setLoading(true);
+    try {
+      const profile = await authApi.profile();
+      if (authVersion.current === version) {
+        bumpAuthEpoch();
+        setUser(profile);
+      }
+      return profile;
+    } finally {
+      if (authVersion.current === version) setLoading(false);
+    }
   }
 
   return (

@@ -2,6 +2,10 @@
 
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
+from app.core.config import settings
+from app.core.password import hash_password
 from app.models.user import User
 from app.routers.auth import update_streak
 
@@ -67,6 +71,67 @@ def test_login_success(client):
     assert resp.json()["redirect"] == "/kurslarim"
     assert "access_token" not in resp.json()
     assert client.cookies.get("refresh_token")
+
+
+@pytest.mark.parametrize(
+    ("role", "redirect"),
+    [
+        ("superadmin", "/superadmin"),
+        ("admin", "/admin"),
+        ("instructor", "/instruktor-panel"),
+        ("user", "/kurslarim"),
+    ],
+)
+def test_email_password_login_supports_every_role(client, db_session, role, redirect):
+    email = f"{role}@example.com"
+    db_session.add(
+        User(
+            email=email,
+            name=role,
+            role=role,
+            provider="local",
+            password=hash_password(VALID_PASSWORD),
+        )
+    )
+    db_session.commit()
+
+    resp = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": VALID_PASSWORD},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["user"]["role"] == role
+    assert resp.json()["redirect"] == redirect
+
+
+def test_production_login_accepts_csrf_and_does_not_require_missing_captcha(
+    client, db_session, monkeypatch
+):
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    db_session.add(
+        User(
+            email="production@example.com",
+            name="Production",
+            role="user",
+            provider="local",
+            password=hash_password(VALID_PASSWORD),
+        )
+    )
+    db_session.commit()
+
+    csrf_response = client.get("/api/auth/csrf-token")
+    assert csrf_response.status_code == 200
+    csrf_token = csrf_response.json()["csrf_token"]
+
+    resp = client.post(
+        "/api/auth/login",
+        headers={"X-CSRF-Token": csrf_token},
+        json={"email": "production@example.com", "password": VALID_PASSWORD},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["success"] is True
 
 
 def test_login_wrong_password(client):

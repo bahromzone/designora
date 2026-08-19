@@ -215,24 +215,6 @@ export default function EngagementSection() {
             <LessonPreview />
           </motion.div>
         </div>
-
-        <div className="flex flex-col gap-5 rounded-[2rem] bg-violet-100 px-7 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-10">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-700">
-              Shaffof va halol start
-            </p>
-            <p className="mt-2 max-w-2xl text-lg font-semibold leading-7 text-slate-950">
-              Birinchi bitiruvchilar chiqqach, aynan ularning tasdiqlangan
-              ishlari va fikrlarini shu yerda ko'rsatamiz.
-            </p>
-          </div>
-          <Link
-            to="/kurslar"
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-violet-300 bg-white px-6 py-3 text-sm font-bold text-slate-950 transition-transform duration-200 hover:-translate-y-0.5"
-          >
-            Dasturlarni ko'rish
-          </Link>
-        </div>
       </div>
     </section>
   );

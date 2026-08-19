@@ -55,7 +55,7 @@ export default function HomePage() {
     <div className="relative w-full bg-[var(--bg-light)]">
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
 
-      <section className="relative flex min-h-[95vh] items-center justify-center overflow-hidden px-6 pt-20">
+      <section className="relative flex min-h-[95vh] items-center justify-center overflow-hidden px-6 pt-36 sm:pt-40 md:pt-44">
         <div className="animate-stripe pointer-events-none absolute right-0 top-0 z-0 -mr-[30%] -mt-[25%] h-[120%] w-[120%] scale-110">
           <WaveAnimation />
         </div>

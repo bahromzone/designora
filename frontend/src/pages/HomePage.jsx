@@ -164,17 +164,21 @@ export default function HomePage() {
             Platformadagi yo'nalishlar
           </p>
           <div className="flex flex-wrap justify-center gap-10 font-serif text-2xl font-bold text-slate-800 opacity-40 grayscale md:gap-20 md:text-3xl">
-            {["UI/UX", "Moda dizayni", "Brending", "Styling", "Grafik dizayn"].map(
-              (direction) => (
-                <motion.span
-                  key={direction}
-                  whileHover={{ scale: 1.05, opacity: 0.8 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {direction}
-                </motion.span>
-              )
-            )}
+            {[
+              "UI/UX",
+              "Moda dizayni",
+              "Brending",
+              "Styling",
+              "Grafik dizayn",
+            ].map((direction) => (
+              <motion.span
+                key={direction}
+                whileHover={{ scale: 1.05, opacity: 0.8 }}
+                transition={{ duration: 0.2 }}
+              >
+                {direction}
+              </motion.span>
+            ))}
           </div>
         </motion.div>
       </section>

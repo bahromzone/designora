@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi_csrf_protect import CsrfProtect
 from pydantic import BaseModel, EmailStr, StringConstraints, field_validator
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import limiter, settings
@@ -33,6 +34,15 @@ _REFRESH_COOKIE = "refresh_token"
 
 def _is_production() -> bool:
     return settings.ENVIRONMENT == "production"
+
+
+def _normalize_email(value: str) -> str:
+    return str(value).strip().casefold()
+
+
+def _find_user_by_email(db: Session, value: str) -> User | None:
+    normalized = _normalize_email(value)
+    return db.query(User).filter(func.lower(User.email) == normalized).first()
 
 
 def _serialize_user(user: User) -> dict:
@@ -149,11 +159,10 @@ async def register(
 ):
     if not await verify_recaptcha(data.recaptcha_token):
         raise HTTPException(status_code=400, detail="reCAPTCHA noto'g'ri")
-    if db.query(User).filter(User.email == data.email).first():
+    email = _normalize_email(data.email)
+    if _find_user_by_email(db, email):
         raise HTTPException(status_code=400, detail="Bu email allaqachon mavjud")
-    user = User(
-        name=data.username, email=data.email, password=hash_password(data.password)
-    )
+    user = User(name=data.username, email=email, password=hash_password(data.password))
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -189,10 +198,8 @@ async def login(
 ):
     if _is_production():
         await csrf_protect.validate_csrf(request)
-    # Password login must not depend on a CAPTCHA token the frontend does not
-    # render or submit. CSRF and the shared 5/minute limiter remain enforced.
-    user = db.query(User).filter(User.email == data.email).first()
-    logger.info("Login attempt: %s", data.email)
+    user = _find_user_by_email(db, data.email)
+    logger.info("Login attempt: %s", _normalize_email(data.email))
     if (
         not user
         or not user.password
@@ -233,7 +240,7 @@ def get_csrf_token(request: Request, csrf_protect: CsrfProtect = Depends()):
 def login_page(request: Request, db: Session = Depends(get_db)):
     email = get_current_user_optional(request, db)
     if email:
-        user = db.query(User).filter(User.email == email).first()
+        user = _find_user_by_email(db, email)
         if user:
             return RedirectResponse(dashboard_path_for_role(user.role), status_code=302)
     return RedirectResponse("/?modal=login", status_code=302)
@@ -267,7 +274,7 @@ def forgot_password(
             "Agar email tizimda mavjud bo'lsa, parolni tiklash havolasi yuborildi"
         )
     }
-    user = db.query(User).filter(User.email == data.email).first()
+    user = _find_user_by_email(db, data.email)
     if not user or not user.is_active:
         return same_response
     token = str(uuid4())

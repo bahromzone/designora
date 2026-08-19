@@ -162,9 +162,7 @@ async def register(
     email = _normalize_email(data.email)
     if _find_user_by_email(db, email):
         raise HTTPException(status_code=400, detail="Bu email allaqachon mavjud")
-    user = User(
-        name=data.username, email=email, password=hash_password(data.password)
-    )
+    user = User(name=data.username, email=email, password=hash_password(data.password))
     db.add(user)
     db.commit()
     db.refresh(user)

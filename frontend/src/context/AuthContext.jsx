@@ -29,7 +29,7 @@ function isKnownPostAuthPath(path) {
   return Object.values(ROLE_DASHBOARD_PATHS).includes(path);
 }
 
-export default function AuthProvider({ children }) {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const authVersion = useRef(0);

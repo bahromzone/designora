@@ -9,6 +9,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
 import { bumpAuthEpoch, currentAuthEpoch } from "../lib/authEpoch";
+import { request } from "../lib/request";
 
 const AuthContext = createContext(null);
 
@@ -95,7 +96,12 @@ export function AuthProvider({ children }) {
 
   async function login(credentials) {
     const version = ++authVersion.current;
-    const response = await authApi.login(credentials);
+    const csrf = await request("/api/auth/csrf-token");
+    const response = await request("/api/auth/login", {
+      method: "POST",
+      headers: { "X-CSRF-Token": csrf.csrf_token },
+      body: JSON.stringify(credentials),
+    });
     if (authVersion.current !== version) return response;
     bumpAuthEpoch();
     setUser(response.user);

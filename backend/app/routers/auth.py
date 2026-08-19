@@ -189,8 +189,8 @@ async def login(
 ):
     if _is_production():
         await csrf_protect.validate_csrf(request)
-    if not await verify_recaptcha(data.recaptcha_token):
-        raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+    # Password login must not depend on a CAPTCHA token the frontend does not
+    # render or submit. CSRF and the shared 5/minute limiter remain enforced.
     user = db.query(User).filter(User.email == data.email).first()
     logger.info("Login attempt: %s", data.email)
     if (

@@ -164,21 +164,17 @@ export default function HomePage() {
             Platformadagi yo'nalishlar
           </p>
           <div className="flex flex-wrap justify-center gap-10 font-serif text-2xl font-bold text-slate-800 opacity-40 grayscale md:gap-20 md:text-3xl">
-            {[
-              "UI/UX",
-              "Moda dizayni",
-              "Brending",
-              "Styling",
-              "Grafik dizayn",
-            ].map((direction) => (
-              <motion.span
-                key={direction}
-                whileHover={{ scale: 1.05, opacity: 0.8 }}
-                transition={{ duration: 0.2 }}
-              >
-                {direction}
-              </motion.span>
-            ))}
+            {["UI/UX", "Moda dizayni", "Brending", "Styling", "Grafik dizayn"].map(
+              (direction) => (
+                <motion.span
+                  key={direction}
+                  whileHover={{ scale: 1.05, opacity: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {direction}
+                </motion.span>
+              )
+            )}
           </div>
         </motion.div>
       </section>
@@ -192,36 +188,6 @@ export default function HomePage() {
           fetcher={() => discoveryApi.bestselling(6)}
           limit={3}
         />
-      </section>
-
-      <section className="relative mx-auto max-w-7xl px-6 py-32">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: premiumEasing }}
-          className="relative overflow-hidden rounded-[32px] border border-violet-100 bg-white p-12 text-center shadow-[0_40px_100px_rgba(79,70,229,0.1)] md:p-20"
-        >
-          <h2 className="relative z-10 mx-auto mb-6 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-5xl">
-            Birinchi oqimni biz bilan boshlang.
-          </h2>
-          <p className="relative z-10 mx-auto mb-10 max-w-lg text-lg text-slate-600">
-            30 ta joy, 8 haftalik amaliy dastur va portfolio uchun to'rtta
-            yakunlangan loyiha.
-          </p>
-          <Link to="/?modal=signup" className="relative z-10 inline-block">
-            <motion.span
-              whileHover={{
-                scale: 1.03,
-                boxShadow: "0 20px 40px -10px rgba(124,58,237,0.45)",
-              }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-block rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 px-8 py-4 text-lg font-bold text-white shadow-lg"
-            >
-              Joyni band qilish
-            </motion.span>
-          </Link>
-        </motion.div>
       </section>
     </div>
   );

@@ -65,7 +65,9 @@ export function AuthProvider({ children }) {
         try {
           await authApi.refresh();
           const profile = await authApi.profile();
-          if (active && authVersion.current === restoreVersion) setUser(profile);
+          if (active && authVersion.current === restoreVersion) {
+            setUser(profile);
+          }
         } catch {
           if (active && authVersion.current === restoreVersion) setUser(null);
         }

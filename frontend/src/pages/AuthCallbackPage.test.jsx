@@ -19,10 +19,7 @@ function renderCallback(next) {
         <Routes>
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/admin" element={<p>Admin panel</p>} />
-          <Route
-            path="/instruktor-panel"
-            element={<p>Instruktor paneli</p>}
-          />
+          <Route path="/instruktor-panel" element={<p>Instruktor paneli</p>} />
           <Route path="/kurslarim" element={<p>Mening kurslarim</p>} />
           <Route path="/" element={<p>Bosh sahifa</p>} />
         </Routes>
@@ -45,9 +42,7 @@ describe("safeRedirect", () => {
   });
 
   it("begona va tashqi yo'llarni role dashboardiga tushiradi", () => {
-    expect(safeRedirect("https://evil.example.com", "user")).toBe(
-      "/kurslarim"
-    );
+    expect(safeRedirect("https://evil.example.com", "user")).toBe("/kurslarim");
     expect(safeRedirect("/admin/users", "user")).toBe("/kurslarim");
     expect(safeRedirect("", "user")).toBe("/kurslarim");
   });

@@ -19,12 +19,17 @@ const ALLOWED_REDIRECTS = new Set([
 ]);
 
 function roleDashboard(role) {
-  const normalizedRole = String(role || "user").trim().toLowerCase();
+  const normalizedRole = String(role || "user")
+    .trim()
+    .toLowerCase();
   return ROLE_DASHBOARD_PATHS[normalizedRole] || ROLE_DASHBOARD_PATHS.user;
 }
 
 export function safeRedirect(path, role) {
-  if (ALLOWED_REDIRECTS.has(path) && !(path === "/" && role && role !== "user")) {
+  if (
+    ALLOWED_REDIRECTS.has(path) &&
+    !(path === "/" && role && role !== "user")
+  ) {
     return path;
   }
   return roleDashboard(role);
@@ -46,7 +51,9 @@ export default function AuthCallbackPage() {
 
       completeOAuthLogin()
         .then((profile) => {
-          navigate(safeRedirect(requestedPath, profile?.role), { replace: true });
+          navigate(safeRedirect(requestedPath, profile?.role), {
+            replace: true,
+          });
         })
         .catch(() => {
           setError("Google orqali kirishda sessiyani tasdiqlab bo'lmadi.");

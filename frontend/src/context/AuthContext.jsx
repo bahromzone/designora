@@ -21,7 +21,9 @@ const ROLE_DASHBOARD_PATHS = {
 };
 
 function dashboardPathForRole(role) {
-  const normalizedRole = String(role || "user").trim().toLowerCase();
+  const normalizedRole = String(role || "user")
+    .trim()
+    .toLowerCase();
   return ROLE_DASHBOARD_PATHS[normalizedRole] || DEFAULT_POST_AUTH_PATH;
 }
 

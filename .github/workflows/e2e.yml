@@ -121,7 +121,7 @@ jobs:
 
       - name: Install Chromium
         timeout-minutes: 4
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Run critical journey
         id: browser-e2e

@@ -10,13 +10,6 @@ const ROLE_DASHBOARD_PATHS = {
   instructor: "/instruktor-panel",
   user: "/kurslarim",
 };
-const ALLOWED_REDIRECTS = new Set([
-  "/",
-  "/kurslarim",
-  "/admin",
-  "/superadmin",
-  "/instruktor-panel",
-]);
 
 function roleDashboard(role) {
   const normalizedRole = String(role || "user")
@@ -25,13 +18,9 @@ function roleDashboard(role) {
   return ROLE_DASHBOARD_PATHS[normalizedRole] || ROLE_DASHBOARD_PATHS.user;
 }
 
-export function safeRedirect(path, role) {
-  if (
-    ALLOWED_REDIRECTS.has(path) &&
-    !(path === "/" && role && role !== "user")
-  ) {
-    return path;
-  }
+export function safeRedirect(_path, role) {
+  // The OAuth callback must never trust a requested path over the role returned
+  // by the authenticated profile. This keeps all roles on their own dashboard.
   return roleDashboard(role);
 }
 

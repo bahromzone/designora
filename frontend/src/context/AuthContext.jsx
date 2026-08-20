@@ -22,14 +22,12 @@ const ROLE_DASHBOARD_PATHS = {
   user: DEFAULT_POST_AUTH_PATH,
 };
 
-function dashboardPathForRole(role) {
-  const normalizedRole = String(role || "user")
-    .trim()
-    .toLowerCase();
-  return ROLE_DASHBOARD_PATHS[normalizedRole] || DEFAULT_POST_AUTH_PATH;
+export function dashboardPathForRole(role) {
+  const normalized = String(role || "user").trim().toLowerCase();
+  return ROLE_DASHBOARD_PATHS[normalized] || DEFAULT_POST_AUTH_PATH;
 }
 
-function isKnownPostAuthPath(path) {
+export function isKnownPostAuthPath(path) {
   return Object.values(ROLE_DASHBOARD_PATHS).includes(path);
 }
 
@@ -84,14 +82,10 @@ export function AuthProvider({ children }) {
 
   function handlePostAuthRedirect(response) {
     const rolePath = dashboardPathForRole(response?.user?.role);
-    const responsePath = response?.redirect;
-    const requestedPath = location.state?.from;
-    const nextPath = isKnownPostAuthPath(responsePath)
-      ? responsePath
-      : isKnownPostAuthPath(requestedPath)
-        ? requestedPath
-        : rolePath;
-    navigate(nextPath, { replace: true });
+    // The backend redirect is a convenience field, not an authority. Derive
+    // the destination from the authenticated user's role so stale or malformed
+    // redirect values cannot send users to the wrong dashboard.
+    navigate(rolePath, { replace: true });
   }
 
   async function login(credentials) {

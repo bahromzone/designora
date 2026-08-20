@@ -24,7 +24,7 @@ function loadRecaptchaScript() {
       return;
     }
     const script = document.createElement("script");
-    script.src = "https://www.google.com/recaptcha/api.js?render=explicit";
+    script.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve(window.grecaptcha);
@@ -42,7 +42,10 @@ export async function getRegistrationRecaptchaToken() {
   if (!grecaptcha?.ready || !grecaptcha.execute) return "";
   return new Promise((resolve) => {
     grecaptcha.ready(() => {
-      grecaptcha.execute(siteKey, { action: "register" }).then(resolve).catch(() => resolve(""));
+      grecaptcha
+        .execute(siteKey, { action: "register" })
+        .then(resolve)
+        .catch(() => resolve(""));
     });
   });
 }

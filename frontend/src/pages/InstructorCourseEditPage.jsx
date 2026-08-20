@@ -319,7 +319,9 @@ export default function InstructorCourseEditPage() {
                       .filter(Boolean)
                   )
                 }
-                placeholder={"Har qatorda bitta natija\nMasalan: Portfolio yaratish"}
+                placeholder={
+                  "Har qatorda bitta natija\nMasalan: Portfolio yaratish"
+                }
               />
               <small>Har qatorda bitta o'quv natijasi yozing.</small>
             </label>

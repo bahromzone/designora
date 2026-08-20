@@ -7,6 +7,8 @@ import { instructorApi } from "../lib/api";
 import { courseBuilderApi } from "../lib/courseBuilderApi";
 import "./InstructorCourseEditPage.css";
 
+const OUTCOMES_SEPARATOR = "\n";
+
 export default function InstructorCourseEditPage() {
   const { courseId } = useParams();
   const [searchParams] = useSearchParams();
@@ -24,6 +26,7 @@ export default function InstructorCourseEditPage() {
   const detailsRef = useRef(null);
   const descriptionRef = useRef(null);
   const thumbnailRef = useRef(null);
+  const outcomesRef = useRef(null);
   const curriculumRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -55,6 +58,7 @@ export default function InstructorCourseEditPage() {
     const targets = {
       description: descriptionRef,
       thumbnail: thumbnailRef,
+      outcomes: outcomesRef,
       curriculum: curriculumRef,
       details: detailsRef,
     };
@@ -181,6 +185,16 @@ export default function InstructorCourseEditPage() {
               style={{ width: "min(100%, 720px)", borderRadius: 16 }}
             />
           )}
+          {form.learning_outcomes?.length > 0 && (
+            <>
+              <h2>O'quv natijalari</h2>
+              <ul>
+                {form.learning_outcomes.map((outcome) => (
+                  <li key={outcome}>{outcome}</li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
         {data.modules.map((module) => (
           <article key={module.id}>
@@ -198,6 +212,8 @@ export default function InstructorCourseEditPage() {
         ))}
       </main>
     );
+
+  const outcomesText = (form.learning_outcomes || []).join(OUTCOMES_SEPARATOR);
 
   return (
     <main className="course-builder">
@@ -289,6 +305,24 @@ export default function InstructorCourseEditPage() {
                 }}
               />
             )}
+            <label ref={outcomesRef}>
+              O'quv natijalari
+              <textarea
+                value={outcomesText}
+                minLength={1}
+                onChange={(event) =>
+                  setField(
+                    "learning_outcomes",
+                    event.target.value
+                      .split(OUTCOMES_SEPARATOR)
+                      .map((item) => item.trim())
+                      .filter(Boolean)
+                  )
+                }
+                placeholder={"Har qatorda bitta natija\nMasalan: Portfolio yaratish"}
+              />
+              <small>Har qatorda bitta o'quv natijasi yozing.</small>
+            </label>
           </article>
 
           <article className="builder-card" ref={curriculumRef}>

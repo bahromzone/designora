@@ -49,6 +49,7 @@ function alertEditUrl(alert) {
     no_description: "description",
     no_thumbnail: "thumbnail",
     no_lessons: "curriculum",
+    no_outcomes: "outcomes",
     draft: "publish",
   };
   const focus = focusByCode[alert.code] || "details";

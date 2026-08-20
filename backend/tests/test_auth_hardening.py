@@ -41,7 +41,9 @@ def test_password_reset_revokes_existing_refresh_sessions(client, db_session):
     assert response.status_code == 200
     db_session.refresh(old_session)
     assert old_session.revoked_at is not None
-    active = [token for token in db_session.query(RefreshToken).all() if token.is_active]
+    active = [
+        token for token in db_session.query(RefreshToken).all() if token.is_active
+    ]
     assert len(active) == 1
     assert response.cookies.get("refresh_token")
 

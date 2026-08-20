@@ -13,8 +13,6 @@
   padding: 24px;
   background: oklch(0.25 0.02 285/0.55);
 }
-/* Balandlik zanjiri ataylab flex: foizli height (calc(100% - 72px)) modal
-   ichidagi footer'ni overflow chegarasidan tashqariga chiqarib yuborardi. */
 .onboarding-shell {
   display: flex;
   flex-direction: column;
@@ -59,7 +57,7 @@
 .onboarding-layout {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
   overflow: hidden;
 }
@@ -136,8 +134,6 @@
   border-color: oklch(0.62 0.12 155);
   color: oklch(0.72 0.12 155);
 }
-/* margin-top:auto — justify-content:space-between overflow paytida yuqorini
-   kesib qo'yishi mumkin, bu esa kesmaydi. */
 .onboarding-aside small {
   margin-top: auto;
   color: oklch(0.58 0.018 320);
@@ -148,6 +144,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -166,7 +163,11 @@
   transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .onboarding-step {
-  flex: 1 1 auto;
+  position: relative;
+  z-index: 1;
+  display: block;
+  flex: 1 1 0%;
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
   box-sizing: border-box;
@@ -411,8 +412,6 @@
 .reminder-toggle input:checked + b::after {
   transform: translateX(20px);
 }
-/* Footer oqimdagi flex qardosh: absolute emas, shuning uchun uni hech qanday
-   scroll yoki viewport balandligi yashira olmaydi. */
 .onboarding-actions {
   display: flex;
   align-items: center;
@@ -484,10 +483,6 @@
   }
   .onboarding-step {
     padding: 40px 20px 24px;
-  }
-  .onboarding-actions {
-    min-height: 74px;
-    padding: 14px 20px;
   }
   .hours-row {
     grid-template-columns: 1fr 1fr;

@@ -16,6 +16,17 @@ describe("OnboardingModal", () => {
     localStorage.clear();
   });
 
+  it("birinchi qadam kontenti modal ichida ko'rinadi", () => {
+    render(<OnboardingModal />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Design sizni qayerga olib borishi kerak?",
+      })
+    ).toBeVisible();
+    expect(screen.getByText("Ishga tayyorlanish")).toBeVisible();
+  });
+
   it("Oldingi va Keyingi tugmalarini footer ichida ko'rsatadi", () => {
     const { container } = render(<OnboardingModal />);
 

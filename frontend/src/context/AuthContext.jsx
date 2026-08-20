@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
 import { bumpAuthEpoch, currentAuthEpoch } from "../lib/authEpoch";
 import { getRegistrationRecaptchaToken } from "../lib/authExtra";
@@ -36,7 +36,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const authVersion = useRef(0);
 
-  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,9 +81,6 @@ export function AuthProvider({ children }) {
 
   function handlePostAuthRedirect(response) {
     const rolePath = dashboardPathForRole(response?.user?.role);
-    // The backend redirect is a convenience field, not an authority. Derive
-    // the destination from the authenticated user's role so stale or malformed
-    // redirect values cannot send users to the wrong dashboard.
     navigate(rolePath, { replace: true });
   }
 

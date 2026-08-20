@@ -93,8 +93,8 @@ describe("AuthCallbackPage", () => {
 
     expect(
       await screen.findByText(
-        "Google orqali kirishda sessiyani tasdiqlab bo'lmadi.",
-      ),
+        "Google orqali kirishda sessiyani tasdiqlab bo'lmadi."
+      )
     ).toBeInTheDocument();
   });
 });

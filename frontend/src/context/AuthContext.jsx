@@ -9,6 +9,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
 import { bumpAuthEpoch, currentAuthEpoch } from "../lib/authEpoch";
+import { getRegistrationRecaptchaToken } from "../lib/authExtra";
 import { request } from "../lib/request";
 
 const AuthContext = createContext(null);
@@ -111,7 +112,9 @@ export function AuthProvider({ children }) {
 
   async function register(payload) {
     const version = ++authVersion.current;
-    const response = await authApi.register(payload);
+    const recaptcha_token =
+      payload.recaptcha_token || (await getRegistrationRecaptchaToken());
+    const response = await authApi.register({ ...payload, recaptcha_token });
     if (authVersion.current !== version) return response;
     bumpAuthEpoch();
     setUser(response.user);

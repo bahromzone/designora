@@ -84,13 +84,9 @@ export function AuthProvider({ children }) {
 
   function handlePostAuthRedirect(response) {
     const rolePath = dashboardPathForRole(response?.user?.role);
-    const responsePath = response?.redirect;
     const requestedPath = location.state?.from;
-    const nextPath = isKnownPostAuthPath(responsePath)
-      ? responsePath
-      : isKnownPostAuthPath(requestedPath)
-        ? requestedPath
-        : rolePath;
+    const responsePath = response?.redirect;
+    const nextPath = rolePath || responsePath || requestedPath;
     navigate(nextPath, { replace: true });
   }
 

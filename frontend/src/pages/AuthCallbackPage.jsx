@@ -26,12 +26,10 @@ function roleDashboard(role) {
 }
 
 export function safeRedirect(path, role) {
-  if (
-    ALLOWED_REDIRECTS.has(path) &&
-    !(path === "/" && role && role !== "user")
-  ) {
-    return path;
-  }
+  // OAuth always supplies the authenticated role. Keep the old no-role helper
+  // behavior for callers/tests, but never let a known role use another role's
+  // dashboard or an untrusted callback path.
+  if (!role && ALLOWED_REDIRECTS.has(path)) return path;
   return roleDashboard(role);
 }
 

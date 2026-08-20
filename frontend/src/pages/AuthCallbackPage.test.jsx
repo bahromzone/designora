@@ -25,7 +25,7 @@ function renderCallback(next) {
           <Route path="/" element={<p>Bosh sahifa</p>} />
         </Routes>
       </MemoryRouter>
-    </StrictMode>,
+    </StrictMode>
   );
 }
 

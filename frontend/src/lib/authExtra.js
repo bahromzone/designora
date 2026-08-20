@@ -24,9 +24,11 @@ function loadRecaptchaScript() {
       return;
     }
     const script = document.createElement("script");
-    script.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(
-      siteKey,
-    )}`;
+    const recaptchaUrl = new URL(
+      "https://www.google.com/recaptcha/api.js",
+    );
+    recaptchaUrl.searchParams.set("render", siteKey);
+    script.src = recaptchaUrl.toString();
     script.async = true;
     script.defer = true;
     script.onload = () => resolve(window.grecaptcha);

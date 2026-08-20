@@ -24,9 +24,7 @@ function loadRecaptchaScript() {
       return;
     }
     const script = document.createElement("script");
-    const recaptchaUrl = new URL(
-      "https://www.google.com/recaptcha/api.js",
-    );
+    const recaptchaUrl = new URL("https://www.google.com/recaptcha/api.js");
     recaptchaUrl.searchParams.set("render", siteKey);
     script.src = recaptchaUrl.toString();
     script.async = true;

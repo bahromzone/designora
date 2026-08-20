@@ -19,29 +19,25 @@ function renderCallback(next) {
         <Routes>
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/admin" element={<p>Admin panel</p>} />
+          <Route path="/superadmin" element={<p>Superadmin panel</p>} />
           <Route path="/instruktor-panel" element={<p>Instruktor paneli</p>} />
           <Route path="/kurslarim" element={<p>Mening kurslarim</p>} />
           <Route path="/" element={<p>Bosh sahifa</p>} />
         </Routes>
       </MemoryRouter>
-    </StrictMode>
+    </StrictMode>,
   );
 }
 
 describe("safeRedirect", () => {
-  it("ruxsat etilgan yo'llarni o'zgartirmaydi", () => {
-    expect(safeRedirect("/admin")).toBe("/admin");
-    expect(safeRedirect("/superadmin")).toBe("/superadmin");
-    expect(safeRedirect("/instruktor-panel")).toBe("/instruktor-panel");
-    expect(safeRedirect("/kurslarim")).toBe("/kurslarim");
+  it("har bir rolni o'z dashboardiga yuboradi", () => {
+    expect(safeRedirect("/admin", "admin")).toBe("/admin");
+    expect(safeRedirect("/kurslarim", "superadmin")).toBe("/superadmin");
+    expect(safeRedirect("/kurslarim", "instructor")).toBe("/instruktor-panel");
+    expect(safeRedirect("/admin", "user")).toBe("/kurslarim");
   });
 
-  it("role uchun noto'g'ri bosh sahifa fallbackini tuzatadi", () => {
-    expect(safeRedirect("/", "instructor")).toBe("/instruktor-panel");
-    expect(safeRedirect("/", "admin")).toBe("/admin");
-  });
-
-  it("begona va tashqi yo'llarni role dashboardiga tushiradi", () => {
+  it("begona va tashqi yo'llarni rol dashboardiga tushiradi", () => {
     expect(safeRedirect("https://evil.example.com", "user")).toBe("/kurslarim");
     expect(safeRedirect("/admin/users", "user")).toBe("/kurslarim");
     expect(safeRedirect("", "user")).toBe("/kurslarim");
@@ -53,26 +49,34 @@ describe("AuthCallbackPage", () => {
     completeOAuthLogin.mockReset();
   });
 
-  it("StrictMode ostida sessiya tasdiqlangach `next` yo'liga o'tadi", async () => {
+  it("StrictMode ostida sessiya tasdiqlangach admin dashboardga o'tadi", async () => {
     completeOAuthLogin.mockResolvedValue({ id: 1, role: "admin" });
 
-    renderCallback("/admin");
+    renderCallback("/kurslarim");
 
     expect(await screen.findByText("Admin panel")).toBeInTheDocument();
   });
 
-  it("instructor noto'g'ri `/` next olsa o'z paneliga o'tadi", async () => {
-    completeOAuthLogin.mockResolvedValue({ id: 2, role: "instructor" });
+  it("superadmin noto'g'ri next olsa ham superadmin paneliga o'tadi", async () => {
+    completeOAuthLogin.mockResolvedValue({ id: 2, role: "superadmin" });
 
-    renderCallback("/");
+    renderCallback("/kurslarim");
+
+    expect(await screen.findByText("Superadmin panel")).toBeInTheDocument();
+  });
+
+  it("instructor noto'g'ri next olsa o'z paneliga o'tadi", async () => {
+    completeOAuthLogin.mockResolvedValue({ id: 3, role: "instructor" });
+
+    renderCallback("/admin");
 
     expect(await screen.findByText("Instruktor paneli")).toBeInTheDocument();
   });
 
   it("sessiyani ikki marta tasdiqlamaydi", async () => {
-    completeOAuthLogin.mockResolvedValue({ id: 1, role: "user" });
+    completeOAuthLogin.mockResolvedValue({ id: 4, role: "user" });
 
-    renderCallback("/kurslarim");
+    renderCallback("/admin");
 
     expect(await screen.findByText("Mening kurslarim")).toBeInTheDocument();
     expect(completeOAuthLogin).toHaveBeenCalledTimes(1);
@@ -85,8 +89,8 @@ describe("AuthCallbackPage", () => {
 
     expect(
       await screen.findByText(
-        "Google orqali kirishda sessiyani tasdiqlab bo'lmadi."
-      )
+        "Google orqali kirishda sessiyani tasdiqlab bo'lmadi.",
+      ),
     ).toBeInTheDocument();
   });
 });

@@ -251,10 +251,14 @@ export default function InstructorCourseEditPage() {
                 ref={descriptionRef}
                 value={form.description || ""}
                 minLength={20}
-                onChange={(event) => setField("description", event.target.value)}
+                onChange={(event) =>
+                  setField("description", event.target.value)
+                }
                 placeholder="Kurs kim uchun, nimalarni o'rgatadi va natijasi qanday bo'lishini yozing."
               />
-              <small>{(form.description || "").trim().length}/20 belgi minimum</small>
+              <small>
+                {(form.description || "").trim().length}/20 belgi minimum
+              </small>
             </label>
             <label>
               Muqova rasmi URL
@@ -303,7 +307,9 @@ export default function InstructorCourseEditPage() {
                 <div className="builder-module__head">
                   <strong>{module.title}</strong>
                   <small>{module.lessons.length} dars</small>
-                  <button onClick={() => createLesson(module.id)}>+ Dars</button>
+                  <button onClick={() => createLesson(module.id)}>
+                    + Dars
+                  </button>
                 </div>
                 <div className="builder-lessons">
                   {module.lessons.map((lesson) => (

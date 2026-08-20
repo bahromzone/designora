@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../lib/api";
 import { bumpAuthEpoch, currentAuthEpoch } from "../lib/authEpoch";
 import { getRegistrationRecaptchaToken } from "../lib/authExtra";
@@ -22,12 +22,14 @@ const ROLE_DASHBOARD_PATHS = {
   user: DEFAULT_POST_AUTH_PATH,
 };
 
-export function dashboardPathForRole(role) {
-  const normalized = String(role || "user").trim().toLowerCase();
-  return ROLE_DASHBOARD_PATHS[normalized] || DEFAULT_POST_AUTH_PATH;
+function dashboardPathForRole(role) {
+  const normalizedRole = String(role || "user")
+    .trim()
+    .toLowerCase();
+  return ROLE_DASHBOARD_PATHS[normalizedRole] || DEFAULT_POST_AUTH_PATH;
 }
 
-export function isKnownPostAuthPath(path) {
+function isKnownPostAuthPath(path) {
   return Object.values(ROLE_DASHBOARD_PATHS).includes(path);
 }
 
@@ -36,6 +38,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const authVersion = useRef(0);
 
+  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,7 +84,10 @@ export function AuthProvider({ children }) {
 
   function handlePostAuthRedirect(response) {
     const rolePath = dashboardPathForRole(response?.user?.role);
-    navigate(rolePath, { replace: true });
+    const requestedPath = location.state?.from;
+    const responsePath = response?.redirect;
+    const nextPath = rolePath || responsePath || requestedPath;
+    navigate(nextPath, { replace: true });
   }
 
   async function login(credentials) {

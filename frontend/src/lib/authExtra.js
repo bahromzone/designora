@@ -6,6 +6,7 @@ export const GOOGLE_AUTH_URL = `${API_URL}/auth/google`;
 
 let recaptchaScriptPromise;
 
+// prettier-ignore
 function loadRecaptchaScript() {
   if (typeof window === "undefined") return Promise.resolve(null);
   if (window.grecaptcha) return Promise.resolve(window.grecaptcha);
@@ -15,9 +16,7 @@ function loadRecaptchaScript() {
   if (!siteKey) return Promise.resolve(null);
 
   recaptchaScriptPromise = new Promise((resolve, reject) => {
-    const existing = document.querySelector(
-      'script[src^="https://www.google.com/recaptcha/api.js"]',
-    );
+    const existing = document.querySelector('script[src^="https://www.google.com/recaptcha/api.js"]');
     if (existing) {
       existing.addEventListener("load", () => resolve(window.grecaptcha));
       existing.addEventListener("error", reject);
@@ -37,6 +36,7 @@ function loadRecaptchaScript() {
   return recaptchaScriptPromise;
 }
 
+// prettier-ignore
 export async function getRegistrationRecaptchaToken() {
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   if (!siteKey) return "";

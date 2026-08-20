@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { EmptyState, Spinner } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { instructorApi } from "../lib/api";
 import { courseBuilderApi } from "../lib/courseBuilderApi";
 import "./InstructorCourseEditPage.css";
+
 export default function InstructorCourseEditPage() {
   const { courseId } = useParams();
+  const [searchParams] = useSearchParams();
   const { token } = useAuth();
   const toast = useToast();
   const [data, setData] = useState(null);
@@ -19,41 +21,76 @@ export default function InstructorCourseEditPage() {
   const [uploadingLesson, setUploadingLesson] = useState(null);
   const [videoProgress, setVideoProgress] = useState(0);
   const hydrated = useRef(false);
+  const detailsRef = useRef(null);
+  const descriptionRef = useRef(null);
+  const thumbnailRef = useRef(null);
+  const curriculumRef = useRef(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
+    hydrated.current = false;
     try {
       const builder = await courseBuilderApi.get(courseId, token);
       setData(builder);
       setForm(builder.course);
       setError("");
-      hydrated.current = true;
+      window.setTimeout(() => {
+        hydrated.current = true;
+      }, 0);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
   }, [courseId, token]);
+
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (loading || !form) return;
+    const focus = searchParams.get("focus");
+    const targets = {
+      description: descriptionRef,
+      thumbnail: thumbnailRef,
+      curriculum: curriculumRef,
+      details: detailsRef,
+    };
+    const target = targets[focus]?.current;
+    if (!target) return;
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    const input = target.matches?.("input, textarea")
+      ? target
+      : target.querySelector?.("input, textarea");
+    input?.focus({ preventScroll: true });
+  }, [form, loading, searchParams]);
+
   useEffect(() => {
     if (!hydrated.current || !form) return;
     setSaveState("saving");
-    const t = setTimeout(async () => {
+    const timer = window.setTimeout(async () => {
       try {
         await courseBuilderApi.autosave(courseId, form, token);
         setSaveState("saved");
-      } catch {
+      } catch (e) {
         setSaveState("error");
+        toast.error(e.message || "O'zgarishlarni saqlab bo'lmadi");
       }
     }, 900);
-    return () => clearTimeout(t);
-  }, [courseId, form, token]);
+    return () => window.clearTimeout(timer);
+  }, [courseId, form, token, toast]);
+
   const allLessons = useMemo(
-    () => data?.modules?.flatMap((m) => m.lessons || []) || [],
+    () => data?.modules?.flatMap((module) => module.lessons || []) || [],
     [data]
   );
+
+  function setField(key, value) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+
   async function uploadVideo(lesson, file) {
     if (!file) return;
     if (file.size > 3 * 1024 * 1024 * 1024) {
@@ -79,40 +116,44 @@ export default function InstructorCourseEditPage() {
       setVideoProgress(0);
     }
   }
+
   async function createModule() {
-    const title = prompt("Yangi modul nomi");
-    if (title?.trim())
-      try {
-        await instructorApi.createModule(
-          courseId,
-          { title: title.trim(), order: data.modules.length },
-          token
-        );
-        await load();
-      } catch (e) {
-        toast.error(e.message);
-      }
+    const title = window.prompt("Yangi modul nomi");
+    if (!title?.trim()) return;
+    try {
+      await instructorApi.createModule(
+        courseId,
+        { title: title.trim(), order: data.modules.length },
+        token
+      );
+      await load();
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
+
   async function createLesson(moduleId) {
-    const title = prompt("Yangi dars nomi");
-    if (title?.trim())
-      try {
-        await instructorApi.createLesson(
-          courseId,
-          { title: title.trim(), module_id: moduleId, type: "video" },
-          token
-        );
-        await load();
-      } catch (e) {
-        toast.error(e.message);
-      }
+    const title = window.prompt("Yangi dars nomi");
+    if (!title?.trim()) return;
+    try {
+      await instructorApi.createLesson(
+        courseId,
+        { title: title.trim(), module_id: moduleId, type: "video" },
+        token
+      );
+      await load();
+    } catch (e) {
+      toast.error(e.message);
+    }
   }
+
   if (loading)
     return (
       <div className="builder-state">
         <Spinner />
       </div>
     );
+
   if (error || !data || !form)
     return (
       <div className="builder-state">
@@ -121,19 +162,35 @@ export default function InstructorCourseEditPage() {
         <Link to="/instruktor-boshqaruv">Kurslarga qaytish</Link>
       </div>
     );
+
   if (preview)
     return (
       <main className="builder-preview">
-        <button onClick={() => setPreview(false)}>Builderga qaytish</button>
-        {data.modules.map((m) => (
-          <article key={m.id}>
-            <h2>{m.title}</h2>
-            {m.lessons.map((l) => (
-              <div key={l.id}>
-                {l.video_url ? (
-                  <video src={l.video_url} controls />
+        <div className="builder-preview__bar">
+          <strong>Talaba preview</strong>
+          <button onClick={() => setPreview(false)}>Builderga qaytish</button>
+        </div>
+        <section>
+          <span>{form.category || "Kurs"}</span>
+          <h1>{form.title}</h1>
+          <p>{form.description || "Tavsif hali yozilmagan."}</p>
+          {form.thumbnail_url && (
+            <img
+              src={form.thumbnail_url}
+              alt={`${form.title} kursi muqovasi`}
+              style={{ width: "min(100%, 720px)", borderRadius: 16 }}
+            />
+          )}
+        </section>
+        {data.modules.map((module) => (
+          <article key={module.id}>
+            <h2>{module.title}</h2>
+            {module.lessons.map((lesson) => (
+              <div className="builder-preview__lesson" key={lesson.id}>
+                {lesson.video_url ? (
+                  <video src={lesson.video_url} controls />
                 ) : (
-                  <p>{l.title}: video yuklanmagan</p>
+                  <p>{lesson.title}: video yuklanmagan</p>
                 )}
               </div>
             ))}
@@ -141,72 +198,192 @@ export default function InstructorCourseEditPage() {
         ))}
       </main>
     );
+
   return (
     <main className="course-builder">
       <header className="builder-header">
         <div>
           <Link to="/instruktor-boshqaruv">← Kurslar</Link>
           <h1>{form.title}</h1>
-          <p>
+          <p className={`save-state save-state--${saveState}`} role="status">
             {saveState === "saving"
               ? "Saqlanmoqda..."
-              : "Barcha o'zgarishlar saqlandi"}
+              : saveState === "error"
+                ? "Saqlashda xato. Maydonni tekshirib qayta urinib ko'ring."
+                : "Barcha o'zgarishlar saqlandi"}
           </p>
         </div>
-        <button onClick={() => setPreview(true)}>Talaba preview</button>
-      </header>
-      <article className="builder-card">
-        <div className="builder-card__head">
-          <h2>Modullar va darslar</h2>
-          <button onClick={createModule}>+ Modul</button>
+        <div className="builder-actions">
+          <button onClick={() => setPreview(true)}>Talaba preview</button>
         </div>
-        {data.modules.map((m) => (
-          <div className="builder-module" key={m.id}>
-            <div className="builder-module__head">
-              <strong>{m.title}</strong>
-              <button onClick={() => createLesson(m.id)}>+ Dars</button>
+      </header>
+
+      <div className="builder-layout">
+        <section className="builder-main">
+          <article className="builder-card builder-settings" ref={detailsRef}>
+            <div className="builder-card__head">
+              <div>
+                <span>Course details</span>
+                <h2>Kurs ma'lumotlari</h2>
+              </div>
+              <strong>Avtomatik saqlanadi</strong>
             </div>
-            <div className="builder-lessons">
-              {m.lessons.map((l) => (
-                <div className="builder-lesson" key={l.id}>
-                  <div>
-                    <strong>{l.title}</strong>
-                    <small>{l.processing_status || "ready"}</small>
-                  </div>
-                  <label className="video-upload">
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm,video/quicktime,.m4v"
-                      disabled={uploadingLesson === l.id}
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        e.target.value = "";
-                        uploadVideo(l, f);
-                      }}
-                    />
-                    <span>
-                      {uploadingLesson === l.id
-                        ? `Yuklanmoqda ${videoProgress}%`
-                        : l.video_url
-                          ? "Videoni almashtirish"
-                          : "Video yuklash"}
-                    </span>
-                  </label>
-                  {uploadingLesson === l.id && (
-                    <progress max="100" value={videoProgress} />
-                  )}{" "}
-                  {l.video_url && (
-                    <a href={l.video_url} target="_blank" rel="noreferrer">
-                      Ko'rish
-                    </a>
-                  )}
+            <label>
+              Kurs nomi
+              <input
+                value={form.title || ""}
+                minLength={3}
+                maxLength={200}
+                onChange={(event) => setField("title", event.target.value)}
+              />
+            </label>
+            <label>
+              Qism sarlavha
+              <input
+                value={form.subtitle || ""}
+                maxLength={300}
+                onChange={(event) => setField("subtitle", event.target.value)}
+              />
+            </label>
+            <label>
+              Kurs tavsifi
+              <textarea
+                ref={descriptionRef}
+                value={form.description || ""}
+                minLength={20}
+                onChange={(event) => setField("description", event.target.value)}
+                placeholder="Kurs kim uchun, nimalarni o'rgatadi va natijasi qanday bo'lishini yozing."
+              />
+              <small>{(form.description || "").trim().length}/20 belgi minimum</small>
+            </label>
+            <label>
+              Muqova rasmi URL
+              <input
+                ref={thumbnailRef}
+                type="url"
+                value={form.thumbnail_url || ""}
+                onChange={(event) =>
+                  setField("thumbnail_url", event.target.value)
+                }
+                placeholder="https://example.com/course-cover.jpg"
+              />
+            </label>
+            {form.thumbnail_url && (
+              <img
+                key={form.thumbnail_url}
+                src={form.thumbnail_url}
+                alt="Kurs muqovasi preview"
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
+                style={{
+                  width: "100%",
+                  maxHeight: 260,
+                  marginTop: 12,
+                  borderRadius: 12,
+                  objectFit: "cover",
+                }}
+              />
+            )}
+          </article>
+
+          <article className="builder-card" ref={curriculumRef}>
+            <div className="builder-card__head">
+              <div>
+                <span>Curriculum</span>
+                <h2>Modullar va darslar</h2>
+              </div>
+              <div className="builder-actions">
+                <strong>{allLessons.length} dars</strong>
+                <button onClick={createModule}>+ Modul</button>
+              </div>
+            </div>
+            {data.modules.map((module) => (
+              <div className="builder-module" key={module.id}>
+                <div className="builder-module__head">
+                  <strong>{module.title}</strong>
+                  <small>{module.lessons.length} dars</small>
+                  <button onClick={() => createLesson(module.id)}>+ Dars</button>
                 </div>
+                <div className="builder-lessons">
+                  {module.lessons.map((lesson) => (
+                    <div className="builder-lesson" key={lesson.id}>
+                      <div>
+                        <strong>{lesson.title}</strong>
+                        <small>{lesson.processing_status || "ready"}</small>
+                      </div>
+                      <label className="video-upload">
+                        <input
+                          type="file"
+                          accept="video/mp4,video/webm,video/quicktime,.m4v"
+                          disabled={uploadingLesson === lesson.id}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            event.target.value = "";
+                            uploadVideo(lesson, file);
+                          }}
+                        />
+                        <span>
+                          {uploadingLesson === lesson.id
+                            ? `Yuklanmoqda ${videoProgress}%`
+                            : lesson.video_url
+                              ? "Videoni almashtirish"
+                              : "Video yuklash"}
+                        </span>
+                      </label>
+                      {uploadingLesson === lesson.id && (
+                        <progress
+                          className="video-progress"
+                          max="100"
+                          value={videoProgress}
+                        />
+                      )}
+                      {lesson.video_url && (
+                        <a
+                          className="video-preview-link"
+                          href={lesson.video_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Ko'rish
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {!data.modules.length && (
+              <p className="builder-empty">
+                Modul yo'q. Birinchi modulni shu yerdan yarating.
+              </p>
+            )}
+          </article>
+        </section>
+
+        <aside className="builder-sidebar">
+          <article className="builder-card">
+            <div className="builder-card__head">
+              <div>
+                <span>Publish</span>
+                <h2>Checklist</h2>
+              </div>
+              <strong>
+                {data.checklist.filter((item) => item.complete).length}/
+                {data.checklist.length}
+              </strong>
+            </div>
+            <div className="builder-checklist">
+              {data.checklist.map((item) => (
+                <p className={item.complete ? "complete" : ""} key={item.key}>
+                  <span>{item.complete ? "✓" : "○"}</span>
+                  {item.label}
+                </p>
               ))}
             </div>
-          </div>
-        ))}
-      </article>
-      <p>{allLessons.length} ta dars</p>
+          </article>
+        </aside>
+      </div>
     </main>
   );
 }

@@ -88,7 +88,7 @@ async def verify_recaptcha(token: str) -> bool:
         return True
     if not token:
         return False
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
         response = await client.post(
             "https://www.google.com/recaptcha/api/siteverify",
             data={"secret": settings.RECAPTCHA_SECRET_KEY, "response": token},
@@ -266,6 +266,7 @@ def reset_password_page(request: Request, token: str):
 
 
 @router.post("/forgot-password")
+@limiter.limit("3/minute")
 def forgot_password(
     request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)
 ):
@@ -285,16 +286,20 @@ def forgot_password(
     db.commit()
     base_url = str(request.base_url).rstrip("/")
     link = f"{base_url}/reset-password?token={token}"
-    send_email(
-        to=user.email,
-        subject="Parolni tiklash | Designora",
-        body=(
-            "<h3>Parolni tiklash</h3>"
-            "<p>Quyidagi havola orqali yangi parol o'rnating:</p>"
-            f'<a href="{link}">{link}</a>'
-            "<p>Havola 30 daqiqa amal qiladi.</p>"
-        ),
-    )
+    try:
+        send_email(
+            to=user.email,
+            subject="Parolni tiklash | Designora",
+            body=(
+                "<h3>Parolni tiklash</h3>"
+                "<p>Quyidagi havola orqali yangi parol o'rnating:</p>"
+                f'<a href="{link}">{link}</a>'
+                "<p>Havola 15 daqiqa amal qiladi.</p>"
+            ),
+        )
+    except Exception:
+        # Do not turn an otherwise neutral response into an account oracle.
+        logger.exception("Password reset email delivery failed")
     return same_response
 
 
@@ -319,6 +324,11 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=403, detail=INACTIVE_ACCOUNT_DETAIL)
     user.password = hash_password(data.password)
     db.delete(reset)
+    # A password reset invalidates every previously issued refresh session.
+    db.query(RefreshToken).filter(
+        RefreshToken.user_id == user.id,
+        RefreshToken.revoked_at.is_(None),
+    ).update({RefreshToken.revoked_at: datetime.now(UTC)}, synchronize_session=False)
     db.commit()
     access_token = create_access_token(user.email)
     refresh_token = _issue_refresh_token(db, user)

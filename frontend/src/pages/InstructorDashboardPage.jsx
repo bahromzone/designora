@@ -44,6 +44,17 @@ function QueueSection({ title, count, empty, children }) {
   );
 }
 
+function alertEditUrl(alert) {
+  const focusByCode = {
+    no_description: "description",
+    no_thumbnail: "thumbnail",
+    no_lessons: "curriculum",
+    draft: "publish",
+  };
+  const focus = focusByCode[alert.code] || "details";
+  return `/instruktor/kurs/${alert.course_id}?focus=${focus}`;
+}
+
 export default function InstructorDashboardPage() {
   const { token } = useAuth();
   const [data, setData] = useState(null);
@@ -289,7 +300,7 @@ export default function InstructorDashboardPage() {
                   <strong>{alert.message}</strong>
                   <p>{alert.course_title}</p>
                 </div>
-                <Link to={`/instruktor/kurs/${alert.course_id}`}>Tuzatish</Link>
+                <Link to={alertEditUrl(alert)}>Tuzatish</Link>
               </article>
             ))}
           </QueueSection>

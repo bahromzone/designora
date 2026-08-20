@@ -4,8 +4,8 @@ from app.core.password import hash_password
 from app.models.password_reset import PasswordReset
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
-from app.services.token_service import generate_refresh_token, hash_token
 from app.routers import auth as auth_router
+from app.services.token_service import generate_refresh_token, hash_token
 
 
 def test_password_reset_revokes_existing_refresh_sessions(client, db_session):

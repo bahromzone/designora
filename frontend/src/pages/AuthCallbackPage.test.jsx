@@ -33,12 +33,16 @@ describe("safeRedirect", () => {
   it("har bir rolni o'z dashboardiga yuboradi", () => {
     expect(safeRedirect("/admin", "admin")).toBe("/admin");
     expect(safeRedirect("/kurslarim", "superadmin")).toBe("/superadmin");
-    expect(safeRedirect("/kurslarim", "instructor")).toBe("/instruktor-panel");
+    expect(safeRedirect("/kurslarim", "instructor")).toBe(
+      "/instruktor-panel",
+    );
     expect(safeRedirect("/admin", "user")).toBe("/kurslarim");
   });
 
   it("begona va tashqi yo'llarni rol dashboardiga tushiradi", () => {
-    expect(safeRedirect("https://evil.example.com", "user")).toBe("/kurslarim");
+    expect(safeRedirect("https://evil.example.com", "user")).toBe(
+      "/kurslarim",
+    );
     expect(safeRedirect("/admin/users", "user")).toBe("/kurslarim");
     expect(safeRedirect("", "user")).toBe("/kurslarim");
   });

@@ -78,6 +78,8 @@ describe("CourseDetailPage", () => {
     expect(
       screen.queryByRole("link", { name: "Kursga yozilish" })
     ).not.toBeInTheDocument();
-    expect(screen.queryByText("Bir martalik kurs kodi")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Bir martalik kurs kodi")
+    ).not.toBeInTheDocument();
   });
 });

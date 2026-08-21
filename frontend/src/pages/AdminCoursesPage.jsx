@@ -125,7 +125,9 @@ export default function AdminCoursesPage() {
   async function copyGeneratedCode() {
     if (!generatedCode?.code) return;
     if (!navigator.clipboard?.writeText) {
-      setCopyFeedback("Avtomatik nusxalash mavjud emas. Kodni qo'lda nusxalang.");
+      setCopyFeedback(
+        "Avtomatik nusxalash mavjud emas. Kodni qo'lda nusxalang."
+      );
       return;
     }
     try {

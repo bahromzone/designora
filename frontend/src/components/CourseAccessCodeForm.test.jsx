@@ -41,13 +41,10 @@ describe("CourseAccessCodeForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Kodni qo'llash" }));
 
     await waitFor(() =>
-      expect(request).toHaveBeenCalledWith(
-        "/api/course-access-codes/redeem",
-        {
-          method: "POST",
-          body: JSON.stringify({ course_id: 7, code: "ABCD-2345-EFGH" }),
-        }
-      )
+      expect(request).toHaveBeenCalledWith("/api/course-access-codes/redeem", {
+        method: "POST",
+        body: JSON.stringify({ course_id: 7, code: "ABCD-2345-EFGH" }),
+      })
     );
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Kurs biriktirildi"

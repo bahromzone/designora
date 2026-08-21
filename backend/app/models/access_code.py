@@ -18,7 +18,10 @@ class CourseAccessCode(Base):
     code_hash = Column(String(64), unique=True, index=True, nullable=False)
     code_hint = Column(String(4), nullable=False)
     course_id = Column(
-        Integer, ForeignKey("courses.id", ondelete="CASCADE"), index=True, nullable=False
+        Integer,
+        ForeignKey("courses.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
     )
     user_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
@@ -31,5 +34,8 @@ class CourseAccessCode(Base):
     used_at = Column(DateTime(timezone=True), nullable=True)
     revoked_at = Column(DateTime(timezone=True), nullable=True)
     order_id = Column(
-        Integer, ForeignKey("orders.id", ondelete="SET NULL"), unique=True, nullable=True
+        Integer,
+        ForeignKey("orders.id", ondelete="SET NULL"),
+        unique=True,
+        nullable=True,
     )

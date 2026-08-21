@@ -17,9 +17,7 @@ def _user(db, email, role="user"):
 
 
 def _course(db, title="Paid course"):
-    course = Course(
-        title=title, is_active=True, status="published", price=590000
-    )
+    course = Course(title=title, is_active=True, status="published", price=590000)
     db.add(course)
     db.commit()
     db.refresh(course)

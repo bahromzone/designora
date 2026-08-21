@@ -35,7 +35,9 @@ def _now() -> datetime:
 
 
 def _normalize(value: str) -> str:
-    return "".join(char for char in value.upper() if char in string.ascii_uppercase + string.digits)
+    return "".join(
+        char for char in value.upper() if char in string.ascii_uppercase + string.digits
+    )
 
 
 def _hash(value: str) -> str:
@@ -53,7 +55,9 @@ def _expired(value: datetime) -> bool:
 
 
 def _user(db: Session, email: str) -> User:
-    user = db.query(User).filter(func.lower(User.email) == email.strip().lower()).first()
+    user = (
+        db.query(User).filter(func.lower(User.email) == email.strip().lower()).first()
+    )
     if not user:
         raise HTTPException(status_code=401, detail="Avtorizatsiya talab etiladi")
     if not user.is_active:

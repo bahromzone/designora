@@ -32,7 +32,6 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["order_id"], ["orders.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("code_hash"),
         sa.UniqueConstraint("order_id"),
     )
     op.create_index(

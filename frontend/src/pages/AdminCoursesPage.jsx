@@ -27,6 +27,7 @@ export default function AdminCoursesPage() {
   });
   const [generatedCode, setGeneratedCode] = useState(null);
   const [codeBusy, setCodeBusy] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -101,6 +102,7 @@ export default function AdminCoursesPage() {
     if (codeBusy) return;
     setCodeBusy(true);
     setGeneratedCode(null);
+    setCopyFeedback("");
     setError("");
     try {
       const result = await request("/api/admin/course-access-codes", {
@@ -122,7 +124,16 @@ export default function AdminCoursesPage() {
 
   async function copyGeneratedCode() {
     if (!generatedCode?.code) return;
-    await navigator.clipboard.writeText(generatedCode.code);
+    if (!navigator.clipboard?.writeText) {
+      setCopyFeedback("Avtomatik nusxalash mavjud emas. Kodni qo'lda nusxalang.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(generatedCode.code);
+      setCopyFeedback("Kod nusxalandi.");
+    } catch {
+      setCopyFeedback("Kod nusxalanmadi. Iltimos, uni qo'lda nusxalang.");
+    }
   }
 
   async function toggleCourse(course) {
@@ -310,6 +321,11 @@ export default function AdminCoursesPage() {
                 {generatedCode.code}
               </strong>
               <small>Bu kod qayta ko'rsatilmaydi. Hozir nusxalang.</small>
+              {copyFeedback && (
+                <small style={{ display: "block", marginTop: 6 }}>
+                  {copyFeedback}
+                </small>
+              )}
             </div>
             <button
               className="admin-btn"

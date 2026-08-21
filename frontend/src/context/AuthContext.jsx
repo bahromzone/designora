@@ -136,9 +136,10 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }
 
-  async function refreshProfile() {
+  async function refreshProfile(options = {}) {
+    const silent = options.silent === true;
     const version = ++authVersion.current;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const profile = await authApi.profile();
       if (authVersion.current === version) {
@@ -147,7 +148,7 @@ export function AuthProvider({ children }) {
       }
       return profile;
     } finally {
-      if (authVersion.current === version) setLoading(false);
+      if (!silent && authVersion.current === version) setLoading(false);
     }
   }
 

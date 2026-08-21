@@ -124,12 +124,8 @@ export default function ProfilePage() {
     try {
       const result = await accountApi.uploadAvatar(file);
       setField("avatar_url", result.avatar_url);
+      await refreshProfile?.({ silent: true });
       setMessage("Profil rasmi yuklandi. O‘zgarishlar saqlandi.");
-      try {
-        await refreshProfile?.();
-      } catch {
-        // Upload tugadi; profilni yangilash vaqtinchalik yiqilsa ham rasm saqlandi.
-      }
     } catch (e) {
       setError(e.message || "Profil rasmini yuklab bo‘lmadi.");
     } finally {
@@ -151,12 +147,8 @@ export default function ProfilePage() {
         website: form.website.trim(),
         avatar_url: form.avatar_url.trim(),
       });
+      await refreshProfile?.({ silent: true });
       setMessage("Profil ma’lumotlari saqlandi.");
-      try {
-        await refreshProfile?.();
-      } catch {
-        // Profil saqlandi; sessiya refresh'i keyinroq qayta tiklanadi.
-      }
     } catch (e) {
       setError(e.message);
     } finally {

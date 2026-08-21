@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
+import CourseAccessCodeForm from "../components/CourseAccessCodeForm";
 import SavedCourseButton from "../components/SavedCourseButton";
 import { useAuth } from "../context/AuthContext";
 import { accountApi } from "../lib/accountApi";
 import { coursesApi, formatPrice, learningApi } from "../lib/api";
+
+const SAFIBUY_USERNAME = "safibuy";
 
 export default function CourseDetailPage() {
   const { courseId } = useParams();
@@ -57,14 +60,20 @@ export default function CourseDetailPage() {
   if (error || !course)
     return <main className="shell py-20">{error || "Kurs topilmadi"}</main>;
 
-  const buy = async () => {
+  const isPaid = (course.price || 0) > 0;
+  const telegramMessage = [
+    "Assalomu alaykum!",
+    `Designora'dagi “${course.title}” kursiga yozilmoqchiman.`,
+    `Kurs ID: ${courseId}`,
+  ].join("\n");
+  const telegramUrl = `https://t.me/${SAFIBUY_USERNAME}?text=${encodeURIComponent(
+    telegramMessage
+  )}`;
+
+  const enrollFreeCourse = async () => {
     if (busy) return;
     if (authLoading || !isAuthenticated) {
       navigate("/?modal=login", { state: { from: location.pathname } });
-      return;
-    }
-    if ((course.price || 0) > 0) {
-      navigate(`/checkout/${courseId}`);
       return;
     }
     setBusy(true);
@@ -108,14 +117,38 @@ export default function CourseDetailPage() {
               O'qishni davom ettirish
             </Link>
           ) : (
-            <button
-              className="btn-primary mt-5 w-full justify-center"
-              onClick={buy}
-              disabled={busy}
-              aria-busy={busy}
-            >
-              {busy ? "Yozilmoqda..." : "Kursga yozilish"}
-            </button>
+            <>
+              {isPaid ? (
+                <a
+                  className="btn-primary mt-5 w-full justify-center"
+                  href={telegramUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Kursga yozilish
+                </a>
+              ) : (
+                <button
+                  className="btn-primary mt-5 w-full justify-center"
+                  onClick={enrollFreeCourse}
+                  disabled={busy}
+                  aria-busy={busy}
+                >
+                  {busy ? "Yozilmoqda..." : "Kursga yozilish"}
+                </button>
+              )}
+              {isPaid && (
+                <CourseAccessCodeForm
+                  courseId={courseId}
+                  isAuthenticated={isAuthenticated}
+                  authLoading={authLoading}
+                  onRedeemed={() => {
+                    setEnrolled(true);
+                    navigate(`/organish/${courseId}`);
+                  }}
+                />
+              )}
+            </>
           )}
           {error && (
             <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -123,7 +156,9 @@ export default function CourseDetailPage() {
             </p>
           )}
           <p className="mt-4 text-sm text-gray-500">
-            Aniq narx, promo code, xavfsiz to'lov va chek.
+            {isPaid
+              ? "Telegram orqali to'lovni tasdiqlang va berilgan kodni kiriting."
+              : "Bepul kursga yozilib, darhol o'qishni boshlang."}
           </p>
         </aside>
       </div>

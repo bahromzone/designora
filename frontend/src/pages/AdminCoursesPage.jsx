@@ -20,12 +20,27 @@ export default function AdminCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState("");
+  const [codeForm, setCodeForm] = useState({
+    course_id: "",
+    user_email: "",
+    expires_in_days: 7,
+  });
+  const [generatedCode, setGeneratedCode] = useState(null);
+  const [codeBusy, setCodeBusy] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      setCourses(await request("/api/admin/courses", { token }));
+      const rows = await request("/api/admin/courses", { token });
+      setCourses(rows);
+      setCodeForm((current) => ({
+        ...current,
+        course_id:
+          current.course_id ||
+          String(rows.find((row) => row.is_active)?.id || ""),
+      }));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -79,6 +94,47 @@ export default function AdminCoursesPage() {
       await load();
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function createAccessCode(event) {
+    event.preventDefault();
+    if (codeBusy) return;
+    setCodeBusy(true);
+    setGeneratedCode(null);
+    setCopyFeedback("");
+    setError("");
+    try {
+      const result = await request("/api/admin/course-access-codes", {
+        method: "POST",
+        body: JSON.stringify({
+          course_id: Number(codeForm.course_id),
+          user_email: codeForm.user_email.trim(),
+          expires_in_days: Number(codeForm.expires_in_days),
+        }),
+        token,
+      });
+      setGeneratedCode(result);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCodeBusy(false);
+    }
+  }
+
+  async function copyGeneratedCode() {
+    if (!generatedCode?.code) return;
+    if (!navigator.clipboard?.writeText) {
+      setCopyFeedback(
+        "Avtomatik nusxalash mavjud emas. Kodni qo'lda nusxalang."
+      );
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(generatedCode.code);
+      setCopyFeedback("Kod nusxalandi.");
+    } catch {
+      setCopyFeedback("Kod nusxalanmadi. Iltimos, uni qo'lda nusxalang.");
     }
   }
 
@@ -184,6 +240,104 @@ export default function AdminCoursesPage() {
             </button>
           )}
         </form>
+      </section>
+      <section className="admin-section">
+        <div className="admin-kicker">Tashqi to'lov</div>
+        <h2>Bir martalik kirish kodi</h2>
+        <p className="admin-empty">
+          To'lovni tekshirgandan keyin kod yarating. Kod faqat tanlangan
+          foydalanuvchi va kurs uchun ishlaydi.
+        </p>
+        <form className="admin-user-filters" onSubmit={createAccessCode}>
+          <select
+            required
+            aria-label="Kurs"
+            value={codeForm.course_id}
+            onChange={(event) =>
+              setCodeForm((current) => ({
+                ...current,
+                course_id: event.target.value,
+              }))
+            }
+          >
+            <option value="">Kursni tanlang</option>
+            {courses
+              .filter((course) => course.is_active)
+              .map((course) => (
+                <option key={course.id} value={course.id}>
+                  {course.title}
+                </option>
+              ))}
+          </select>
+          <input
+            required
+            type="email"
+            placeholder="Foydalanuvchi emaili"
+            value={codeForm.user_email}
+            onChange={(event) =>
+              setCodeForm((current) => ({
+                ...current,
+                user_email: event.target.value,
+              }))
+            }
+          />
+          <select
+            aria-label="Kod muddati"
+            value={codeForm.expires_in_days}
+            onChange={(event) =>
+              setCodeForm((current) => ({
+                ...current,
+                expires_in_days: event.target.value,
+              }))
+            }
+          >
+            <option value="1">1 kun</option>
+            <option value="3">3 kun</option>
+            <option value="7">7 kun</option>
+            <option value="14">14 kun</option>
+            <option value="30">30 kun</option>
+          </select>
+          <button
+            className="admin-btn primary"
+            type="submit"
+            disabled={codeBusy}
+          >
+            {codeBusy ? "Yaratilmoqda..." : "Kod yaratish"}
+          </button>
+        </form>
+        {generatedCode && (
+          <div className="admin-list-row" role="status">
+            <div>
+              <small>
+                {generatedCode.user_email} · {generatedCode.course_title}
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  marginTop: 6,
+                  fontFamily: "monospace",
+                  fontSize: "1.4rem",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                {generatedCode.code}
+              </strong>
+              <small>Bu kod qayta ko'rsatilmaydi. Hozir nusxalang.</small>
+              {copyFeedback && (
+                <small style={{ display: "block", marginTop: 6 }}>
+                  {copyFeedback}
+                </small>
+              )}
+            </div>
+            <button
+              className="admin-btn"
+              type="button"
+              onClick={copyGeneratedCode}
+            >
+              Nusxalash
+            </button>
+          </div>
+        )}
       </section>
       <section className="admin-section">
         <div className="admin-table-wrap">

@@ -1,6 +1,7 @@
 """Barcha SQLAlchemy modellarini ro'yxatga oladi."""
 
 from . import (
+    access_code,
     analytics_event,
     assignment_submission,
     audit_log,

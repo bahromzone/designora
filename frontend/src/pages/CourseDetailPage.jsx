@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
+import CourseAccessCodeForm from "../components/CourseAccessCodeForm";
 import SavedCourseButton from "../components/SavedCourseButton";
 import { useAuth } from "../context/AuthContext";
 import { accountApi } from "../lib/accountApi";
@@ -108,14 +109,27 @@ export default function CourseDetailPage() {
               O'qishni davom ettirish
             </Link>
           ) : (
-            <button
-              className="btn-primary mt-5 w-full justify-center"
-              onClick={buy}
-              disabled={busy}
-              aria-busy={busy}
-            >
-              {busy ? "Yozilmoqda..." : "Kursga yozilish"}
-            </button>
+            <>
+              <button
+                className="btn-primary mt-5 w-full justify-center"
+                onClick={buy}
+                disabled={busy}
+                aria-busy={busy}
+              >
+                {busy ? "Yozilmoqda..." : "Kursga yozilish"}
+              </button>
+              {(course.price || 0) > 0 && (
+                <CourseAccessCodeForm
+                  courseId={courseId}
+                  isAuthenticated={isAuthenticated}
+                  authLoading={authLoading}
+                  onRedeemed={() => {
+                    setEnrolled(true);
+                    navigate(`/organish/${courseId}`);
+                  }}
+                />
+              )}
+            </>
           )}
           {error && (
             <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">

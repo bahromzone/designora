@@ -42,9 +42,12 @@ export default function CourseAccessCodeForm({
 
   return (
     <div className="mt-5 border-t border-violet-100 pt-5">
-      <p className="text-sm font-bold text-slate-900">Admin bergan kodingiz bormi?</p>
+      <p className="text-sm font-bold text-slate-900">
+        Admin bergan kodingiz bormi?
+      </p>
       <p className="mt-1 text-sm leading-6 text-slate-500">
-        Tasdiqlangan to'lov kodini kiriting. Kod faqat siz va shu kurs uchun ishlaydi.
+        Tasdiqlangan to'lov kodini kiriting. Kod faqat siz va shu kurs uchun
+        ishlaydi.
       </p>
       <form className="mt-3 flex gap-2" onSubmit={redeem}>
         <label className="sr-only" htmlFor={`course-code-${courseId}`}>
@@ -72,12 +75,18 @@ export default function CourseAccessCodeForm({
         </button>
       </form>
       {error && (
-        <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+        <p
+          className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700"
+          role="alert"
+        >
           {error}
         </p>
       )}
       {success && (
-        <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+        <p
+          className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
+          role="status"
+        >
           {success}
         </p>
       )}

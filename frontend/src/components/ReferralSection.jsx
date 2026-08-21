@@ -11,6 +11,8 @@ export default function ReferralSection() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(isAuthenticated);
   const [copied, setCopied] = useState(false);
+  const [code, setCode] = useState("");
+  const [applying, setApplying] = useState(false);
 
   const load = useCallback(async () => {
     if (!isAuthenticated) {
@@ -41,6 +43,23 @@ export default function ReferralSection() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Nusxa olib bo'lmadi.");
+    }
+  }
+
+  async function applyCode(event) {
+    event.preventDefault();
+    const normalized = code.trim().toUpperCase();
+    if (!normalized) return;
+    setApplying(true);
+    try {
+      await referralApi.apply(normalized);
+      setCode("");
+      toast.success("Referral kodi muvaffaqiyatli qo'llandi!");
+      await load();
+    } catch (error) {
+      toast.error(error.message || "Referral kodini qo'llab bo'lmadi.");
+    } finally {
+      setApplying(false);
     }
   }
 
@@ -83,12 +102,40 @@ export default function ReferralSection() {
               {data.code}
             </code>
             <button
+              type="button"
               onClick={copyCode}
               className="btn-primary shrink-0 px-5 py-3 text-sm"
             >
               {copied ? "Nusxa olindi ✓" : "Nusxa olish"}
             </button>
           </div>
+
+          <form
+            className="mt-5 flex flex-col gap-3 sm:flex-row"
+            onSubmit={applyCode}
+          >
+            <label className="sr-only" htmlFor="referral-code">
+              Do'stingizning referral kodi
+            </label>
+            <input
+              id="referral-code"
+              className="input-field flex-1 uppercase"
+              value={code}
+              onChange={(event) => setCode(event.target.value.toUpperCase())}
+              placeholder="Do'stingiz kodini kiriting"
+              minLength={4}
+              maxLength={32}
+              autoComplete="off"
+              disabled={applying}
+            />
+            <button
+              type="submit"
+              className="btn-outline shrink-0 px-5 py-3 text-sm"
+              disabled={applying || code.trim().length < 4}
+            >
+              {applying ? "Qo'llanmoqda..." : "Kodni qo'llash"}
+            </button>
+          </form>
 
           <div className="mt-6 grid grid-cols-3 gap-4">
             {[

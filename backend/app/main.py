@@ -34,6 +34,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+setup_admin(app)
 for r in (profile.router, admin_courses.router, admin_payments.router, admin_users.router, analytics.router, assignments.router, assignments_upload.router, blog.router, calendar.router, certificates.router, checkout_experience.router, course_access_codes.admin_router, course_access_codes.router, course_builder.router, course_forum.router, courses_api.router, dashboard.router, discovery.router, forum.router, gamification.router, google.router, instructor_applications.router, instructor.router, instructor_analytics.router, instructors.router, learning.router, learning_paths.router, media.router, moderation.router, monetization.router, notes.router, notifications.router, pages.router, payments.router, payment_history.router, portfolio.router, privacy.router, qa.router, quiz.router, quiz_instructor_list.router, referrals.router, reviews.router, saved_courses.router, superadmin.router, system.router, token.router, uploads.router, video_uploads.router, users.router, public_router, auth.router):
     app.include_router(r)
 

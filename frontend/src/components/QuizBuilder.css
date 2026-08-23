@@ -1,0 +1,22 @@
+.quiz-builder .input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+.quiz-builder .input:focus {
+  border-color: var(--brand);
+  background: #fff;
+  box-shadow: 0 0 0 4px var(--amber-10);
+  outline: none;
+}
+.quiz-builder .input::placeholder { color: var(--muted); }
+.quiz-builder .input:invalid:not(:placeholder-shown) { border-color: #e11d48; }
+@media (max-width: 640px) {
+  .quiz-builder .builder-card__head { align-items: flex-start; flex-direction: column; }
+  .quiz-builder .builder-card__head > button { width: 100%; justify-content: center; }
+}

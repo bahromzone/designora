@@ -1,7 +1,7 @@
 import { request } from "./request";
 
 export const quizBuilderApi = {
-  list: (courseId) => request(`/api/quiz/courses/${courseId}/quizzes`),
+  list: (courseId) => request(`/api/quiz/courses/${courseId}/manage`),
   create: (courseId, body) =>
     request(`/api/quiz/courses/${courseId}/quizzes`, {
       method: "POST",

@@ -15,18 +15,65 @@ const createDefaultQuestionPayload = () => ({
   explanation: "",
 });
 
-function QuizForm({ initial, onSave, onCancel, saving }) {
-  const [form, setForm] = useState(
-    initial || {
-      title: "",
-      description: "",
-      passing_score: 70,
-      max_attempts: "",
-      time_limit_minutes: "",
+function normalizeOptions(options) {
+  if (!Array.isArray(options) || options.length === 0) {
+    return [
+      { id: "a", text: "" },
+      { id: "b", text: "" },
+    ];
+  }
+  return options.map((opt, idx) => {
+    if (typeof opt === "string") {
+      return { id: String.fromCharCode(97 + idx), text: opt };
     }
-  );
+    return {
+      id: String(
+        opt.id ?? opt.value ?? opt.key ?? String.fromCharCode(97 + idx)
+      ),
+      text: opt.text ?? opt.label ?? opt.value ?? "",
+    };
+  });
+}
+
+function normalizeCorrectAnswers(correctAnswers, options, type) {
+  const current = Array.isArray(correctAnswers)
+    ? correctAnswers.map(String)
+    : [];
+  if (type === "boolean") {
+    return current.includes("false") ? ["false"] : ["true"];
+  }
+  const validIds = options.map((o) => o.id);
+  const filtered = current.filter((id) => validIds.includes(id));
+  if (filtered.length === 0 && validIds.length > 0) {
+    return [validIds[0]];
+  }
+  return type === "single" ? (filtered[0] ? [filtered[0]] : []) : filtered;
+}
+
+function QuizForm({ initial, onSave, onCancel, saving }) {
+  const [form, setForm] = useState({
+    title: initial?.title || "",
+    description: initial?.description || "",
+    passing_score: initial?.passing_score ?? 70,
+    max_attempts: initial?.max_attempts ?? "",
+    time_limit_minutes: initial?.time_limit_minutes ?? "",
+  });
+
+  useEffect(() => {
+    if (initial) {
+      setForm({
+        title: initial.title || "",
+        description: initial.description || "",
+        passing_score: initial.passing_score ?? 70,
+        max_attempts: initial.max_attempts ?? "",
+        time_limit_minutes: initial.time_limit_minutes ?? "",
+      });
+    }
+  }, [initial]);
+
   const set = (key, value) =>
     setForm((current) => ({ ...current, [key]: value }));
+
   return (
     <form
       className="mt-5 grid gap-4 rounded-2xl border border-border bg-surface p-5"
@@ -126,37 +173,100 @@ function QuizForm({ initial, onSave, onCancel, saving }) {
 }
 
 function QuestionEditor({ question, index, onSave, onDelete }) {
-  const [form, setForm] = useState({
-    ...question,
-    correct_answers: question.correct_answers || [],
-    options: question.options?.length
-      ? question.options
-      : [
-          { id: "a", text: "" },
-          { id: "b", text: "" },
-        ],
+  const [form, setForm] = useState(() => {
+    const opts = normalizeOptions(question.options);
+    const type = question.type || "single";
+    return {
+      ...question,
+      type,
+      options: opts,
+      correct_answers: normalizeCorrectAnswers(
+        question.correct_answers,
+        opts,
+        type
+      ),
+      points: question.points ?? 1,
+      explanation: question.explanation || "",
+    };
   });
+
+  useEffect(() => {
+    const opts = normalizeOptions(question.options);
+    const type = question.type || "single";
+    setForm({
+      ...question,
+      type,
+      options: opts,
+      correct_answers: normalizeCorrectAnswers(
+        question.correct_answers,
+        opts,
+        type
+      ),
+      points: question.points ?? 1,
+      explanation: question.explanation || "",
+    });
+  }, [question]);
+
   const set = (key, value) =>
     setForm((current) => ({ ...current, [key]: value }));
+
   const isBoolean = form.type === "boolean";
-  const isMultiple = form.type === "multiple";
-  const options = isBoolean
-    ? [
-        { id: "true", text: "To‘g‘ri" },
-        { id: "false", text: "Noto‘g‘ri" },
-      ]
-    : form.options;
-  const toggleCorrect = (id) =>
-    set(
-      "correct_answers",
-      form.correct_answers.includes(id)
-        ? form.correct_answers.filter((item) => item !== id)
-        : isMultiple
-          ? [...form.correct_answers, id]
-          : [id]
-    );
+
+  const booleanOptions = [
+    { id: "true", text: "To‘g‘ri" },
+    { id: "false", text: "Noto‘g‘ri" },
+  ];
+
+  const currentOptions = isBoolean ? booleanOptions : form.options;
+
+  const handleTypeChange = (newType) => {
+    setForm((prev) => {
+      let updatedCorrect = [];
+      if (newType === "boolean") {
+        updatedCorrect = ["true"];
+      } else if (newType === "single") {
+        updatedCorrect = prev.correct_answers[0]
+          ? [prev.correct_answers[0]]
+          : prev.options[0]?.id
+            ? [prev.options[0].id]
+            : ["a"];
+      } else {
+        updatedCorrect = prev.correct_answers.length
+          ? prev.correct_answers
+          : prev.options[0]?.id
+            ? [prev.options[0].id]
+            : ["a"];
+      }
+      return {
+        ...prev,
+        type: newType,
+        correct_answers: updatedCorrect,
+      };
+    });
+  };
+
+  const toggleCorrect = (id) => {
+    const stringId = String(id);
+    setForm((prev) => {
+      if (prev.type === "boolean" || prev.type === "single") {
+        return {
+          ...prev,
+          correct_answers: [stringId],
+        };
+      }
+      const has = prev.correct_answers.includes(stringId);
+      const next = has
+        ? prev.correct_answers.filter((item) => item !== stringId)
+        : [...prev.correct_answers, stringId];
+      return {
+        ...prev,
+        correct_answers: next.length > 0 ? next : [stringId],
+      };
+    });
+  };
+
   return (
-    <article className="rounded-2xl border border-border bg-canvas p-4">
+    <article className="rounded-2xl border border-border bg-canvas p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-muted">
@@ -165,7 +275,7 @@ function QuestionEditor({ question, index, onSave, onDelete }) {
           <h3 className="mt-1 font-semibold text-ink">Savol va javoblar</h3>
         </div>
         <button
-          className="text-sm font-semibold text-rose-600"
+          className="text-sm font-semibold text-rose-600 hover:text-rose-700"
           type="button"
           onClick={onDelete}
         >
@@ -178,29 +288,18 @@ function QuestionEditor({ question, index, onSave, onDelete }) {
           value={form.text}
           onChange={(e) => set("text", e.target.value)}
           className="input min-h-20"
-          placeholder="Savol matni"
+          placeholder="Savol matnini kiriting..."
         />
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="grid gap-1 text-sm font-semibold text-ink">
             Turi
             <select
               value={form.type}
-              onChange={(e) => {
-                const nextType = e.target.value;
-                set("type", nextType);
-                if (nextType === "boolean") {
-                  set("correct_answers", ["true"]);
-                } else if (
-                  !form.correct_answers.length &&
-                  form.options?.length
-                ) {
-                  set("correct_answers", [form.options[0].id]);
-                }
-              }}
+              onChange={(e) => handleTypeChange(e.target.value)}
               className="input"
             >
-              <option value="single">Bitta javob</option>
-              <option value="multiple">Bir nechta javob</option>
+              <option value="single">Bitta to‘g‘ri javob</option>
+              <option value="multiple">Bir nechta to‘g‘ri javob</option>
               <option value="boolean">To‘g‘ri / noto‘g‘ri</option>
             </select>
           </label>
@@ -224,78 +323,142 @@ function QuestionEditor({ question, index, onSave, onDelete }) {
             />
           </label>
         </div>
+
         {!isBoolean && (
           <div className="grid gap-2">
-            {options.map((option, optionIndex) => (
-              <div className="flex gap-2" key={option.id || optionIndex}>
-                <input
-                  required
-                  aria-label={`Variant ${optionIndex + 1}`}
-                  value={option.text}
-                  onChange={(e) =>
-                    set(
-                      "options",
-                      form.options.map((item, i) =>
-                        i === optionIndex
-                          ? { ...item, text: e.target.value }
-                          : item
-                      )
-                    )
-                  }
-                  className="input flex-1"
-                  placeholder={`Variant ${optionIndex + 1}`}
-                />
-                <button
-                  type="button"
-                  className={`min-w-10 rounded-xl border px-3 text-sm font-semibold ${form.correct_answers.includes(option.id) ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-border text-muted"}`}
-                  onClick={() => toggleCorrect(option.id)}
-                  aria-label={`${option.id} to‘g‘ri javob`}
+            <span className="text-xs font-semibold text-muted">
+              Javob variantlari (to‘g‘risini belgilang):
+            </span>
+            {form.options.map((option, optionIndex) => {
+              const optId = String(option.id);
+              const isChecked = form.correct_answers.includes(optId);
+              return (
+                <div
+                  className="flex items-center gap-2"
+                  key={optId || optionIndex}
                 >
-                  ✓
-                </button>
-              </div>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => toggleCorrect(optId)}
+                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                      isChecked
+                        ? "border-emerald-600 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-400"
+                        : "border-border bg-surface text-muted hover:border-violet-300"
+                    }`}
+                    title={
+                      isChecked
+                        ? "To‘g‘ri javob deb belgilangan"
+                        : "To‘g‘ri javob sifatida belgilash"
+                    }
+                  >
+                    <span className="text-sm">{isChecked ? "✓" : "○"}</span>
+                    <span>{isChecked ? "To‘g‘ri" : "Belgilash"}</span>
+                  </button>
+                  <input
+                    required
+                    aria-label={`Variant ${optionIndex + 1}`}
+                    value={option.text}
+                    onChange={(e) =>
+                      set(
+                        "options",
+                        form.options.map((item, i) =>
+                          i === optionIndex
+                            ? { ...item, text: e.target.value }
+                            : item
+                        )
+                      )
+                    }
+                    className="input flex-1"
+                    placeholder={`Variant ${optionIndex + 1}`}
+                  />
+                  {form.options.length > 2 && (
+                    <button
+                      type="button"
+                      className="px-2 text-xs font-semibold text-rose-500 hover:text-rose-700"
+                      onClick={() => {
+                        const newOpts = form.options.filter(
+                          (_, i) => i !== optionIndex
+                        );
+                        set("options", newOpts);
+                        if (form.correct_answers.includes(optId)) {
+                          const remainingValid = form.correct_answers.filter(
+                            (id) => id !== optId
+                          );
+                          set(
+                            "correct_answers",
+                            remainingValid.length
+                              ? remainingValid
+                              : [String(newOpts[0]?.id ?? "a")]
+                          );
+                        }
+                      }}
+                      title="Variantni o‘chirish"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              );
+            })}
             <button
               type="button"
-              className="justify-self-start text-sm font-semibold text-violet-700"
-              onClick={() =>
+              className="mt-1 justify-self-start text-sm font-semibold text-violet-700 hover:text-violet-900"
+              onClick={() => {
+                const nextLetter = String.fromCharCode(
+                  97 + form.options.length
+                );
                 set("options", [
                   ...form.options,
                   {
-                    id: String.fromCharCode(97 + form.options.length),
+                    id: nextLetter,
                     text: "",
                   },
-                ])
-              }
+                ]);
+              }}
             >
               + Variant qo‘shish
             </button>
           </div>
         )}
+
         {isBoolean && (
-          <div className="flex gap-2">
-            {options.map((option) => (
-              <button
-                type="button"
-                key={option.id}
-                onClick={() => set("correct_answers", [option.id])}
-                className={`rounded-xl border px-4 py-2 text-sm font-semibold ${form.correct_answers.includes(option.id) ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-border text-muted"}`}
-              >
-                {option.text}
-              </button>
-            ))}
+          <div className="grid gap-2">
+            <span className="text-xs font-semibold text-muted">
+              To‘g‘ri holatni tanlang:
+            </span>
+            <div className="flex gap-3">
+              {booleanOptions.map((option) => {
+                const isChecked = form.correct_answers.includes(option.id);
+                return (
+                  <button
+                    type="button"
+                    key={option.id}
+                    onClick={() => toggleCorrect(option.id)}
+                    className={`flex-1 rounded-xl border py-3 text-sm font-bold transition ${
+                      isChecked
+                        ? "border-emerald-600 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-400 shadow-sm"
+                        : "border-border bg-surface text-muted hover:border-violet-300"
+                    }`}
+                  >
+                    {isChecked ? "✓ " : ""}
+                    {option.text}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
+
         <button
           type="button"
-          className="btn-outline justify-self-start px-4 py-2 text-sm"
+          className="btn-outline mt-2 justify-self-start px-4 py-2 text-sm"
           onClick={() =>
             onSave({
               ...form,
               text: form.text.trim(),
-              points: Number(form.points),
+              points: Number(form.points) || 1,
               correct_answers: form.correct_answers,
-              options,
+              options: currentOptions,
             })
           }
         >

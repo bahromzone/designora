@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { EmptyState, Spinner } from "../components/ui";
+import QuizBuilder from "../components/QuizBuilder";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { instructorApi } from "../lib/api";
@@ -28,6 +29,7 @@ export default function InstructorCourseEditPage() {
   const thumbnailRef = useRef(null);
   const outcomesRef = useRef(null);
   const curriculumRef = useRef(null);
+  const quizRef = useRef(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,11 +49,9 @@ export default function InstructorCourseEditPage() {
       setLoading(false);
     }
   }, [courseId, token]);
-
   useEffect(() => {
     load();
   }, [load]);
-
   useEffect(() => {
     if (loading || !form) return;
     const focus = searchParams.get("focus");
@@ -61,6 +61,7 @@ export default function InstructorCourseEditPage() {
       outcomes: outcomesRef,
       curriculum: curriculumRef,
       details: detailsRef,
+      quizzes: quizRef,
     };
     const target = targets[focus]?.current;
     if (!target) return;
@@ -70,7 +71,6 @@ export default function InstructorCourseEditPage() {
       : target.querySelector?.("input, textarea");
     input?.focus({ preventScroll: true });
   }, [form, loading, searchParams]);
-
   useEffect(() => {
     if (!hydrated.current || !form) return;
     setSaveState("saving");
@@ -85,16 +85,13 @@ export default function InstructorCourseEditPage() {
     }, 900);
     return () => window.clearTimeout(timer);
   }, [courseId, form, token, toast]);
-
   const allLessons = useMemo(
     () => data?.modules?.flatMap((module) => module.lessons || []) || [],
     [data]
   );
-
   function setField(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
   }
-
   async function uploadVideo(lesson, file) {
     if (!file) return;
     if (file.size > 3 * 1024 * 1024 * 1024) {
@@ -120,7 +117,6 @@ export default function InstructorCourseEditPage() {
       setVideoProgress(0);
     }
   }
-
   async function createModule() {
     const title = window.prompt("Yangi modul nomi");
     if (!title?.trim()) return;
@@ -135,7 +131,6 @@ export default function InstructorCourseEditPage() {
       toast.error(e.message);
     }
   }
-
   async function createLesson(moduleId) {
     const title = window.prompt("Yangi dars nomi");
     if (!title?.trim()) return;
@@ -150,14 +145,12 @@ export default function InstructorCourseEditPage() {
       toast.error(e.message);
     }
   }
-
   if (loading)
     return (
       <div className="builder-state">
         <Spinner />
       </div>
     );
-
   if (error || !data || !form)
     return (
       <div className="builder-state">
@@ -166,7 +159,6 @@ export default function InstructorCourseEditPage() {
         <Link to="/instruktor-boshqaruv">Kurslarga qaytish</Link>
       </div>
     );
-
   if (preview)
     return (
       <main className="builder-preview">
@@ -212,9 +204,7 @@ export default function InstructorCourseEditPage() {
         ))}
       </main>
     );
-
   const outcomesText = (form.learning_outcomes || []).join(OUTCOMES_SEPARATOR);
-
   return (
     <main className="course-builder">
       <header className="builder-header">
@@ -233,7 +223,6 @@ export default function InstructorCourseEditPage() {
           <button onClick={() => setPreview(true)}>Talaba preview</button>
         </div>
       </header>
-
       <div className="builder-layout">
         <section className="builder-main">
           <article className="builder-card builder-settings" ref={detailsRef}>
@@ -326,7 +315,6 @@ export default function InstructorCourseEditPage() {
               <small>Har qatorda bitta o'quv natijasi yozing.</small>
             </label>
           </article>
-
           <article className="builder-card" ref={curriculumRef}>
             <div className="builder-card__head">
               <div>
@@ -401,8 +389,10 @@ export default function InstructorCourseEditPage() {
               </p>
             )}
           </article>
+          <div ref={quizRef}>
+            <QuizBuilder courseId={courseId} />
+          </div>
         </section>
-
         <aside className="builder-sidebar">
           <article className="builder-card">
             <div className="builder-card__head">

@@ -59,6 +59,7 @@ from app.routers import (
     privacy,
     profile,
     qa,
+    quiz_instructor_list,
     quiz,
     referrals,
     reviews,
@@ -78,7 +79,6 @@ if _log_file:
     _log_handlers.append(
         RotatingFileHandler(_log_file, maxBytes=10_000_000, backupCount=5)
     )
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -155,6 +155,7 @@ for r in (
     privacy.router,
     qa.router,
     quiz.router,
+    quiz_instructor_list.router,
     referrals.router,
     reviews.router,
     saved_courses.router,

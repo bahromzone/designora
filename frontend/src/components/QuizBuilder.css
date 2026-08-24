@@ -23,6 +23,20 @@
 .quiz-builder .input:invalid:not(:placeholder-shown) {
   border-color: #e11d48;
 }
+
+/* Tugmalar ustiga sichqoncha olib borilganda joyidan siljimasligi (hover transform o'chirilishi) */
+.quiz-builder .btn-primary,
+.quiz-builder .btn-outline,
+.quiz-builder button {
+  transform: none !important;
+}
+
+.quiz-builder .btn-primary:hover,
+.quiz-builder .btn-outline:hover,
+.quiz-builder button:hover {
+  transform: none !important;
+}
+
 @media (max-width: 640px) {
   .quiz-builder .builder-card__head {
     align-items: flex-start;

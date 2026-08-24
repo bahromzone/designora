@@ -3,14 +3,14 @@ import { useToast } from "../context/ToastContext";
 import { quizBuilderApi } from "../lib/quizBuilderApi";
 import "./QuizBuilder.css";
 
-const emptyQuestion = () => ({
-  text: "",
+const createDefaultQuestionPayload = () => ({
+  text: "Yangi savol",
   type: "single",
   options: [
-    { id: "a", text: "" },
-    { id: "b", text: "" },
+    { id: "a", text: "1-variant" },
+    { id: "b", text: "2-variant" },
   ],
-  correct_answers: [],
+  correct_answers: ["a"],
   points: 1,
   explanation: "",
 });
@@ -131,7 +131,10 @@ function QuestionEditor({ question, index, onSave, onDelete }) {
     correct_answers: question.correct_answers || [],
     options: question.options?.length
       ? question.options
-      : emptyQuestion().options,
+      : [
+          { id: "a", text: "" },
+          { id: "b", text: "" },
+        ],
   });
   const set = (key, value) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -182,7 +185,18 @@ function QuestionEditor({ question, index, onSave, onDelete }) {
             Turi
             <select
               value={form.type}
-              onChange={(e) => set("type", e.target.value)}
+              onChange={(e) => {
+                const nextType = e.target.value;
+                set("type", nextType);
+                if (nextType === "boolean") {
+                  set("correct_answers", ["true"]);
+                } else if (
+                  !form.correct_answers.length &&
+                  form.options?.length
+                ) {
+                  set("correct_answers", [form.options[0].id]);
+                }
+              }}
               className="input"
             >
               <option value="single">Bitta javob</option>
@@ -233,7 +247,7 @@ function QuestionEditor({ question, index, onSave, onDelete }) {
                 />
                 <button
                   type="button"
-                  className={`min-w-10 rounded-xl border px-3 text-sm ${form.correct_answers.includes(option.id) ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-border text-muted"}`}
+                  className={`min-w-10 rounded-xl border px-3 text-sm font-semibold ${form.correct_answers.includes(option.id) ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-border text-muted"}`}
                   onClick={() => toggleCorrect(option.id)}
                   aria-label={`${option.id} to‘g‘ri javob`}
                 >
@@ -265,7 +279,7 @@ function QuestionEditor({ question, index, onSave, onDelete }) {
                 type="button"
                 key={option.id}
                 onClick={() => set("correct_answers", [option.id])}
-                className={`rounded-xl border px-4 py-2 text-sm ${form.correct_answers.includes(option.id) ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-border text-muted"}`}
+                className={`rounded-xl border px-4 py-2 text-sm font-semibold ${form.correct_answers.includes(option.id) ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-border text-muted"}`}
               >
                 {option.text}
               </button>
@@ -350,7 +364,10 @@ export default function QuizBuilder({ courseId }) {
   }
   async function addQuestion() {
     try {
-      await quizBuilderApi.addQuestion(active.id, emptyQuestion());
+      await quizBuilderApi.addQuestion(
+        active.id,
+        createDefaultQuestionPayload()
+      );
       await openQuiz(active.id);
       toast.success("Savol qo‘shildi");
     } catch (err) {

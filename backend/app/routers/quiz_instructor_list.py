@@ -18,10 +18,7 @@ def list_course_quizzes_for_instructor(
     """Instruktor uchun kursdagi barcha quizlar, shu jumladan draft/inactive."""
     course = _owned_course(db, course_id, user)
     quizzes = (
-        db.query(Quiz)
-        .filter(Quiz.course_id == course.id)
-        .order_by(Quiz.id.asc())
-        .all()
+        db.query(Quiz).filter(Quiz.course_id == course.id).order_by(Quiz.id.asc()).all()
     )
     return [
         {

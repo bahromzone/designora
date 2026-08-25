@@ -368,9 +368,7 @@ def list_course_quizzes(
             .order_by(QuizAttempt.score.desc())
             .first()
         )
-        can_take, retry_after_sec, retry_at = _get_retry_cooldown(
-            db, quiz.id, user.id
-        )
+        can_take, retry_after_sec, retry_at = _get_retry_cooldown(db, quiz.id, user.id)
         out.append(
             {
                 "id": quiz.id,

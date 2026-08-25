@@ -10,7 +10,6 @@ export default function AboutPage() {
   return (
     <section className="shell py-12 sm:py-16">
       <div className="max-w-3xl mx-auto">
-        <p className="label mb-3">Biz haqimizda</p>
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold text-ink mb-6 leading-tight">
           Designora — dizayn ta'limining yangi bosqichi
         </h1>

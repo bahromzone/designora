@@ -47,7 +47,10 @@ def _active_quiz_ids(db: Session, course_id: int) -> list[int]:
 
 
 def _all_quizzes_passed(db: Session, user: User, course_id: int) -> bool:
-    for qid in _active_quiz_ids(db, course_id):
+    quiz_ids = _active_quiz_ids(db, course_id)
+    if not quiz_ids:
+        return True
+    for qid in quiz_ids:
         passed = (
             db.query(QuizAttempt)
             .filter(
@@ -128,7 +131,7 @@ def issue_certificate(
     if not _all_quizzes_passed(db, user, course_id):
         raise HTTPException(
             status_code=400,
-            detail="Avval kursning barcha testlaridan o'ting",
+            detail="Sertifikat olish uchun avval kursning barcha testlaridan muvaffaqiyatli o'tishingiz kerak",
         )
 
     existing = (

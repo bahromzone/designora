@@ -257,7 +257,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         >
-                          <path d="M1 INDENT 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
                       ) : (
@@ -378,7 +378,6 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
 export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Modal State
@@ -425,12 +424,10 @@ export default function Navbar() {
   return (
     <>
       <div
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={`w-full transition-all duration-300 ${
-          scrolled || isHovered
-            ? "py-4 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm"
-            : "py-6 bg-transparent"
+        className={`w-full py-4 transition-colors duration-200 ${
+          scrolled
+            ? "bg-white/90 backdrop-blur-xl border-b border-gray-200 shadow-sm"
+            : "bg-white/70 backdrop-blur-md border-b border-gray-100"
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">

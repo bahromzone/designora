@@ -28,7 +28,7 @@ const WaveAnimation = () => {
       `}</style>
 
       <div
-        className="absolute top-0 right-0 z-[-1] pointer-events-none overflow-visible w-[800px] h-[600px] md:w-[1200px] md:h-[800px] transform origin-top-right scale-75 md:scale-100 translate-x-[10%] -translate-y-[10%]"
+        className="absolute top-0 right-0 z-[-1] pointer-events-none overflow-visible w-[500px] h-[400px] sm:w-[800px] sm:h-[600px] md:w-[1200px] md:h-[800px] transform origin-top-right scale-75 sm:scale-90 md:scale-100 translate-x-[5%] sm:translate-x-[8%] md:translate-x-[10%] -translate-y-[5%] sm:-translate-y-[8%] md:-translate-y-[10%]"
         aria-hidden="true"
       >
         <svg

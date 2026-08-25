@@ -14,7 +14,9 @@ describe("legal pages", () => {
       screen.getByRole("heading", { name: /Sizning huquqlaringiz/ })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: /Saqlash joyi va transchegaraviy uzatish/ })
+      screen.getByRole("heading", {
+        name: /Saqlash joyi va transchegaraviy uzatish/,
+      })
     ).toBeInTheDocument();
     expect(screen.getByText(/2026-yil 25-avgust/)).toBeInTheDocument();
     expect(screen.getAllByRole("link").length).toBeGreaterThanOrEqual(14);

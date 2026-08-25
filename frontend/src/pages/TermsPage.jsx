@@ -167,18 +167,27 @@ export default function TermsPage() {
         <p className="mt-4 text-sm" style={{ color: "var(--ink-60)" }}>
           Kuchga kirgan va oxirgi yangilangan sana: {UPDATED_AT}
         </p>
-        <p className="mt-6 text-lg leading-8" style={{ color: "var(--ink-60)" }}>
+        <p
+          className="mt-6 text-lg leading-8"
+          style={{ color: "var(--ink-60)" }}
+        >
           Ushbu Shartlar siz va Designora o‘rtasidagi xizmatdan foydalanish
           qoidalarini belgilaydi. Xarid yoki ro‘yxatdan o‘tishdan oldin ularni
           diqqat bilan o‘qing.
         </p>
 
-        <nav aria-label="Foydalanish shartlari bo‘limlari" className="my-10 rounded-2xl border border-black/10 bg-black/[0.025] p-6">
+        <nav
+          aria-label="Foydalanish shartlari bo‘limlari"
+          className="my-10 rounded-2xl border border-black/10 bg-black/[0.025] p-6"
+        >
           <h2 className="mb-4 font-semibold text-ink">Mundarija</h2>
           <ol className="grid gap-2 text-sm sm:grid-cols-2">
             {SECTIONS.map((section) => (
               <li key={section.id}>
-                <a className="text-purple-700 underline-offset-4 hover:underline" href={`#${section.id}`}>
+                <a
+                  className="text-purple-700 underline-offset-4 hover:underline"
+                  href={`#${section.id}`}
+                >
                   {section.title}
                 </a>
               </li>
@@ -188,13 +197,25 @@ export default function TermsPage() {
 
         <div className="space-y-10">
           {SECTIONS.map((section) => (
-            <section id={section.id} key={section.id} className="scroll-mt-28" aria-labelledby={`${section.id}-title`}>
-              <h2 id={`${section.id}-title`} className="font-serif text-2xl font-semibold text-ink">
+            <section
+              id={section.id}
+              key={section.id}
+              className="scroll-mt-28"
+              aria-labelledby={`${section.id}-title`}
+            >
+              <h2
+                id={`${section.id}-title`}
+                className="font-serif text-2xl font-semibold text-ink"
+              >
                 {section.title}
               </h2>
               <div className="mt-3 space-y-3">
                 {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph} className="text-base leading-8" style={{ color: "var(--ink-60)" }}>
+                  <p
+                    key={paragraph}
+                    className="text-base leading-8"
+                    style={{ color: "var(--ink-60)" }}
+                  >
                     {paragraph}
                   </p>
                 ))}

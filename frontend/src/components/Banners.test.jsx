@@ -18,7 +18,9 @@ describe("TopAnnouncementBanner & CookieConsentBanner", () => {
     );
 
     expect(screen.getByText("AKSIYA")).toBeInTheDocument();
-    expect(screen.getByText(/Yozgi chegirma: barcha kurslarga/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Yozgi chegirma: barcha kurslarga/i)
+    ).toBeInTheDocument();
     expect(screen.getByText("Chegirmani olish")).toBeInTheDocument();
   });
 
@@ -30,7 +32,9 @@ describe("TopAnnouncementBanner & CookieConsentBanner", () => {
     );
 
     // Initial state check after render (modal shows when no key in localStorage)
-    const acceptBtn = await screen.findByRole("button", { name: /Qabul qilish/i });
+    const acceptBtn = await screen.findByRole("button", {
+      name: /Qabul qilish/i,
+    });
     expect(acceptBtn).toBeInTheDocument();
 
     fireEvent.click(acceptBtn);

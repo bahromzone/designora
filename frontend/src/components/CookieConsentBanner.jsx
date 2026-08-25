@@ -39,7 +39,10 @@ export default function CookieConsentBanner() {
             className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 mx-auto max-w-4xl z-50 bg-[#171727] text-white p-4 sm:p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.45)] border border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 font-sans"
           >
             <div className="flex items-center gap-3.5 text-slate-200 text-sm sm:text-[14.5px] leading-relaxed">
-              <span className="text-2xl select-none shrink-0" aria-hidden="true">
+              <span
+                className="text-2xl select-none shrink-0"
+                aria-hidden="true"
+              >
                 🍪
               </span>
               <p>

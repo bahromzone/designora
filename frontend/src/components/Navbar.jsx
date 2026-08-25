@@ -257,7 +257,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         >
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <path d="M1 INDENT 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
                       ) : (
@@ -424,13 +424,10 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+      <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
+        className={`w-full transition-all duration-300 ${
           scrolled || isHovered
             ? "py-4 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm"
             : "py-6 bg-transparent"
@@ -573,7 +570,7 @@ export default function Navbar() {
             </svg>
           </button>
         </div>
-      </motion.header>
+      </div>
 
       {/* Mobile Drawer */}
       <AnimatePresence>

@@ -123,9 +123,11 @@ export default function AppShell({ children }) {
       <a href="#asosiy-kontent" className="skip-link">
         Asosiy kontentga o'tish
       </a>
-      <TopAnnouncementBanner />
+      <header className="sticky top-0 z-40 w-full">
+        <TopAnnouncementBanner />
+        <Navbar />
+      </header>
       <OnboardingModal />
-      <Navbar />
       <AnimatePresence mode="wait">
         <motion.main
           id="asosiy-kontent"
@@ -134,7 +136,7 @@ export default function AppShell({ children }) {
           initial="initial"
           animate="enter"
           exit="exit"
-          className={`relative z-10 flex flex-grow flex-col ${isHomePage ? "" : "pt-24"}`}
+          className={`relative z-10 flex flex-grow flex-col ${isHomePage ? "" : "pt-8"}`}
         >
           {children}
         </motion.main>

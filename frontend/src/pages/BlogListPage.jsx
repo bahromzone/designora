@@ -109,7 +109,6 @@ export default function BlogListPage() {
   return (
     <section className="shell py-16 sm:py-20">
       <div className="mb-10">
-        <p className="label mb-3">Blog</p>
         <h1
           className="font-serif font-semibold text-ink leading-tight"
           style={{ fontSize: "clamp(2rem,4.5vw,3rem)" }}

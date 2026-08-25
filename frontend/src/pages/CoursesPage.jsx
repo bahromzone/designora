@@ -115,7 +115,6 @@ export default function CoursesPage() {
   return (
     <section className="shell py-16 sm:py-20">
       <header className="max-w-3xl">
-        <p className="label">Katalog</p>
         <h1 className="font-serif text-3xl font-semibold text-ink sm:text-4xl">
           Kurslar katalogi
         </h1>

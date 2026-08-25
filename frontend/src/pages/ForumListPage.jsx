@@ -151,7 +151,6 @@ export default function ForumListPage() {
     <section className="shell py-16 sm:py-20">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="label mb-3">Forum</p>
           <h1
             className="font-serif font-semibold text-ink leading-tight"
             style={{ fontSize: "clamp(2rem,4.5vw,3rem)" }}

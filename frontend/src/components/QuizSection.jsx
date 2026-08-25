@@ -5,6 +5,18 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { Badge, Spinner } from "./ui";
 
+function formatRemainingTime(seconds) {
+  if (!seconds || seconds <= 0) return "";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins >= 60) {
+    const hours = Math.floor(mins / 60);
+    const restMins = mins % 60;
+    return `${hours} soat ${restMins > 0 ? `${restMins} daqiqa` : ""}`;
+  }
+  return `${mins} daqiqa ${secs} soniya`;
+}
+
 // Variant qiymati/yorlig'ini turli backend shakllariga moslab olish.
 function optValue(opt, i) {
   if (opt == null) return String(i);
@@ -31,6 +43,8 @@ function QuizList({ quizzes, onStart }) {
             ? null
             : Math.max(0, quiz.max_attempts - (quiz.attempts_used ?? 0));
         const noAttempts = attemptsLeft === 0;
+        const cooldownActive = quiz.can_take === false;
+
         return (
           <div
             key={quiz.id}
@@ -52,12 +66,23 @@ function QuizList({ quizzes, onStart }) {
                 {quiz.questions_count} savol · o'tish uchun {quiz.passing_score}
                 %{attemptsLeft != null && ` · ${attemptsLeft} urinish qoldi`}
               </p>
+              {cooldownActive && (
+                <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700">
+                  ⏳ Qayta urinish uchun 1 soat kutish kerak (qolgan vaqt:{" "}
+                  {formatRemainingTime(quiz.retry_after_seconds)})
+                </p>
+              )}
             </div>
             <button
               type="button"
               onClick={() => onStart(quiz)}
-              disabled={noAttempts}
+              disabled={noAttempts || cooldownActive}
               className="btn-primary shrink-0 px-5 py-2 text-sm disabled:opacity-50"
+              title={
+                cooldownActive
+                  ? "Testdan o'ta olmaganingiz sababli 1 soat kuting"
+                  : ""
+              }
             >
               {quiz.passed ? "Qayta yechish" : "Boshlash"}
             </button>
@@ -174,6 +199,8 @@ function QuizTake({ quiz, onSubmit, onCancel, submitting }) {
 
 function QuizResult({ quiz, result, onRetry, onBack }) {
   const perQuestion = result.per_question ?? [];
+  const cooldownActive = !result.passed;
+
   return (
     <div className="card rounded-2xl p-6">
       <div className="text-center">
@@ -198,6 +225,13 @@ function QuizResult({ quiz, result, onRetry, onBack }) {
             {result.passing_score}%
           </p>
         )}
+        {!result.passed && (
+          <div className="mt-4 inline-block rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+            <span className="font-semibold">⚠️ Qayta urinish cheklovi:</span>{" "}
+            Testdan o'ta olmadingiz. Qoidalarga ko'ra keyingi urinish{" "}
+            <strong>1 soatdan</strong> keyin mumkin bo'ladi.
+          </div>
+        )}
       </div>
 
       {perQuestion.length > 0 && (
@@ -221,13 +255,21 @@ function QuizResult({ quiz, result, onRetry, onBack }) {
         </div>
       )}
 
-      <div className="mt-6 flex gap-2">
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
         <button
           type="button"
           onClick={onRetry}
-          className="btn-outline px-5 py-2 text-sm"
+          disabled={cooldownActive}
+          className="btn-outline px-5 py-2 text-sm disabled:opacity-50"
+          title={
+            cooldownActive
+              ? "Qayta urinish uchun 1 soat kuting"
+              : "Qayta topshirish"
+          }
         >
-          Qayta urinish
+          {cooldownActive
+            ? "⏳ Qayta urinish (1 soatdan keyin)"
+            : "Qayta urinish"}
         </button>
         <button
           type="button"
@@ -278,6 +320,14 @@ export default function QuizSection({ courseId, isEnrolled }) {
   }, [load]);
 
   async function startQuiz(quiz) {
+    if (quiz.can_take === false) {
+      const waitTime =
+        formatRemainingTime(quiz.retry_after_seconds) || "1 soat";
+      toast.error(
+        `Testdan o'ta olmagansiz. Qayta urinish uchun ${waitTime} kuting.`
+      );
+      return;
+    }
     try {
       const full = await quizApi.take(quiz.id, token);
       setActive(full);
@@ -294,9 +344,13 @@ export default function QuizSection({ courseId, isEnrolled }) {
       const res = await quizApi.submit(active.id, answers, token);
       setResult(res);
       setView("result");
-      toast[res.passed ? "success" : "info"](
-        res.passed ? "Tabriklaymiz, o'tdingiz!" : "Yana urinib ko'ring."
-      );
+      if (res.passed) {
+        toast.success("Tabriklaymiz, testdan muvaffaqiyatli o'tdingiz!");
+      } else {
+        toast.error(
+          "Testdan o'ta olmadingiz. Qayta urinish 1 soatdan keyin mumkin bo'ladi."
+        );
+      }
       load();
     } catch (err) {
       toast.error(err.message || "Javoblarni yuborib bo'lmadi.");
@@ -329,7 +383,13 @@ export default function QuizSection({ courseId, isEnrolled }) {
           <QuizResult
             quiz={active}
             result={result}
-            onRetry={() => startQuiz(active)}
+            onRetry={() => {
+              if (result.passed) {
+                startQuiz(active);
+              } else {
+                toast.error("Qayta topshirish uchun 1 soat kutishingiz kerak.");
+              }
+            }}
             onBack={() => setView("list")}
           />
         ) : (

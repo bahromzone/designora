@@ -150,8 +150,8 @@ export default function CertificateSection({ courseId, isEnrolled, progress }) {
               Tabriklaymiz! Kursni yakunladingiz.
             </p>
             <p className="mt-1 text-sm text-muted">
-              Sertifikatingizni oling (barcha testlardan o'tilgan bo'lishi
-              kerak).
+              Sertifikat olish uchun darslarni 100% tugatish va kursning barcha
+              testlaridan muvaffaqiyatli o'tish talab etiladi.
             </p>
             <button
               type="button"
@@ -159,14 +159,14 @@ export default function CertificateSection({ courseId, isEnrolled, progress }) {
               disabled={issuing}
               className="btn-primary mx-auto mt-5 px-6 py-2.5 text-sm disabled:opacity-60"
             >
-              {issuing ? "..." : "Sertifikat olish"}
+              {issuing ? "Tekshirilmoqda..." : "Sertifikat olish"}
             </button>
           </div>
         ) : (
           <div className="card rounded-2xl p-6">
             <p className="text-sm text-muted">
-              Sertifikat uchun kursni 100% tugatishingiz va barcha testlardan
-              o'tishingiz kerak.
+              Sertifikat olish uchun darslarni 100% tugatishingiz va kursning
+              barcha testlaridan muvaffaqiyatli o'tishingiz shart.
             </p>
             <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface">
               <div
@@ -175,7 +175,7 @@ export default function CertificateSection({ courseId, isEnrolled, progress }) {
               />
             </div>
             <p className="mt-2 text-xs text-muted">
-              {progress ?? 0}% tugatildi
+              {progress ?? 0}% darslar tugatildi
             </p>
           </div>
         )}

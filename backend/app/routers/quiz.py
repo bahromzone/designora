@@ -6,7 +6,7 @@ Prefix: /api/quiz
 - Talaba: quizni yechish, avtomatik baholash, urinishlar tarixi
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -24,6 +24,8 @@ from app.services.gamification_service import award_badge
 from app.services.quiz_service import grade_submission
 
 router = APIRouter(prefix="/api/quiz", tags=["Quiz"])
+
+RETRY_COOLDOWN_MINUTES = 60
 
 
 def _now():
@@ -60,6 +62,41 @@ def _owned_quiz(db: Session, quiz_id: int, user: User) -> Quiz:
     quiz = _get_quiz(db, quiz_id)
     _owned_course(db, quiz.course_id, user)
     return quiz
+
+
+def _get_retry_cooldown(
+    db: Session,
+    quiz_id: int,
+    user_id: int,
+    cooldown_minutes: int = RETRY_COOLDOWN_MINUTES,
+) -> tuple[bool, int, str | None]:
+    """Testdan o'ta olmagan taqdirda 1 soatlik (cooldown_minutes) qayta urinish cheklovini hisoblaydi.
+
+    Qaytaradi: (can_take, retry_after_seconds, retry_available_at_iso)
+    """
+    last_attempt = (
+        db.query(QuizAttempt)
+        .filter(QuizAttempt.quiz_id == quiz_id, QuizAttempt.user_id == user_id)
+        .order_by(QuizAttempt.submitted_at.desc())
+        .first()
+    )
+    if not last_attempt or last_attempt.passed:
+        return True, 0, None
+
+    if not last_attempt.submitted_at:
+        return True, 0, None
+
+    submitted_at = last_attempt.submitted_at
+    if submitted_at.tzinfo is None:
+        submitted_at = submitted_at.replace(tzinfo=UTC)
+
+    now = _now()
+    available_at = submitted_at + timedelta(minutes=cooldown_minutes)
+    if now < available_at:
+        remaining_seconds = int((available_at - now).total_seconds())
+        return False, max(1, remaining_seconds), available_at.isoformat()
+
+    return True, 0, None
 
 
 # ── SCHEMAS ──
@@ -331,6 +368,9 @@ def list_course_quizzes(
             .order_by(QuizAttempt.score.desc())
             .first()
         )
+        can_take, retry_after_sec, retry_at = _get_retry_cooldown(
+            db, quiz.id, user.id
+        )
         out.append(
             {
                 "id": quiz.id,
@@ -342,6 +382,9 @@ def list_course_quizzes(
                 "questions_count": quiz.questions.count(),
                 "best_score": best.score if best else None,
                 "passed": bool(best.passed) if best else False,
+                "can_take": can_take,
+                "retry_after_seconds": retry_after_sec,
+                "retry_available_at": retry_at,
             }
         )
     return out
@@ -357,6 +400,14 @@ def get_quiz_to_take(
     user = _get_user(db, email)
     quiz = _get_quiz(db, quiz_id)
     _require_enrolled(db, user, quiz.course_id)
+
+    can_take, retry_after_sec, _ = _get_retry_cooldown(db, quiz.id, user.id)
+    if not can_take:
+        minutes_left = max(1, (retry_after_sec + 59) // 60)
+        raise HTTPException(
+            status_code=429,
+            detail=f"Testdan o'ta olmadingiz. Qayta urinish uchun {minutes_left} daqiqa kuting.",
+        )
 
     used = (
         db.query(QuizAttempt)
@@ -376,6 +427,9 @@ def get_quiz_to_take(
         "max_attempts": quiz.max_attempts,
         "attempts_used": used,
         "attempts_left": attempts_left,
+        "can_take": can_take,
+        "retry_after_seconds": retry_after_sec,
+        "retry_available_at": None,
         "questions": [
             _question_public_dict(q)
             for q in quiz.questions.order_by(QuizQuestion.order.asc()).all()
@@ -393,6 +447,14 @@ def submit_quiz(
     user = _get_user(db, email)
     quiz = _get_quiz(db, quiz_id)
     _require_enrolled(db, user, quiz.course_id)
+
+    can_take, retry_after_sec, _ = _get_retry_cooldown(db, quiz.id, user.id)
+    if not can_take:
+        minutes_left = max(1, (retry_after_sec + 59) // 60)
+        raise HTTPException(
+            status_code=429,
+            detail=f"Qayta urinish uchun {minutes_left} daqiqa kuting.",
+        )
 
     used = (
         db.query(QuizAttempt)
@@ -440,6 +502,15 @@ def submit_quiz(
     db.commit()
     db.refresh(attempt)
 
+    retry_after_sec = 0 if passed else (RETRY_COOLDOWN_MINUTES * 60)
+    retry_at = (
+        None
+        if passed
+        else (
+            attempt.submitted_at + timedelta(minutes=RETRY_COOLDOWN_MINUTES)
+        ).isoformat()
+    )
+
     return {
         "attempt_id": attempt.id,
         "score": attempt.score,
@@ -447,6 +518,9 @@ def submit_quiz(
         "total_points": attempt.total_points,
         "passed": attempt.passed,
         "passing_score": quiz.passing_score,
+        "can_take": bool(passed),
+        "retry_after_seconds": retry_after_sec,
+        "retry_available_at": retry_at,
         "per_question": result["per_question"],
     }
 

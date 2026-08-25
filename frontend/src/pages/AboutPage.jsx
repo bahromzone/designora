@@ -1,13 +1,7 @@
 import { Link } from "react-router-dom";
 
-const STATS = [
-  { value: "12,000+", label: "Faol o'quvchilar" },
-  { value: "80+", label: "Tayyor kurslar" },
-  { value: "4.9/5", label: "O'rtacha baho" },
-];
-
 const INTRO =
-  "Designora — O'zbekistondagi dizaynerlar uchun premium onlayn ta'lim platformasi. Biz oddiy videodarslardan voz kechib, soha yetakchilaridan kinematik sifatdagi jonli masterklasslar, amaliy loyihalar va shaxsiy mentorlik taklif qilamiz.";
+  "Designora — O'zbekistondagi dizaynerlar uchun premium onlayn ta'lim platformasi. Biz videodarslar bilan birga soha yetakchilaridan kinematik sifatdagi jonli masterklasslar, amaliy loyihalar va shaxsiy mentorlik taklif qilamiz.";
 
 const MISSION =
   "Maqsadimiz — har bir o'quvchini moodboarddan tayyor mahsulotgacha bo'lgan yo'lda kuzatib borish va ularni haqiqiy bozorga tayyorlash. UI/UX, moda dizayni, brending va styling yo'nalishlarida amaliy bilim beramiz.";
@@ -32,22 +26,6 @@ export default function AboutPage() {
         >
           {MISSION}
         </p>
-
-        <div className="grid grid-cols-3 gap-4 mb-12">
-          {STATS.map((s) => (
-            <div key={s.label} className="card rounded-2xl px-4 py-5">
-              <p
-                className="font-serif text-2xl sm:text-3xl font-semibold"
-                style={{ color: "var(--ink)" }}
-              >
-                {s.value}
-              </p>
-              <p className="text-sm mt-1" style={{ color: "var(--ink-60)" }}>
-                {s.label}
-              </p>
-            </div>
-          ))}
-        </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <Link to="/kurslar" className="btn-dark py-3.5 px-7 justify-center">

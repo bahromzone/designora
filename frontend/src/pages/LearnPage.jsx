@@ -140,15 +140,15 @@ export default function LearnPage() {
     Number(data.progress_percent) >= 100 && Number(data.total_lessons) > 0;
 
   return (
-    <section className="shell py-16" data-testid="learn-ready">
-      <div className="mb-8 flex flex-col gap-4 sm:mb-10">
+    <section className="shell py-12" data-testid="learn-ready">
+      <div className="mb-8 flex flex-col gap-4">
         <Link
           to="/kurslarim"
           data-testid="back-to-my-courses"
-          className="group inline-flex w-fit min-h-10 items-center gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 sm:px-5 sm:text-base"
+          className="group inline-flex w-fit min-h-10 items-center gap-2.5 rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
         >
           <span
-            className="text-lg leading-none transition-transform duration-200 group-hover:-translate-x-1"
+            className="text-base leading-none transition-transform duration-200 group-hover:-translate-x-1"
             aria-hidden="true"
           >
             ←
@@ -156,16 +156,44 @@ export default function LearnPage() {
           <span>Kurslarimga qaytish</span>
         </Link>
         <div className="max-w-4xl">
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-600">
-            {courseCompleted ? "Kurs tugallangan" : "Hozir o'rganilmoqda"}
-          </p>
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+          <div className="mb-2.5 flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                courseCompleted
+                  ? "border border-emerald-200/60 bg-emerald-50 text-emerald-700"
+                  : "border border-violet-200/60 bg-violet-50 text-violet-700"
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  courseCompleted ? "bg-emerald-500" : "bg-violet-500"
+                }`}
+                aria-hidden="true"
+              />
+              {courseCompleted ? "Kurs yakunlangan" : "O'rganilmoqda"}
+            </span>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
             {data.title}
           </h1>
-          <div
-            className="mt-4 h-1.5 w-20 rounded-full bg-violet-500"
-            aria-hidden="true"
-          />
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 sm:text-sm">
+            {data.modules?.length > 0 && (
+              <span>{data.modules.length} ta modul</span>
+            )}
+            {data.total_lessons > 0 && (
+              <>
+                {data.modules?.length > 0 && <span aria-hidden="true">·</span>}
+                <span>
+                  {data.completed_lessons || 0}/{data.total_lessons} ta dars
+                  tugatildi
+                </span>
+              </>
+            )}
+            <span aria-hidden="true">·</span>
+            <span className="font-medium text-violet-700">
+              {data.progress_percent || 0}% progress
+            </span>
+          </div>
         </div>
       </div>
       {error && <p role="alert">{error}</p>}

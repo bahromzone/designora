@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import OnboardingModal from "./OnboardingModal";
+import TopAnnouncementBanner from "./TopAnnouncementBanner";
+import CookieConsentBanner from "./CookieConsentBanner";
 import { trackEvent } from "../lib/track";
 
 const pageVariants = {
@@ -121,6 +123,7 @@ export default function AppShell({ children }) {
       <a href="#asosiy-kontent" className="skip-link">
         Asosiy kontentga o'tish
       </a>
+      <TopAnnouncementBanner />
       <OnboardingModal />
       <Navbar />
       <AnimatePresence mode="wait">
@@ -208,6 +211,7 @@ export default function AppShell({ children }) {
           </div>
         </div>
       </footer>
+      <CookieConsentBanner />
     </div>
   );
 }

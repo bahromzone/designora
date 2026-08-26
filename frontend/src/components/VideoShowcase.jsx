@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Play, X } from "lucide-react";
 
 export default function VideoShowcase() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -27,7 +26,13 @@ export default function VideoShowcase() {
                 className="group/btn relative flex h-20 w-20 transform items-center justify-center rounded-full border border-white/40 bg-white/20 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white/30 focus:outline-none focus:ring-4 focus:ring-purple-400/50 active:scale-95 sm:h-24 sm:w-24"
               >
                 <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100" />
-                <Play className="relative z-10 h-8 w-8 translate-x-0.5 fill-white text-white sm:h-10 sm:w-10" />
+                <svg
+                  className="relative z-10 h-8 w-8 translate-x-0.5 fill-white text-white sm:h-10 sm:w-10"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
               </button>
               <h3 className="mt-6 max-w-2xl text-2xl font-extrabold tracking-tight text-white drop-shadow-md sm:text-3xl md:text-4xl">
                 Designora platformasi bilan 1 daqiqada tanishing
@@ -56,7 +61,19 @@ export default function VideoShowcase() {
               aria-label="Videoni yopish"
               className="absolute right-4 top-4 z-20 rounded-full border border-white/20 bg-black/60 p-2 text-white backdrop-blur-md transition-colors hover:bg-black/80"
             >
-              <X className="h-5 w-5" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </button>
             <iframe
               className="h-full w-full"

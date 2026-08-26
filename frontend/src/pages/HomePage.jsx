@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
+import VideoShowcase from "../components/VideoShowcase";
 import { discoveryApi } from "../lib/api";
 
 const premiumEasing = [0.16, 1, 0.3, 1];
@@ -150,6 +151,9 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Video Showcase Banner */}
+      <VideoShowcase />
 
       <section className="border-y border-gray-200/60 bg-white/40 py-10">
         <motion.div

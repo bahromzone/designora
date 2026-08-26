@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
 import VideoShowcase from "../components/VideoShowcase";
@@ -8,203 +7,123 @@ import { discoveryApi } from "../lib/api";
 
 const premiumEasing = [0.16, 1, 0.3, 1];
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-  },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: premiumEasing },
-  },
-};
-
-const HERO_COPY = [
-  "Portfolio yarating.",
-  "Ilhomingizga shakl bering.",
-  "Har bir g‘oya ko‘rinishga loyiq.",
-  "Natijani yarating.",
-  "Kuchli loyiha sari yuring.",
-  "Ijodingizga yangi makon oching.",
+const directions = [
+  { label: "UI/UX", query: "ui ux" },
+  { label: "Moda dizayni", query: "moda" },
+  { label: "Brending", query: "brending" },
+  { label: "Styling", query: "styling" },
+  { label: "Grafik dizayn", query: "grafik dizayn" },
 ];
 
-// public/hero/ papkasidagi 50 ta rasm (1.webp, 2.webp ... 50.webp)
-const HERO_BG_IMAGE_COUNT = 50;
-const HERO_BG_IMAGES = Array.from(
-  { length: HERO_BG_IMAGE_COUNT },
-  (_, index) => `/hero/${index + 1}.webp`
-);
-
 export default function HomePage() {
-  const [copyIndex, setCopyIndex] = useState(0);
-  const [bgIndex, setBgIndex] = useState(0);
-
-  useEffect(() => {
-    const copyInterval = window.setInterval(() => {
-      setCopyIndex((currentIndex) => (currentIndex + 1) % HERO_COPY.length);
-    }, 3000);
-
-    const bgInterval = window.setInterval(() => {
-      setBgIndex((currentIndex) => (currentIndex + 1) % HERO_BG_IMAGES.length);
-    }, 6000);
-
-    return () => {
-      window.clearInterval(copyInterval);
-      window.clearInterval(bgInterval);
-    };
-  }, []);
-
   return (
-    <div className="relative w-full bg-[var(--bg-light)]">
-      <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
+    <div className="home-reference-shell relative w-full bg-[oklch(98%_0.008_245)]">
+      <style>{`
+        body:has(.home-reference-shell) header > aside { display: none; }
+        body:has(.home-reference-shell) header > div:has(nav) {
+          border: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 12px 16px !important;
+        }
+        body:has(.home-reference-shell) header > div:has(nav) > div {
+          max-width: 1280px;
+          border: 1px solid oklch(91% 0.012 245);
+          border-radius: 999px;
+          background: oklch(99% 0.006 245 / 0.96);
+          box-shadow: 0 16px 40px oklch(35% 0.035 245 / 0.12);
+          padding: 8px 16px;
+        }
+        body:has(.home-reference-shell) header nav { gap: clamp(20px, 3vw, 40px); }
+        body:has(.home-reference-shell) header nav a { color: oklch(38% 0.018 245); }
+        body:has(.home-reference-shell) header nav a:hover,
+        body:has(.home-reference-shell) header nav a[aria-current="page"] {
+          color: oklch(18% 0.018 245);
+        }
+        @media (max-width: 767px) {
+          body:has(.home-reference-shell) header > div:has(nav) > div {
+            border-radius: 22px;
+          }
+        }
+      `}</style>
 
-      <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden px-6 pb-16 pt-12 sm:pt-16 md:min-h-[90vh] md:pt-20">
-        {/* Dynamic rotating background images from public/hero/ */}
-        <div
-          data-testid="hero-background-slideshow"
-          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
-        >
-          <AnimatePresence initial={false}>
-            <motion.div
-              key={bgIndex}
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 0.15, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 2, ease: "easeInOut" }}
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat filter blur-[3px]"
-              style={{
-                backgroundImage: `url('${HERO_BG_IMAGES[bgIndex]}')`,
-              }}
-            />
-          </AnimatePresence>
-
-          {/* Overlay gradient mask to ensure perfect text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-light)]/60 via-transparent to-[var(--bg-light)]" />
-        </div>
-
-        <motion.div
-          animate={{ x: [0, 30, -20, 0], y: [0, -30, 20, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-          className="pointer-events-none absolute left-[-10%] top-[10%] z-0 h-[40rem] w-[40rem] rounded-full bg-pink-400/10 blur-[120px]"
+      <section
+        data-home-section="hero"
+        aria-labelledby="home-hero-title"
+        className="relative mx-auto min-h-[700px] w-[calc(100%-24px)] max-w-[1440px] overflow-hidden rounded-[28px] bg-sky-300 sm:min-h-[760px] lg:min-h-[820px]"
+      >
+        <img
+          data-testid="home-hero-image"
+          src="https://u308501018.p.clickup-attachments.com/u308501018/e9ac86e5-8064-4d3e-8a04-97656c08e4b6/generated-image-bc0cf268-346a-4738-8ec7-a486ee819dc4.png?view=open"
+          alt="Dizayn vositalari bilan ishlayotgan Designora talabalari"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          fetchPriority="high"
         />
-        <div className="relative z-10 mx-auto w-full max-w-5xl">
-          <motion.div
-            data-testid="home-hero-content"
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="mx-auto text-center"
-          >
-            <motion.h1
-              variants={fadeUp}
-              className="mb-6 text-5xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-7xl"
-            >
-              Dizaynni o'rganing. <br />
-              <span
-                className="inline-grid min-h-[2.2em] overflow-hidden pb-2 align-top text-violet-600"
-                aria-live="polite"
-              >
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.span
-                    key={copyIndex}
-                    className="col-start-1 row-start-1 inline-block"
-                    initial={{ opacity: 0, y: 24 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -24 }}
-                    transition={{ duration: 0.45, ease: premiumEasing }}
-                  >
-                    {HERO_COPY[copyIndex]}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
-            </motion.h1>
-            <motion.p
-              variants={fadeUp}
-              className="mx-auto mb-10 max-w-xl text-lg text-slate-600 md:text-xl"
-            >
-              8 haftalik amaliy dastur, to'rtta portfolio loyihasi va har
-              bosqichda mentor tekshiruvi. Birinchi oqim 30 ishtirokchi bilan
-              boshlanadi.
-            </motion.p>
-            <motion.div
-              data-testid="home-hero-actions"
-              variants={fadeUp}
-              className="flex flex-col justify-center gap-4 sm:flex-row"
-            >
-              <Link to="/?modal=signup">
-                <motion.span
-                  whileHover={{
-                    scale: 1.03,
-                    boxShadow: "0 20px 40px -10px rgba(124,58,237,0.45)",
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="relative inline-block overflow-hidden rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 px-8 py-4 text-lg font-bold text-white"
-                >
-                  Birinchi oqimga qo'shilish
-                </motion.span>
-              </Link>
-              <Link to="/kurslar">
-                <motion.span
-                  whileHover={{ scale: 1.03, backgroundColor: "#f8fafc" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="glass-panel inline-block rounded-full px-8 py-4 text-lg font-bold text-slate-900 transition-colors"
-                >
-                  Dasturlarni ko'rish
-                </motion.span>
-              </Link>
-            </motion.div>
-            <motion.div
-              data-testid="home-hero-facts"
-              variants={fadeUp}
-              className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-0 border-y border-gray-200 text-center sm:grid-cols-3 sm:border-y-0 sm:border-t"
-            ></motion.div>
-          </motion.div>
-        </div>
-      </section>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-100/25 via-transparent to-slate-950/20" />
 
-      {/* 1. Platformadagi yo'nalishlar (Videodan tepada) */}
-      <section className="border-y border-gray-200/60 bg-white/40 py-10">
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 1 }}
-          className="mx-auto max-w-7xl px-6 text-center"
+          data-testid="home-hero-content"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: premiumEasing }}
+          className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pb-72 pt-16 text-center sm:px-8 sm:pb-80 sm:pt-20 lg:pb-96 lg:pt-24"
         >
-          <p className="mb-6 text-xs font-bold uppercase tracking-widest text-slate-400">
-            Platformadagi yo'nalishlar
-          </p>
-          <div className="flex flex-wrap justify-center gap-10 font-serif text-2xl font-bold text-slate-800 opacity-40 grayscale md:gap-20 md:text-3xl">
-            {[
-              "UI/UX",
-              "Moda dizayni",
-              "Brending",
-              "Styling",
-              "Grafik dizayn",
-            ].map((direction) => (
-              <motion.span
-                key={direction}
-                whileHover={{ scale: 1.05, opacity: 0.8 }}
-                transition={{ duration: 0.2 }}
-              >
-                {direction}
-              </motion.span>
-            ))}
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/85 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-sm">
+            <span className="flex -space-x-1.5" aria-hidden="true">
+              <span className="h-5 w-5 rounded-full border-2 border-white bg-amber-300" />
+              <span className="h-5 w-5 rounded-full border-2 border-white bg-violet-300" />
+              <span className="h-5 w-5 rounded-full border-2 border-white bg-emerald-300" />
+            </span>
+            1 000+ ijodkor Designora bilan o'rganmoqda
           </div>
+
+          <h1
+            id="home-hero-title"
+            className="max-w-[850px] text-balance text-[clamp(2.65rem,6vw,5.4rem)] font-black leading-[0.94] tracking-[-0.055em] text-slate-950"
+          >
+            Aqlliroq o'rganing. Tezroq o'sing. Istalgan joyda yarating.
+          </h1>
+          <p className="mt-6 max-w-2xl text-pretty text-base font-medium leading-7 text-slate-700 sm:text-lg">
+            Amaliy kurslar, real loyihalar va mentor fikri bilan dizayn
+            mahoratingizni portfolio darajasiga olib chiqing.
+          </p>
+          <Link
+            to="/kurslar"
+            className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-7 py-3 text-sm font-bold text-white shadow-[0_14px_30px_oklch(20%_0.02_245/0.24)] transition duration-200 hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950 active:translate-y-0"
+          >
+            Kurslarni ko'rish
+          </Link>
         </motion.div>
       </section>
 
-      {/* 2. Video Showcase (Yo'nalishlardan pastda, yozuvlarsiz, ixchamlashtirilgan) */}
-      <VideoShowcase />
+      <section
+        data-home-section="directions"
+        data-testid="home-directions"
+        aria-labelledby="directions-title"
+        className="bg-[oklch(99%_0.006_245)] px-6 py-12 sm:py-16"
+      >
+        <div className="mx-auto max-w-7xl text-center">
+          <p
+            id="directions-title"
+            className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500"
+          >
+            Platformadagi yo'nalishlar
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-7 gap-y-4 sm:gap-x-12 lg:gap-x-16">
+            {directions.map((direction) => (
+              <Link
+                key={direction.label}
+                to={`/kurslar?q=${encodeURIComponent(direction.query)}`}
+                className="text-xl font-bold tracking-tight text-slate-800 transition duration-200 hover:-translate-y-0.5 hover:text-violet-700 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 sm:text-2xl"
+              >
+                {direction.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
+      <VideoShowcase />
       <EngagementSection />
 
       <section className="mx-auto max-w-7xl px-6 py-16">

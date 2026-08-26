@@ -34,13 +34,12 @@ const HERO_COPY = [
   "Ijodingizga yangi makon oching.",
 ];
 
-// static / public papkaga joylanadigan rasmlar ro'yxati
-const HERO_BG_IMAGES = [
-  "/hero-1.webp",
-  "/hero-2.webp",
-  "/hero-3.webp",
-  "/hero-4.webp",
-];
+// public/hero/ papkasidagi 50 ta rasm (1.webp, 2.webp ... 50.webp)
+const HERO_BG_IMAGE_COUNT = 50;
+const HERO_BG_IMAGES = Array.from(
+  { length: HERO_BG_IMAGE_COUNT },
+  (_, index) => `/hero/${index + 1}.webp`
+);
 
 export default function HomePage() {
   const [copyIndex, setCopyIndex] = useState(0);
@@ -66,7 +65,7 @@ export default function HomePage() {
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
 
       <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden px-6 pb-16 pt-12 sm:pt-16 md:min-h-[90vh] md:pt-20">
-        {/* Dynamic rotating background images with subtle fade & blur */}
+        {/* Dynamic rotating background images from public/hero/ */}
         <div
           data-testid="hero-background-slideshow"
           className="pointer-events-none absolute inset-0 z-0 overflow-hidden"

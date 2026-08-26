@@ -132,9 +132,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Video Showcase Banner */}
-      <VideoShowcase />
-
+      {/* 1. Platformadagi yo'nalishlar (Videodan tepada) */}
       <section className="border-y border-gray-200/60 bg-white/40 py-10">
         <motion.div
           initial={{ opacity: 0 }}
@@ -165,6 +163,9 @@ export default function HomePage() {
           </div>
         </motion.div>
       </section>
+
+      {/* 2. Video Showcase (Yo'nalishlardan pastda, yozuvlarsiz, ixchamlashtirilgan) */}
+      <VideoShowcase />
 
       <EngagementSection />
 

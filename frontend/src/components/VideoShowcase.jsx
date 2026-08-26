@@ -5,48 +5,47 @@ export default function VideoShowcase() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   return (
-    <section className="relative z-10 -mt-10 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto mb-16">
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 group">
+    <section className="relative z-10 -mt-6 mb-16 px-6 sm:-mt-10">
+      <div className="group relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 shadow-2xl">
         {!isPlaying ? (
-          <div className="relative aspect-video w-full flex flex-col justify-between p-6 sm:p-10 md:p-14 text-white overflow-hidden">
-            {/* Background glowing gradients & decorative pattern */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-brand-purple/40 via-transparent to-blue-600/30 opacity-70 pointer-events-none" />
-            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative flex aspect-video w-full flex-col justify-between overflow-hidden p-6 text-white sm:p-10 md:p-14">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-violet-600/30 via-transparent to-blue-600/30 opacity-70" />
+            <div className="pointer-events-none absolute -bottom-20 -right-20 h-80 w-80 rounded-full bg-purple-600/20 blur-3xl" />
 
-            {/* Top header within video banner */}
             <div className="relative z-10 flex items-center justify-between">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-semibold tracking-wide uppercase text-purple-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-purple-200 backdrop-blur-md">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
                 Platforma bilan tanishuv
               </div>
             </div>
 
-            {/* Middle Play Button */}
-            <div className="relative z-10 flex flex-col items-center justify-center my-auto text-center">
+            <div className="relative z-10 my-auto flex flex-col items-center justify-center text-center">
               <button
                 type="button"
                 onClick={() => setIsPlaying(true)}
                 aria-label="Videoni tomosha qilish"
-                className="group/btn relative flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 focus:outline-none focus:ring-4 focus:ring-purple-400/50"
+                className="group/btn relative flex h-20 w-20 transform items-center justify-center rounded-full border border-white/40 bg-white/20 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:bg-white/30 focus:outline-none focus:ring-4 focus:ring-purple-400/50 active:scale-95 sm:h-24 sm:w-24"
               >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-                <Play className="relative z-10 w-8 h-8 sm:w-10 sm:h-10 text-white fill-white translate-x-0.5" />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100" />
+                <Play className="relative z-10 h-8 w-8 translate-x-0.5 fill-white text-white sm:h-10 sm:w-10" />
               </button>
-              <h3 className="mt-6 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white max-w-2xl drop-shadow-md">
+              <h3 className="mt-6 max-w-2xl text-2xl font-extrabold tracking-tight text-white drop-shadow-md sm:text-3xl md:text-4xl">
                 Designora platformasi bilan 1 daqiqada tanishing
               </h3>
-              <p className="mt-2 text-sm sm:text-base text-slate-300 max-w-lg">
-                Darslar qanday o‘tiladi, mentorlik jarayoni va amaliy loyihalar ustida ishlash tartibi
+              <p className="mt-2 max-w-lg text-sm text-slate-300 sm:text-base">
+                Darslar qanday o‘tiladi, mentorlik jarayoni va amaliy loyihalar
+                ustida ishlash tartibi
               </p>
             </div>
 
-            {/* Bottom floating preview badge */}
             <div className="relative z-10 flex items-center justify-between text-xs text-slate-300">
-              <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10">
+              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-1.5 backdrop-blur-md">
                 <span>Davomiyligi:</span>
                 <span className="font-semibold text-white">1:20 daqiqa</span>
               </div>
-              <span className="hidden sm:inline-block text-slate-400">Interaktiv darslar &bull; Real vaqtda mentorlik</span>
+              <span className="hidden text-slate-400 sm:inline-block">
+                Interaktiv darslar &bull; Real vaqtda mentorlik
+              </span>
             </div>
           </div>
         ) : (
@@ -55,12 +54,12 @@ export default function VideoShowcase() {
               type="button"
               onClick={() => setIsPlaying(false)}
               aria-label="Videoni yopish"
-              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white border border-white/20 backdrop-blur-md transition-colors"
+              className="absolute right-4 top-4 z-20 rounded-full border border-white/20 bg-black/60 p-2 text-white backdrop-blur-md transition-colors hover:bg-black/80"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
             <iframe
-              className="w-full h-full"
+              className="h-full w-full"
               src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1"
               title="Designora Platforma Tanishuvi"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

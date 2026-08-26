@@ -32,7 +32,7 @@ describe("HomePage hero and video showcase", () => {
     expect(description).toHaveClass("mx-auto");
   });
 
-  it("renders video showcase banner and handles play interaction", () => {
+  it("renders clean video showcase banner and handles play interaction", () => {
     render(
       <BrowserRouter>
         <HomePage />
@@ -43,11 +43,6 @@ describe("HomePage hero and video showcase", () => {
       name: /Videoni tomosha qilish/i,
     });
     expect(playBtn).toBeInTheDocument();
-
-    const videoTitle = screen.getByText(
-      /Designora platformasi bilan 1 daqiqada tanishing/i
-    );
-    expect(videoTitle).toBeInTheDocument();
 
     fireEvent.click(playBtn);
     expect(

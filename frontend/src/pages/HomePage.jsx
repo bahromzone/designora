@@ -55,7 +55,6 @@ export default function HomePage() {
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
 
       <section className="relative flex min-h-[85vh] md:min-h-[90vh] items-center justify-center overflow-hidden px-6 pt-12 sm:pt-16 md:pt-20 pb-16">
-        
         <motion.div
           animate={{ x: [0, 30, -20, 0], y: [0, -30, 20, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "linear" }}

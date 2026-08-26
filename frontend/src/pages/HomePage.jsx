@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
-import WaveAnimation from "../components/WaveAnimation";
 import { discoveryApi } from "../lib/api";
 
 const premiumEasing = [0.16, 1, 0.3, 1];
@@ -56,9 +55,7 @@ export default function HomePage() {
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
 
       <section className="relative flex min-h-[85vh] md:min-h-[90vh] items-center justify-center overflow-hidden px-6 pt-12 sm:pt-16 md:pt-20 pb-16">
-        <div className="animate-stripe pointer-events-none absolute right-0 top-0 z-0 -mr-[25%] -mt-[15%] sm:-mr-[20%] sm:-mt-[10%] md:-mr-[15%] md:-mt-[5%] h-[110%] w-[110%] scale-100 sm:scale-105 md:scale-110">
-          <WaveAnimation />
-        </div>
+        
         <motion.div
           animate={{ x: [0, 30, -20, 0], y: [0, -30, 20, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "linear" }}

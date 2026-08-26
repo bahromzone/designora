@@ -34,15 +34,31 @@ const HERO_COPY = [
   "Ijodingizga yangi makon oching.",
 ];
 
+// static / public papkaga joylanadigan rasmlar ro'yxati
+const HERO_BG_IMAGES = [
+  "/hero-1.webp",
+  "/hero-2.webp",
+  "/hero-3.webp",
+  "/hero-4.webp",
+];
+
 export default function HomePage() {
   const [copyIndex, setCopyIndex] = useState(0);
+  const [bgIndex, setBgIndex] = useState(0);
 
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
+    const copyInterval = window.setInterval(() => {
       setCopyIndex((currentIndex) => (currentIndex + 1) % HERO_COPY.length);
     }, 3000);
 
-    return () => window.clearInterval(intervalId);
+    const bgInterval = window.setInterval(() => {
+      setBgIndex((currentIndex) => (currentIndex + 1) % HERO_BG_IMAGES.length);
+    }, 6000);
+
+    return () => {
+      window.clearInterval(copyInterval);
+      window.clearInterval(bgInterval);
+    };
   }, []);
 
   return (
@@ -50,6 +66,29 @@ export default function HomePage() {
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
 
       <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden px-6 pb-16 pt-12 sm:pt-16 md:min-h-[90vh] md:pt-20">
+        {/* Dynamic rotating background images with subtle fade & blur */}
+        <div
+          data-testid="hero-background-slideshow"
+          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        >
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={bgIndex}
+              initial={{ opacity: 0, scale: 1.08 }}
+              animate={{ opacity: 0.15, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2, ease: "easeInOut" }}
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat filter blur-[3px]"
+              style={{
+                backgroundImage: `url('${HERO_BG_IMAGES[bgIndex]}')`,
+              }}
+            />
+          </AnimatePresence>
+
+          {/* Overlay gradient mask to ensure perfect text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-light)]/60 via-transparent to-[var(--bg-light)]" />
+        </div>
+
         <motion.div
           animate={{ x: [0, 30, -20, 0], y: [0, -30, 20, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "linear" }}

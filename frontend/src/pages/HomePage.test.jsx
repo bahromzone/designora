@@ -30,6 +30,9 @@ describe("HomePage hero and video showcase", () => {
       /8 haftalik amaliy dastur, to'rtta portfolio loyihasi va har bosqichda mentor tekshiruvi/
     );
     expect(description).toHaveClass("mx-auto");
+
+    const bgSlideshow = screen.getByTestId("hero-background-slideshow");
+    expect(bgSlideshow).toBeInTheDocument();
   });
 
   it("renders clean video showcase banner and handles play interaction", () => {

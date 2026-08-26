@@ -1,40 +1,48 @@
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import HomePage from "./HomePage";
 
-vi.mock("../components/EngagementSection", () => ({
-  default: () => <div data-testid="engagement-section" />,
-}));
-
-vi.mock("../components/RecommendationSection", () => ({
-  default: () => <div data-testid="recommendation-section" />,
-}));
-
 vi.mock("../lib/api", () => ({
-  discoveryApi: { bestselling: vi.fn() },
+  getFeaturedCourses: vi.fn().mockResolvedValue([]),
+  getPopularCourses: vi.fn().mockResolvedValue([]),
 }));
 
-describe("HomePage hero", () => {
+describe("HomePage hero and video showcase", () => {
   it("centers the complete hero content across breakpoints", () => {
     render(
-      <MemoryRouter>
+      <BrowserRouter>
         <HomePage />
-      </MemoryRouter>
+      </BrowserRouter>
     );
 
-    expect(screen.getByTestId("home-hero-content")).toHaveClass(
-      "mx-auto",
-      "text-center"
+    const title = screen.getByRole("heading", {
+      name: /Dizaynni o'rganing\./i,
+    });
+    expect(title).toBeInTheDocument();
+    expect(title).toHaveClass("text-center");
+
+    const description = screen.getByText(
+      /8 haftalik amaliy dastur, to'rtta portfolio loyihasi va har bosqichda mentor tekshiruvi/
     );
-    expect(screen.getByText(/8 haftalik amaliy dastur/)).toHaveClass("mx-auto");
-    expect(screen.getByTestId("home-hero-actions")).toHaveClass(
-      "justify-center"
+    expect(description).toHaveClass("text-center");
+    expect(description).toHaveClass("mx-auto");
+  });
+
+  it("renders video showcase banner and handles play interaction", () => {
+    render(
+      <BrowserRouter>
+        <HomePage />
+      </BrowserRouter>
     );
-    expect(screen.getByTestId("home-hero-facts")).toHaveClass(
-      "mx-auto",
-      "max-w-3xl",
-      "text-center"
-    );
+
+    const playBtn = screen.getByRole("button", { name: /Videoni tomosha qilish/i });
+    expect(playBtn).toBeInTheDocument();
+
+    const videoTitle = screen.getByText(/Designora platformasi bilan 1 daqiqada tanishing/i);
+    expect(videoTitle).toBeInTheDocument();
+
+    fireEvent.click(playBtn);
+    expect(screen.getByTitle(/Designora Platforma Tanishuvi/i)).toBeInTheDocument();
   });
 });

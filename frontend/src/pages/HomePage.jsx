@@ -54,18 +54,19 @@ export default function HomePage() {
     <div className="relative w-full bg-[var(--bg-light)]">
       <style>{`@keyframes stripe-float { 0%, 100% { transform: translate(0px, 0px) rotate(35deg); } 50% { transform: translate(45px, 40px) rotate(50deg); } } .animate-stripe { animation: stripe-float 20s ease-in-out infinite; }`}</style>
 
-      <section className="relative flex min-h-[85vh] md:min-h-[90vh] items-center justify-center overflow-hidden px-6 pt-12 sm:pt-16 md:pt-20 pb-16">
+      <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden px-6 pb-16 pt-12 sm:pt-16 md:min-h-[90vh] md:pt-20">
         <motion.div
           animate={{ x: [0, 30, -20, 0], y: [0, -30, 20, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
           className="pointer-events-none absolute left-[-10%] top-[10%] z-0 h-[40rem] w-[40rem] rounded-full bg-pink-400/10 blur-[120px]"
         />
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-2">
+        <div className="relative z-10 mx-auto w-full max-w-5xl">
           <motion.div
+            data-testid="home-hero-content"
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
-            className="text-center lg:text-left"
+            className="mx-auto text-center"
           >
             <motion.h1
               variants={fadeUp}
@@ -92,15 +93,16 @@ export default function HomePage() {
             </motion.h1>
             <motion.p
               variants={fadeUp}
-              className="mx-auto mb-10 max-w-xl text-lg text-slate-600 md:text-xl lg:mx-0"
+              className="mx-auto mb-10 max-w-xl text-lg text-slate-600 md:text-xl"
             >
               8 haftalik amaliy dastur, to'rtta portfolio loyihasi va har
               bosqichda mentor tekshiruvi. Birinchi oqim 30 ishtirokchi bilan
               boshlanadi.
             </motion.p>
             <motion.div
+              data-testid="home-hero-actions"
               variants={fadeUp}
-              className="flex flex-col justify-center gap-4 sm:flex-row lg:justify-start"
+              className="flex flex-col justify-center gap-4 sm:flex-row"
             >
               <Link to="/?modal=signup">
                 <motion.span
@@ -127,13 +129,14 @@ export default function HomePage() {
               </Link>
             </motion.div>
             <motion.div
+              data-testid="home-hero-facts"
               variants={fadeUp}
-              className="mt-12 grid grid-cols-1 gap-0 border-y border-gray-200 text-left sm:grid-cols-3 sm:border-y-0 sm:border-t"
+              className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-0 border-y border-gray-200 text-center sm:grid-cols-3 sm:border-y-0 sm:border-t"
             >
               {FIRST_COHORT_FACTS.map((fact) => (
                 <div
                   key={fact.value}
-                  className="border-b border-gray-200 py-5 sm:border-b-0 sm:border-r sm:px-5 sm:first:pl-0 sm:last:border-r-0"
+                  className="border-b border-gray-200 px-5 py-5 sm:border-b-0 sm:border-r sm:last:border-r-0"
                 >
                   <p className="text-2xl font-bold text-slate-900">
                     {fact.value}

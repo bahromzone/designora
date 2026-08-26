@@ -47,6 +47,7 @@ export default function HomePage() {
         }
       `}</style>
 
+      {/* Katta Hero banner (public/hero-banner.png) */}
       <section
         data-home-section="hero"
         aria-labelledby="home-hero-title"
@@ -54,7 +55,7 @@ export default function HomePage() {
       >
         <img
           data-testid="home-hero-image"
-          src="https://u308501018.p.clickup-attachments.com/u308501018/e9ac86e5-8064-4d3e-8a04-97656c08e4b6/generated-image-bc0cf268-346a-4738-8ec7-a486ee819dc4.png?view=open"
+          src="/hero-banner.png"
           alt="Dizayn vositalari bilan ishlayotgan Designora talabalari"
           className="absolute inset-0 h-full w-full object-cover object-center"
           fetchPriority="high"
@@ -96,6 +97,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
+      {/* Platformadagi yo'nalishlar (Katta rasmdan pastda) */}
       <section
         data-home-section="directions"
         data-testid="home-directions"

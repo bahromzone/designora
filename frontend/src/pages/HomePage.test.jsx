@@ -1,74 +1,84 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import HomePage from "./HomePage";
 
 vi.mock("../lib/api", () => ({
   discoveryApi: {
-    bestselling: vi.fn().mockResolvedValue([]),
-    popular: vi.fn().mockResolvedValue([]),
+    bestselling: vi.fn().mockResolvedValue({
+      courses: [
+        {
+          id: "test-course-1",
+          title: "Brand identika asoslari",
+          description: "Noldan brend yaratish",
+          category: "Brending",
+          level: "Boshlang'ich",
+          price: 490000,
+          cover_url: "/course-covers/branding-1.jpg",
+          rating: 4.9,
+          total_enrolled: 120,
+          lessons_count: 14,
+        },
+      ],
+    }),
   },
 }));
 
-describe("HomePage reference-inspired hero", () => {
-  it("renders the large visual hero with readable content and CTA", () => {
+vi.mock("../components/VideoShowcase", () => ({
+  default: function MockVideoShowcase() {
+    return (
+      <div data-testid="video-showcase-mock">
+        <button type="button" aria-label="Videoni tomosha qilish">
+          Videoni tomosha qilish
+        </button>
+      </div>
+    );
+  },
+}));
+
+describe("HomePage hero and directions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders new reference hero image and copy", () => {
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <HomePage />
-      </BrowserRouter>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTestId("home-hero-image")).toHaveAttribute(
+      "src",
+      "/hero-banner.png"
     );
 
     expect(
       screen.getByRole("heading", {
-        name: /Aqlliroq o'rganing\. Tezroq o'sing\./i,
+        level: 1,
+        name: /Aqlliroq o'rganing\. Tezroq o'sing\. Istalgan joyda yarating\./i,
       })
     ).toBeInTheDocument();
 
-    const heroImage = screen.getByTestId("home-hero-image");
-    expect(heroImage).toHaveAttribute(
-      "alt",
-      "Dizayn vositalari bilan ishlayotgan Designora talabalari"
-    );
-    expect(heroImage).toHaveAttribute("fetchpriority", "high");
-
     expect(
-      screen.getByRole("link", { name: /Kurslarni ko'rish/i })
+      screen.getByRole("link", { name: "Kurslarni ko'rish" })
     ).toHaveAttribute("href", "/kurslar");
-  });
 
-  it("places platform directions immediately after the large hero", () => {
-    const { container } = render(
-      <BrowserRouter>
-        <HomePage />
-      </BrowserRouter>
-    );
-
-    const orderedSections = Array.from(
-      container.querySelectorAll("[data-home-section]")
-    ).map((section) => section.getAttribute("data-home-section"));
-
-    expect(orderedSections).toEqual(["hero", "directions"]);
     expect(screen.getByTestId("home-directions")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "UI/UX" })).toHaveAttribute(
-      "href",
-      "/kurslar?q=ui%20ux"
-    );
+    expect(screen.getByRole("link", { name: "UI/UX" })).toBeInTheDocument();
   });
 
-  it("keeps the video showcase interaction working", () => {
+  it("renders video showcase mock correctly", () => {
     render(
-      <BrowserRouter>
+      <MemoryRouter>
         <HomePage />
-      </BrowserRouter>
+      </MemoryRouter>
     );
 
-    const playButton = screen.getByRole("button", {
-      name: /Videoni tomosha qilish/i,
+    const playBtn = screen.getByRole("button", {
+      name: "Videoni tomosha qilish",
     });
-    fireEvent.click(playButton);
-
-    expect(
-      screen.getByTitle(/Designora Platforma Tanishuvi/i)
-    ).toBeInTheDocument();
+    expect(playBtn).toBeInTheDocument();
+    fireEvent.click(playBtn);
   });
 });

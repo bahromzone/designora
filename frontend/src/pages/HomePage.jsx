@@ -25,12 +25,6 @@ const fadeUp = {
   },
 };
 
-const FIRST_COHORT_FACTS = [
-  { value: "1-oqim", label: "Birinchi guruh" },
-  { value: "30 ta joy", label: "Cheklangan qabul" },
-  { value: "Portfolio", label: "4 loyiha bilan yakun" },
-];
-
 const HERO_COPY = [
   "Portfolio yarating.",
   "Ilhomingizga shakl bering.",
@@ -133,21 +127,7 @@ export default function HomePage() {
               data-testid="home-hero-facts"
               variants={fadeUp}
               className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-0 border-y border-gray-200 text-center sm:grid-cols-3 sm:border-y-0 sm:border-t"
-            >
-              {FIRST_COHORT_FACTS.map((fact) => (
-                <div
-                  key={fact.value}
-                  className="border-b border-gray-200 px-5 py-5 sm:border-b-0 sm:border-r sm:last:border-r-0"
-                >
-                  <p className="text-2xl font-bold text-slate-900">
-                    {fact.value}
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-slate-500">
-                    {fact.label}
-                  </p>
-                </div>
-              ))}
-            </motion.div>
+            ></motion.div>
           </motion.div>
         </div>
       </section>

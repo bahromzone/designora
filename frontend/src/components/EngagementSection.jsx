@@ -10,7 +10,8 @@ const steps = [
     tags: ["4K Darslar", "Tayyor Figma manbalar", "Tezkor start"],
     badge: "01 / DARS PLATFORMASI",
     previewTitle: "1-Modul: Kompozitsiya va Grid",
-    previewDesc: "Sohadagi eng kerakli instrumentlar va qisqa video qo'llanmalar",
+    previewDesc:
+      "Sohadagi eng kerakli instrumentlar va qisqa video qo'llanmalar",
     media:
       "https://images.unsplash.com/photo-1581291518655-9523c932deda?auto=format&fit=crop&w=1200&q=80",
   },
@@ -64,7 +65,7 @@ export default function EngagementSection() {
           if (entry.isIntersecting) {
             const index = Number(entry.target.getAttribute("data-step-index"));
             setVisibleSteps((prev) =>
-              prev.includes(index) ? prev : [...prev, index],
+              prev.includes(index) ? prev : [...prev, index]
             );
             setActiveStep(index);
           }
@@ -73,7 +74,7 @@ export default function EngagementSection() {
       {
         threshold: 0.25,
         rootMargin: "-15% 0px -25% 0px",
-      },
+      }
     );
 
     stepRefs.current.forEach((el) => {

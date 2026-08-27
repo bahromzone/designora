@@ -1,22 +1,52 @@
 name: CI
-run-name: CI (${{ github.event_name }}) - ${{ github.ref_name }}
+run-name: CI (${{ github.event_name }})
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   backend:
     name: Backend (lint + migration + test)
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: designora
+          POSTGRES_PASSWORD: designora
+          POSTGRES_DB: designora
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U designora -d designora"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      ENVIRONMENT: development
+      SECRET_KEY: ci-secret
+      SESSION_SECRET_KEY: ci-session
+      JWT_SECRET_KEY: ci-jwt
+      MAIL_USERNAME: ci@example.com
+      MAIL_PASSWORD: ci-pass
+      MAIL_FROM: ci@example.com
+      MAIL_PORT: "587"
+      MAIL_SERVER: smtp.example.com
+      RECAPTCHA_SECRET_KEY: ci-recaptcha
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: designora
+      PGPASSWORD: designora
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,86 +54,91 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
 
       - name: Install dependencies
-        run: |
-          cd backend
-          pip install -r requirements-dev.txt
+        run: pip install -r requirements-dev.txt
 
-      - name: Lint with Ruff
-        run: |
-          cd backend
-          ruff check .
+      - name: Ruff check
+        run: ruff check .
 
+      - name: Black check
+        run: black --check .
 
       - name: Prepare and apply migrations against PostgreSQL
         env:
           DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora"
-        run: |
-          python scripts/prepare_migrations.py && alembic upgrade heads
+        run: python -m scripts.prepare_migrations && alembic upgrade heads
 
-      - name: Run tests
+      - name: Create isolated test database
+        id: testdb
+        run: dropdb --if-exists designora_test && createdb designora_test
+
+      - name: Pytest with SQLite
+        if: ${{ !cancelled() && steps.testdb.outcome == 'success' }}
         env:
           TEST_DATABASE_URL: "sqlite+pysqlite:///:memory:"
+        run: pytest --tb=short
+
+      - name: Pytest with PostgreSQL
+        if: ${{ !cancelled() && steps.testdb.outcome == 'success' }}
+        env:
+          TEST_DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora_test"
         run: pytest --tb=short
 
   frontend:
     name: Frontend (lint + test + build)
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "npm"
+          node-version: "22"
+          cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: |
-          cd frontend
-          npm ci
+        run: npm ci
 
-      - name: Check formatting with Prettier
-        run: |
-          cd frontend
-          npx prettier --check "src/**/*.{js,jsx,ts,tsx,css,json,md}"
+      - name: Check formatting
+        run: npm run format:check
 
-      - name: Lint with ESLint
-        run: |
-          cd frontend
-          npm run lint
+      - name: Run ESLint
+        run: npm run lint
 
-      - name: Run unit & integration tests
-        run: |
-          cd frontend
-          npm test -- --run
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Run coverage
+        run: npm run coverage
 
       - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
+        run: npm run build
 
   docker:
     name: Docker build
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Configure registry mirror and warm base images
+        run: |
+          bash scripts/ci_docker_registry.sh \
+            python:3.12-slim \
+            node:22-alpine \
+            nginx:1.27-alpine
 
       - name: Build backend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: false
-          tags: designora-backend:ci-test
+        run: bash scripts/docker_build_retry.sh designora-backend ./backend
 
       - name: Build frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          push: false
-          tags: designora-frontend:ci-test
+        run: bash scripts/docker_build_retry.sh designora-frontend ./frontend

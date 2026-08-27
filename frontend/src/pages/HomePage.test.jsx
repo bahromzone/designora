@@ -65,7 +65,7 @@ describe("HomePage hero and directions", () => {
     ).toHaveAttribute("href", "/kurslar");
 
     expect(screen.getByTestId("home-directions")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "UI/UX" })).toBeInTheDocument();
+    expect(screen.getAllByText(/UI\/UX Dizayn/i).length).toBeGreaterThan(0);
   });
 
   it("renders video showcase mock correctly", () => {

@@ -208,6 +208,17 @@ header.fixed::before {
     transform: translateY(0);
   }
 }
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500;

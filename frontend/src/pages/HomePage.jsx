@@ -8,11 +8,46 @@ import { discoveryApi } from "../lib/api";
 const premiumEasing = [0.16, 1, 0.3, 1];
 
 const directions = [
-  { label: "UI/UX", query: "ui ux" },
-  { label: "Moda dizayni", query: "moda" },
-  { label: "Brending", query: "brending" },
-  { label: "Styling", query: "styling" },
-  { label: "Grafik dizayn", query: "grafik dizayn" },
+  {
+    label: "UI/UX Dizayn",
+    query: "ui ux",
+    tag: "Web & Mobile",
+    desc: "Figma, Prototype & Design Systems",
+    image:
+      "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    label: "Moda dizayni",
+    query: "moda",
+    tag: "Fashion Art",
+    desc: "Eskizlar, Moodboard & Kolleksiya",
+    image:
+      "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    label: "Brending",
+    query: "brending",
+    tag: "Identika",
+    desc: "Logo, Brandbook & Vizual uslub",
+    image:
+      "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    label: "Styling & Art",
+    query: "styling",
+    tag: "Vizual Usul",
+    desc: "Rang nazariyasi, Art & Kompozitsiya",
+    image:
+      "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=600&q=80",
+  },
+  {
+    label: "Grafik dizayn",
+    query: "grafik dizayn",
+    tag: "Grafika",
+    desc: "Posterlar, 3D Typography & Print",
+    image:
+      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80",
+  },
 ];
 
 export default function HomePage() {
@@ -31,7 +66,7 @@ export default function HomePage() {
           className="absolute inset-0 h-full w-full object-cover object-center"
           fetchPriority="high"
         />
-        {/* Nafis va tabiiy gradient mask: matn orqasini nozik qorong'ilatib, pastki qahramonlarni toza ko'rsatadi */}
+        {/* Nafis va tabiiy gradient mask */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-950/45 via-slate-950/25 to-slate-950/15" />
 
         <motion.div
@@ -69,28 +104,58 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* Platformadagi yo'nalishlar (Katta rasmdan pastda) */}
+      {/* Platformadagi yo'nalishlar: O'ngdan chapga aylanuvchi Marquee (Hoverda to'xtaydi) */}
       <section
         data-home-section="directions"
         data-testid="home-directions"
         aria-labelledby="directions-title"
-        className="bg-[oklch(99%_0.006_245)] px-6 py-12 sm:py-16"
+        className="overflow-hidden bg-[oklch(99%_0.006_245)] py-14 sm:py-20"
       >
-        <div className="mx-auto max-w-7xl text-center">
+        <div className="mx-auto max-w-7xl px-6 text-center">
           <p
             id="directions-title"
-            className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500"
+            className="text-xs font-bold uppercase tracking-[0.16em] text-sky-600"
           >
             Platformadagi yo'nalishlar
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-7 gap-y-4 sm:gap-x-12 lg:gap-x-16">
-            {directions.map((direction) => (
+          <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            O'zingizga mos sohani tanlang
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-slate-500">
+            Har bir yo'nalish bo'yicha mustaqil portfolio loyihasi va shaxsiy
+            mentorlik
+          </p>
+        </div>
+
+        {/* Cheksiz gorizontal Marquee oqimi */}
+        <div className="group relative mt-10 w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent_0%,black_8%,black_92%,transparent_100%)]">
+          <div className="flex w-max gap-5 animate-marquee group-hover:[animation-play-state:paused]">
+            {[...directions, ...directions].map((direction, idx) => (
               <Link
-                key={direction.label}
+                key={`${direction.label}-${idx}`}
                 to={`/kurslar?q=${encodeURIComponent(direction.query)}`}
-                className="text-xl font-bold tracking-tight text-slate-800 transition duration-200 hover:-translate-y-0.5 hover:text-violet-700 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 sm:text-2xl"
+                className="relative flex h-[320px] w-[260px] shrink-0 flex-col justify-end overflow-hidden rounded-3xl border border-sky-100 bg-slate-950 p-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-sky-300 hover:shadow-xl sm:h-[340px] sm:w-[280px]"
               >
-                {direction.label}
+                <img
+                  src={direction.image}
+                  alt={direction.label}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-transparent" />
+                <div className="relative z-10 text-white">
+                  <span className="mb-2 inline-block rounded-full border border-white/20 bg-white/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider backdrop-blur-md">
+                    {direction.tag}
+                  </span>
+                  <h3 className="text-xl font-extrabold tracking-tight">
+                    {direction.label}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-300">
+                    {direction.desc}
+                  </p>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-sky-400">
+                    Kurslarni ko'rish &rarr;
+                  </span>
+                </div>
               </Link>
             ))}
           </div>

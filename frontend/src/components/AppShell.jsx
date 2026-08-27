@@ -119,11 +119,11 @@ export default function AppShell({ children }) {
   }, [location.pathname]);
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-hidden selection:bg-purple-500/20">
+    <div className="relative flex min-h-screen flex-col overflow-x-clip selection:bg-purple-500/20">
       <a href="#asosiy-kontent" className="skip-link">
         Asosiy kontentga o'tish
       </a>
-      <header className="sticky top-0 z-50 w-full pointer-events-none">
+      <header className="fixed inset-x-0 top-0 z-50 pointer-events-none w-full">
         <div className="pointer-events-auto">
           <TopAnnouncementBanner />
           <Navbar />
@@ -138,7 +138,7 @@ export default function AppShell({ children }) {
           initial="initial"
           animate="enter"
           exit="exit"
-          className={`relative z-10 flex flex-grow flex-col ${isHomePage ? "-mt-24 sm:-mt-28" : "pt-4"}`}
+          className={`relative z-10 flex flex-grow flex-col ${isHomePage ? "" : "pt-24 sm:pt-28"}`}
         >
           {children}
         </motion.main>

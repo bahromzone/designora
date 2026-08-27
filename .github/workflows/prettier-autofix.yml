@@ -1,4 +1,4 @@
-name: Frontend repair
+name: Frontend diagnostics
 
 on:
   push:
@@ -9,42 +9,29 @@ permissions:
   contents: write
 
 jobs:
-  repair:
-    name: Format and lint-fix frontend with pinned tools
+  diagnostics:
+    name: Capture frontend lint diagnostics
     runs-on: ubuntu-latest
     if: github.actor != 'github-actions[bot]'
     steps:
-      - name: Check out fix branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: fix/ci-1167-fastapi-prettier
           fetch-depth: 0
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Apply pinned formatter and safe lint fixes
+      - name: Capture pinned ESLint output
         working-directory: frontend
         run: |
-          npm run format
-          npm run lint -- --fix
-
-      - name: Commit repairs
+          npm ci
+          npm run lint > ../frontend-lint-diagnostics.txt 2>&1 || true
+      - name: Commit diagnostics
         run: |
-          if git diff --quiet; then
-            echo "No automatic repairs needed."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/src
-          git commit -m "fix(frontend): apply pinned formatting and lint repairs"
+          git add frontend-lint-diagnostics.txt
+          git commit -m "chore(ci): capture lint diagnostics"
           git push origin HEAD:fix/ci-1167-fastapi-prettier

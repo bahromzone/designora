@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const steps = [
   {
@@ -103,7 +103,6 @@ export default function EngagementSection() {
         </div>
 
         <div className="mt-12 grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-12">
-          {/* Chap taraf: Sticky Mockup Preview */}
           <div className="lg:sticky lg:top-24 lg:col-span-5">
             <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-950 p-3 shadow-2xl transition-all duration-300">
               <div className="mb-3 flex items-center justify-between border-b border-slate-800 px-3 pb-3">
@@ -118,34 +117,31 @@ export default function EngagementSection() {
               </div>
 
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-900">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeStep}
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.35, ease: "easeInOut" }}
-                    className="relative h-full w-full"
-                  >
-                    <img
-                      src={activeData.media}
-                      alt={activeData.previewTitle}
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-                      <span className="inline-block rounded-md bg-white/20 px-2.5 py-1 text-xs font-semibold backdrop-blur-md">
-                        {activeData.step}
-                      </span>
-                      <h4 className="mt-2 text-lg font-bold">
-                        {activeData.previewTitle}
-                      </h4>
-                      <p className="mt-1 text-xs text-slate-300">
-                        {activeData.previewDesc}
-                      </p>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
+                <motion.div
+                  key={activeStep}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  className="relative h-full w-full"
+                >
+                  <img
+                    src={activeData.media}
+                    alt={activeData.previewTitle}
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                    <span className="inline-block rounded-md bg-white/20 px-2.5 py-1 text-xs font-semibold backdrop-blur-md">
+                      {activeData.step}
+                    </span>
+                    <h4 className="mt-2 text-lg font-bold">
+                      {activeData.previewTitle}
+                    </h4>
+                    <p className="mt-1 text-xs text-slate-300">
+                      {activeData.previewDesc}
+                    </p>
+                  </div>
+                </motion.div>
               </div>
 
               <div className="mt-3 flex items-center justify-between border-t border-slate-800 px-3 pt-3 text-xs text-slate-400">
@@ -166,7 +162,6 @@ export default function EngagementSection() {
             </div>
           </div>
 
-          {/* O'ng taraf: Scroll-driven Progressive Stepper Cards */}
           <div className="flex flex-col gap-6 lg:col-span-7 lg:gap-8">
             {steps.map((item, index) => {
               const isVisible = visibleSteps.includes(index);

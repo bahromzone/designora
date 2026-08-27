@@ -1,51 +1,43 @@
-name: Prettier auto-fix
+name: Frontend diagnostics
 
 on:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: Branch to format
-        required: true
-        default: main
-        type: string
+  push:
+    branches:
+      - fix/ci-1167-fastapi-prettier
 
 permissions:
   contents: write
 
 jobs:
-  format:
-    name: Format frontend with Prettier
+  diagnostics:
+    name: Capture final frontend diagnostics
     runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
     steps:
-      - name: Check out target branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: fix/ci-1167-fastapi-prettier
           fetch-depth: 0
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
+      - name: Run frontend checks
         working-directory: frontend
-        run: npm ci
-
-      - name: Apply Prettier fixes
-        working-directory: frontend
-        run: npm run format
-
-      - name: Commit formatted files
         run: |
-          if git diff --quiet; then
-            echo "No formatting changes needed."
-            exit 0
-          fi
+          npm ci
+          {
+            npm run lint
+            npm run format:check
+            npm run test:run
+            npm run coverage
+            npm run build
+          } > ../final-frontend-diagnostics.txt 2>&1 || true
+      - name: Commit diagnostics
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/src
-          git commit -m "style(frontend): apply Prettier formatting"
-          git push origin "HEAD:${{ inputs.branch }}"
+          git add final-frontend-diagnostics.txt
+          git commit -m "chore(ci): capture final frontend diagnostics"
+          git push origin HEAD:fix/ci-1167-fastapi-prettier

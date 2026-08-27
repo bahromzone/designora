@@ -41,7 +41,7 @@ jobs:
         env:
           DATABASE_URL: "postgresql+psycopg2://designora:designora@localhost:5432/designora"
         run: |
-          python -m scripts.prepare_migrations && alembic upgrade heads
+          python scripts/prepare_migrations.py && alembic upgrade heads
 
       - name: Run tests
         env:

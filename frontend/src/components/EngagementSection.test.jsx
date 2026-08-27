@@ -49,9 +49,7 @@ describe("EngagementSection", () => {
         screen.getByText("4-Modul: Behance & Dribbble Portfolio")
       ).toBeInTheDocument();
 
-      expect(
-        screen.getByText("04 / PORTFOLIO SHOWCASE")
-      ).toBeInTheDocument();
+      expect(screen.getByText("04 / PORTFOLIO SHOWCASE")).toBeInTheDocument();
 
       expect(screen.getByText("Bosqich 4 / 4")).toBeInTheDocument();
     });

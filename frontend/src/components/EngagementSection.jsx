@@ -48,7 +48,11 @@ const LEARNING_STEPS = [
     duration: "5-6 hafta",
     title: "Mentordan individual feedback oling",
     text: "Topshirig'ingiz tajribali mentor tomonidan to'liq tekshiriladi, qayerda xato borligi va uni qanday yaxshilash mumkinligi video va audio tahlil orqali ko'rsatiladi.",
-    chips: ["🎙 Video & Audio sharh", "🎯 1:1 yo'naltirish", "📈 Qayta topshirish"],
+    chips: [
+      "🎙 Video & Audio sharh",
+      "🎯 1:1 yo'naltirish",
+      "📈 Qayta topshirish",
+    ],
     badge: "03 / Mentor Feedback",
   },
   {
@@ -57,7 +61,11 @@ const LEARNING_STEPS = [
     duration: "7-8 hafta",
     title: "Kuchli portfolio bilan kursni yakunlang",
     text: "Kurs yakunida qo'lingizda ish beruvchi va mijozlarga bemalol taqdim eta oladigan 4 ta to'liq keys (Behance / Dribbble / PDF) tayyor bo'ladi.",
-    chips: ["💼 4 ta to'liq portfolio", "🏆 Rasmiy Sertifikat", "🤝 Ishga tavsiya"],
+    chips: [
+      "💼 4 ta to'liq portfolio",
+      "🏆 Rasmiy Sertifikat",
+      "🤝 Ishga tavsiya",
+    ],
     badge: "04 / Tayyor Portfolio",
   },
 ];
@@ -190,7 +198,9 @@ function InteractiveStudioPreview({ activeStep }) {
                 />
                 <div>
                   <p className="text-sm font-bold text-white">Aziza Karimova</p>
-                  <p className="text-xs text-sky-300">Lead Product Designer (Mentor)</p>
+                  <p className="text-xs text-sky-300">
+                    Lead Product Designer (Mentor)
+                  </p>
                 </div>
               </div>
 
@@ -209,7 +219,9 @@ function InteractiveStudioPreview({ activeStep }) {
               </div>
 
               <div className="rounded-xl border border-white/15 bg-white/10 p-3.5 text-xs text-slate-200">
-                <span className="font-bold text-amber-300">Mentor xulosasi:</span>{" "}
+                <span className="font-bold text-amber-300">
+                  Mentor xulosasi:
+                </span>{" "}
                 Tipografika ierarxiyasi a'lo! Paddinglarni biroz kengaytirsangiz
                 portfolio uchun mukammal bo'ladi.
               </div>
@@ -347,7 +359,8 @@ export default function EngagementSection() {
               Noldan tayyor portfoliogacha
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-sm font-medium text-slate-500">
-              Sichqonchani o'ng tarafdagi qadamlar ustiga olib boring yoki bosing: chap tarafdagi interfeys avtomatik mos ravishda almashadi
+              Sichqonchani o'ng tarafdagi qadamlar ustiga olib boring yoki
+              bosing: chap tarafdagi interfeys avtomatik mos ravishda almashadi
             </p>
           </div>
 

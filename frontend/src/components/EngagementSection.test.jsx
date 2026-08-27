@@ -24,7 +24,9 @@ describe("EngagementSection Interactive Studio", () => {
     ).toBeInTheDocument();
 
     // Hover step 2
-    const step2Card = screen.getByText(/Amalda bajaring: real Figma loyihalar/i);
+    const step2Card = screen.getByText(
+      /Amalda bajaring: real Figma loyihalar/i
+    );
     fireEvent.mouseEnter(step2Card);
 
     expect(screen.getByText(/02 \/ Figma Amaliyoti/i)).toBeInTheDocument();

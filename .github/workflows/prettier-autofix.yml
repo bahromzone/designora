@@ -1,6 +1,8 @@
 name: Prettier auto-fix
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches:
       - fix/ci-1167-fastapi-prettier

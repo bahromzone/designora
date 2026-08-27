@@ -1,0 +1,28 @@
+
+> designora-frontend@1.0.0 lint
+> eslint .
+
+
+/home/runner/work/designora/designora/frontend/src/context/AuthContext.jsx
+  32:10  warning  'isKnownPostAuthPath' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/home/runner/work/designora/designora/frontend/src/pages/AdminModerationPage.jsx
+  21:6  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/runner/work/designora/designora/frontend/src/pages/AdminPaymentsPage.jsx
+  32:6  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/runner/work/designora/designora/frontend/src/pages/CalendarPage.jsx
+  32:6   warning  React Hook useEffect has missing dependencies: 'range.end' and 'range.start'. Either include them or remove the dependency array          react-hooks/exhaustive-deps
+  32:7   warning  React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+  32:30  warning  React Hook useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+
+/home/runner/work/designora/designora/frontend/src/pages/CheckoutPage.jsx
+  10:9  warning  'navigate' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                 no-unused-vars
+  26:6  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/runner/work/designora/designora/frontend/src/pages/InstructorApplicationsPage.jsx
+  19:6  warning  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 9 problems (0 errors, 9 warnings)
+

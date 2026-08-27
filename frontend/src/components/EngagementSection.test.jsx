@@ -22,7 +22,7 @@ describe("EngagementSection", () => {
     expect(
       screen.getByText("Noldan tayyor portfoliogacha")
     ).toBeInTheDocument();
-    expect(screen.getByText("01-QADAM")).toBeInTheDocument();
+    expect(screen.getAllByText("01-QADAM")).toBeInTheDocument();
     expect(
       screen.getByText("Darsni ko'ring va mohiyatni tushuning")
     ).toBeInTheDocument();

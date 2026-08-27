@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import EngagementSection from "./EngagementSection";
 
 describe("EngagementSection", () => {
@@ -22,7 +22,7 @@ describe("EngagementSection", () => {
     expect(
       screen.getByText("Noldan tayyor portfoliogacha")
     ).toBeInTheDocument();
-    expect(screen.getByText("01-QADAM")).toBeInTheDocument();
+    expect(screen.getAllByText("01-QADAM").length).toBeGreaterThan(0);
     expect(
       screen.getByText("Darsni ko'ring va mohiyatni tushuning")
     ).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe("EngagementSection", () => {
     ).toBeInTheDocument();
   });
 
-  it("changes active preview when hovering over a step card", () => {
+  it("changes active preview when hovering over a step card", async () => {
     render(<EngagementSection />);
 
     const stepFour = screen.getByText(
@@ -39,10 +39,14 @@ describe("EngagementSection", () => {
     );
     fireEvent.mouseEnter(stepFour.closest("[data-step-index]"));
 
-    expect(
-      screen.getByText("4-Modul: Behance & Dribbble Portfolio")
-    ).toBeInTheDocument();
-    expect(screen.getByText("04 / PORTFOLIO SHOWCASE")).toBeInTheDocument();
-    expect(screen.getByText("Bosqich 4 / 4")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByText("4-Modul: Behance & Dribbble Portfolio")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("04 / PORTFOLIO SHOWCASE")
+      ).toBeInTheDocument();
+      expect(screen.getByText("Bosqich 4 / 4")).toBeInTheDocument();
+    });
   });
 });

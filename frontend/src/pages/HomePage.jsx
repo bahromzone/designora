@@ -18,7 +18,7 @@ const directions = [
 export default function HomePage() {
   return (
     <div className="home-reference-shell relative w-full bg-[oklch(98%_0.008_245)]">
-      {/* Katta Hero banner (public/hero-banner.png) - navbar bu rasmning ustida suzib turadi */}
+      {/* Katta Hero banner (public/hero-banner.png) */}
       <section
         data-home-section="hero"
         aria-labelledby="home-hero-title"
@@ -31,7 +31,8 @@ export default function HomePage() {
           className="absolute inset-0 h-full w-full object-cover object-center"
           fetchPriority="high"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-100/30 via-transparent to-slate-950/20" />
+        {/* Nafis va tabiiy gradient mask: matn orqasini nozik qorong'ilatib, pastki qahramonlarni toza ko'rsatadi */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-950/45 via-slate-950/25 to-slate-950/15" />
 
         <motion.div
           data-testid="home-hero-content"
@@ -40,7 +41,7 @@ export default function HomePage() {
           transition={{ duration: 0.7, ease: premiumEasing }}
           className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pb-72 pt-10 text-center sm:px-8 sm:pb-80 sm:pt-14 lg:pb-96 lg:pt-16"
         >
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/85 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-sm">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/90 px-3.5 py-1.5 text-xs font-semibold text-slate-800 shadow-[0_4px_16px_rgba(0,0,0,0.12)] backdrop-blur-md">
             <span className="flex -space-x-1.5" aria-hidden="true">
               <span className="h-5 w-5 rounded-full border-2 border-white bg-amber-300" />
               <span className="h-5 w-5 rounded-full border-2 border-white bg-violet-300" />
@@ -51,17 +52,17 @@ export default function HomePage() {
 
           <h1
             id="home-hero-title"
-            className="max-w-[850px] text-balance text-[clamp(2.65rem,6vw,5.4rem)] font-black leading-[0.94] tracking-[-0.055em] text-slate-950"
+            className="max-w-[850px] text-balance text-[clamp(2.65rem,6vw,5.4rem)] font-black leading-[0.94] tracking-[-0.055em] text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.45)]"
           >
             Aqlliroq o'rganing. Tezroq o'sing. Istalgan joyda yarating.
           </h1>
-          <p className="mt-6 max-w-2xl text-pretty text-base font-medium leading-7 text-slate-700 sm:text-lg">
+          <p className="mt-6 max-w-2xl text-pretty text-base font-semibold leading-7 text-slate-100 drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] sm:text-lg">
             Amaliy kurslar, real loyihalar va mentor fikri bilan dizayn
             mahoratingizni portfolio darajasiga olib chiqing.
           </p>
           <Link
             to="/kurslar"
-            className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-7 py-3 text-sm font-bold text-white shadow-[0_14px_30px_oklch(20%_0.02_245/0.24)] transition duration-200 hover:-translate-y-0.5 hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950 active:translate-y-0"
+            className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-8 py-3.5 text-sm font-bold text-slate-950 shadow-[0_16px_36px_rgba(0,0,0,0.3)] transition duration-200 hover:-translate-y-0.5 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white active:translate-y-0"
           >
             Kurslarni ko'rish
           </Link>

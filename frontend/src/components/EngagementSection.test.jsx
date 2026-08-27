@@ -20,14 +20,14 @@ describe("EngagementSection", () => {
     render(<EngagementSection />);
 
     expect(
-      screen.getByText("Noldan tayyor portfoliogacha"),
+      screen.getByText("Noldan tayyor portfoliogacha")
     ).toBeInTheDocument();
     expect(screen.getByText("01-QADAM")).toBeInTheDocument();
     expect(
-      screen.getByText("Darsni ko'ring va mohiyatni tushuning"),
+      screen.getByText("Darsni ko'ring va mohiyatni tushuning")
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Kuchli portfolio bilan kursni yakunlang"),
+      screen.getByText("Kuchli portfolio bilan kursni yakunlang")
     ).toBeInTheDocument();
   });
 
@@ -35,12 +35,12 @@ describe("EngagementSection", () => {
     render(<EngagementSection />);
 
     const stepFour = screen.getByText(
-      "Kuchli portfolio bilan kursni yakunlang",
+      "Kuchli portfolio bilan kursni yakunlang"
     );
     fireEvent.mouseEnter(stepFour.closest("[data-step-index]"));
 
     expect(
-      screen.getByText("4-Modul: Behance & Dribbble Portfolio"),
+      screen.getByText("4-Modul: Behance & Dribbble Portfolio")
     ).toBeInTheDocument();
     expect(screen.getByText("04 / PORTFOLIO SHOWCASE")).toBeInTheDocument();
     expect(screen.getByText("Bosqich 4 / 4")).toBeInTheDocument();

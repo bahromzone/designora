@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import HomePage from "./HomePage";
@@ -21,18 +21,6 @@ vi.mock("../lib/api", () => ({
         },
       ],
     }),
-  },
-}));
-
-vi.mock("../components/VideoShowcase", () => ({
-  default: function MockVideoShowcase() {
-    return (
-      <div data-testid="video-showcase-mock">
-        <button type="button" aria-label="Videoni tomosha qilish">
-          Videoni tomosha qilish
-        </button>
-      </div>
-    );
   },
 }));
 
@@ -66,19 +54,6 @@ describe("HomePage hero and directions", () => {
 
     expect(screen.getByTestId("home-directions")).toBeInTheDocument();
     expect(screen.getAllByText(/UI\/UX Dizayn/i).length).toBeGreaterThan(0);
-  });
-
-  it("renders video showcase mock correctly", () => {
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    );
-
-    const playBtn = screen.getByRole("button", {
-      name: "Videoni tomosha qilish",
-    });
-    expect(playBtn).toBeInTheDocument();
-    fireEvent.click(playBtn);
+    expect(screen.queryByTestId("video-showcase-mock")).not.toBeInTheDocument();
   });
 });

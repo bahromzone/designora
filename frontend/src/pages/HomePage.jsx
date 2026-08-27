@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import EngagementSection from "../components/EngagementSection";
 import RecommendationSection from "../components/RecommendationSection";
-import VideoShowcase from "../components/VideoShowcase";
 import { discoveryApi } from "../lib/api";
 
 const premiumEasing = [0.16, 1, 0.3, 1];
@@ -162,7 +161,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <VideoShowcase />
       <EngagementSection />
 
       <section className="mx-auto max-w-7xl px-6 py-16">

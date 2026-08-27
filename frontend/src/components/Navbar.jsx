@@ -101,15 +101,15 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            className="relative z-10 w-full max-w-[860px] min-h-[520px] rounded-[2rem] overflow-hidden flex flex-col md:flex-row shadow-[0_20px_60px_-15px_rgba(90,50,230,0.3)] bg-white md:bg-transparent"
+            className="relative z-10 flex min-h-[520px] w-full max-w-[860px] flex-col overflow-hidden rounded-[2rem] bg-white shadow-[0_20px_60px_-15px_rgba(90,50,230,0.3)] md:flex-row md:bg-transparent"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white md:text-[#1E2335] md:hover:bg-gray-100 transition-colors"
+              className="absolute right-4 top-4 z-50 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 md:text-[#1E2335] md:hover:bg-gray-100"
             >
               <svg
                 viewBox="0 0 24 24"
-                className="w-5 h-5"
+                className="h-5 w-5"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -121,9 +121,9 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
               </svg>
             </button>
 
-            <div className="hidden md:block absolute inset-0 z-0 bg-gradient-to-br from-[#A238FF] via-[#6525EA] to-[#255EE5]">
+            <div className="absolute inset-0 z-0 hidden bg-gradient-to-br from-[#A238FF] via-[#6525EA] to-[#255EE5] md:block">
               <svg
-                className={`absolute inset-0 w-full h-full text-white drop-shadow-2xl transition-transform duration-700 ease-in-out ${mode === "signup" ? "-scale-x-100" : ""}`}
+                className={`absolute inset-0 h-full w-full text-white drop-shadow-2xl transition-transform duration-700 ease-in-out ${mode === "signup" ? "-scale-x-100" : ""}`}
                 viewBox="0 0 1000 600"
                 preserveAspectRatio="none"
                 fill="currentColor"
@@ -132,19 +132,19 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
               </svg>
             </div>
 
-            <div className="md:hidden absolute inset-0 z-0 flex flex-col">
+            <div className="absolute inset-0 z-0 flex flex-col md:hidden">
               <div className="flex-1 bg-white"></div>
               <div className="flex-1 bg-gradient-to-br from-[#A238FF] via-[#6525EA] to-[#255EE5]"></div>
             </div>
 
             <div
-              className={`relative z-10 w-full md:w-1/2 flex flex-col items-center justify-center p-8 lg:p-12 transition-all duration-500 ${mode === "signup" ? "md:order-last" : ""}`}
+              className={`relative z-10 flex w-full flex-col items-center justify-center p-8 transition-all duration-500 md:w-1/2 lg:p-12 ${mode === "signup" ? "md:order-last" : ""}`}
             >
-              <div className="w-full max-w-[320px] flex flex-col items-center">
-                <h1 className="text-[2rem] font-extrabold text-[#1E2335] tracking-tight mb-1">
+              <div className="flex w-full max-w-[320px] flex-col items-center">
+                <h1 className="mb-1 text-[2rem] font-extrabold tracking-tight text-[#1E2335]">
                   {mode === "login" ? "Salom!" : "Hisob yarating"}
                 </h1>
-                <p className="text-[14px] text-[#868D9C] mb-6">
+                <p className="mb-6 text-[14px] text-[#868D9C]">
                   {mode === "login"
                     ? "Hisobingizga kiring"
                     : "Bugun Designora'ga qo'shiling"}
@@ -172,10 +172,10 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                         transition={{ duration: 0.3 }}
                         className="relative w-full"
                       >
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                           <svg
                             viewBox="0 0 24 24"
-                            className="w-[20px] h-[20px]"
+                            className="h-[20px] w-[20px]"
                             fill="url(#icon-grad-modal)"
                           >
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
@@ -191,17 +191,17 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                           minLength={3}
                           maxLength={50}
                           required={mode === "signup"}
-                          className="w-full bg-[#F8F9FA] md:bg-white rounded-full py-3.5 pl-[3.2rem] pr-5 text-[14px] text-gray-700 placeholder-[#A0A6B5] outline-none shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] border border-transparent focus:border-violet-100 transition-all duration-300"
+                          className="w-full rounded-full border border-transparent bg-[#F8F9FA] py-3.5 pl-[3.2rem] pr-5 text-[14px] text-gray-700 placeholder-[#A0A6B5] shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] outline-none transition-all duration-300 focus:border-violet-100 focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] md:bg-white"
                         />
                       </motion.div>
                     )}
                   </AnimatePresence>
 
                   <div className="relative w-full">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                       <svg
                         viewBox="0 0 24 24"
-                        className="w-[20px] h-[20px]"
+                        className="h-[20px] w-[20px]"
                         fill="url(#icon-grad-modal)"
                       >
                         <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
@@ -216,15 +216,15 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                         setForm((p) => ({ ...p, email: e.target.value }))
                       }
                       required
-                      className="w-full bg-[#F8F9FA] md:bg-white rounded-full py-3.5 pl-[3.2rem] pr-5 text-[14px] text-gray-700 placeholder-[#A0A6B5] outline-none shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] border border-transparent focus:border-violet-100 transition-all duration-300"
+                      className="w-full rounded-full border border-transparent bg-[#F8F9FA] py-3.5 pl-[3.2rem] pr-5 text-[14px] text-gray-700 placeholder-[#A0A6B5] shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] outline-none transition-all duration-300 focus:border-violet-100 focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] md:bg-white"
                     />
                   </div>
 
                   <div className="relative w-full">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                       <svg
                         viewBox="0 0 24 24"
-                        className="w-[20px] h-[20px]"
+                        className="h-[20px] w-[20px]"
                         fill="url(#icon-grad-modal)"
                       >
                         <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
@@ -240,17 +240,17 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                       minLength={8}
                       maxLength={128}
                       required
-                      className="w-full bg-[#F8F9FA] md:bg-white rounded-full py-3.5 pl-[3.2rem] pr-[3.2rem] text-[14px] text-gray-700 placeholder-[#A0A6B5] outline-none shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] border border-transparent focus:border-violet-100 transition-all duration-300"
+                      className="w-full rounded-full border border-transparent bg-[#F8F9FA] py-3.5 pl-[3.2rem] pr-[3.2rem] text-[14px] text-gray-700 placeholder-[#A0A6B5] shadow-[0_8px_30px_-5px_rgba(110,120,180,0.15)] outline-none transition-all duration-300 focus:border-violet-100 focus:shadow-[0_8px_30px_-5px_rgba(129,59,255,0.25)] md:bg-white"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#813BFF] hover:text-[#5022b5] transition-colors outline-none"
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#813BFF] outline-none transition-colors hover:text-[#5022b5]"
                     >
                       {showPassword ? (
                         <svg
                           viewBox="0 0 24 24"
-                          className="w-4 h-4"
+                          className="h-4 w-4"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2.2"
@@ -263,7 +263,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                       ) : (
                         <svg
                           viewBox="0 0 24 24"
-                          className="w-4 h-4"
+                          className="h-4 w-4"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2.2"
@@ -278,18 +278,18 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                   </div>
 
                   {mode === "login" && (
-                    <div className="flex justify-between items-center px-1 pt-1">
-                      <label className="flex items-center gap-2 cursor-pointer group">
-                        <div className="relative flex items-center justify-center w-[16px] h-[16px] rounded-[4px] bg-[#F8F9FA] md:bg-white border-2 border-[#D1D6E2] group-hover:border-[#813BFF] transition-colors">
+                    <div className="flex items-center justify-between px-1 pt-1">
+                      <label className="group flex cursor-pointer items-center gap-2">
+                        <div className="relative flex h-[16px] w-[16px] items-center justify-center rounded-[4px] border-2 border-[#D1D6E2] bg-[#F8F9FA] transition-colors group-hover:border-[#813BFF] md:bg-white">
                           <input
                             type="checkbox"
                             className="peer sr-only"
                             defaultChecked
                           />
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#813BFF] to-[#3A41FF] rounded-[2px] opacity-0 peer-checked:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="absolute inset-0 flex items-center justify-center rounded-[2px] bg-gradient-to-r from-[#813BFF] to-[#3A41FF] opacity-0 transition-opacity peer-checked:opacity-100">
                             <svg
                               viewBox="0 0 24 24"
-                              className="w-3 h-3"
+                              className="h-3 w-3"
                               fill="none"
                               stroke="white"
                               strokeWidth="3"
@@ -300,7 +300,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                             </svg>
                           </div>
                         </div>
-                        <span className="text-[12px] font-medium text-[#A0A6B5] select-none">
+                        <span className="select-none text-[12px] font-medium text-[#A0A6B5]">
                           Meni eslab qol
                         </span>
                       </label>
@@ -308,7 +308,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                       <Link
                         to="/forgot-password"
                         onClick={onClose}
-                        className="text-[12px] font-medium text-[#A0A6B5] hover:text-[#813BFF] transition-colors"
+                        className="text-[12px] font-medium text-[#A0A6B5] transition-colors hover:text-[#813BFF]"
                       >
                         Parolni unutdingizmi?
                       </Link>
@@ -316,7 +316,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                   )}
 
                   {error && (
-                    <p className="text-center text-[13px] font-semibold text-red-500 px-2">
+                    <p className="px-2 text-center text-[13px] font-semibold text-red-500">
                       {error}
                     </p>
                   )}
@@ -325,7 +325,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="w-[180px] bg-gradient-to-r from-[#953DFF] via-[#6533FF] to-[#3055FF] text-white text-[14px] font-bold tracking-wide py-3 rounded-full shadow-[0_12px_24px_-8px_rgba(100,50,255,0.6)] hover:shadow-[0_15px_30px_-8px_rgba(100,50,255,0.7)] hover:-translate-y-[2px] transition-all duration-300 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
+                      className="w-[180px] rounded-full bg-gradient-to-r from-[#953DFF] via-[#6533FF] to-[#3055FF] py-3 text-[14px] font-bold tracking-wide text-white shadow-[0_12px_24px_-8px_rgba(100,50,255,0.6)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_15px_30px_-8px_rgba(100,50,255,0.7)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:translate-y-0"
                     >
                       {submitting
                         ? "..."
@@ -336,7 +336,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                   </div>
                 </form>
 
-                <p className="mt-6 text-[13px] text-[#A0A6B5] font-medium">
+                <p className="mt-6 text-[13px] font-medium text-[#A0A6B5]">
                   {mode === "login"
                     ? "Hisobingiz yo'qmi? "
                     : "Hisobingiz bormi? "}
@@ -344,7 +344,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
                     onClick={() =>
                       setMode(mode === "login" ? "signup" : "login")
                     }
-                    className="text-[#6533FF] font-semibold hover:underline decoration-2 underline-offset-2 focus:outline-none"
+                    className="font-semibold text-[#6533FF] underline-offset-2 hover:underline focus:outline-none decoration-2"
                   >
                     {mode === "login" ? "Yaratish" : "Kirish"}
                   </button>
@@ -353,15 +353,15 @@ function AuthModal({ isOpen, onClose, initialMode = "login" }) {
             </div>
 
             <div
-              className={`relative z-10 w-full md:w-1/2 flex flex-col items-center justify-center p-8 lg:p-12 text-center transition-all duration-500 ${mode === "signup" ? "md:order-first" : ""}`}
+              className={`relative z-10 flex w-full flex-col items-center justify-center p-8 text-center transition-all duration-500 md:w-1/2 lg:p-12 ${mode === "signup" ? "md:order-first" : ""}`}
             >
               <div className="max-w-[260px]">
-                <h2 className="text-[1.75rem] font-extrabold text-white md:text-[#1E2335] mb-4 tracking-tight drop-shadow-sm md:drop-shadow-none">
+                <h2 className="mb-4 text-[1.75rem] font-extrabold tracking-tight text-white drop-shadow-sm md:text-[#1E2335] md:drop-shadow-none">
                   {mode === "login"
                     ? "Qaytganingizdan xursandmiz!"
                     : "Designora oilasiga xush kelibsiz"}
                 </h2>
-                <p className="text-[13.5px] leading-[1.6] text-white/90 md:text-[#6C7281] font-medium">
+                <p className="text-[13.5px] font-medium leading-[1.6] text-white/90 md:text-[#6C7281]">
                   {mode === "login"
                     ? "Premium kurslar, mentorlik va shaxsiy tavsiyalar sizni kutmoqda. O'qishni qoldirgan joyingizdan davom ettiring."
                     : "Premium kurslar va mentorlikka ega bo'ling hamda kelajakni quruvchi kuchli dizaynerlar hamjamiyatiga qo'shiling."}
@@ -386,8 +386,8 @@ export default function Navbar() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 16);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -423,22 +423,22 @@ export default function Navbar() {
 
   return (
     <>
-      <div
-        className={`w-full py-4 transition-colors duration-200 ${
-          scrolled
-            ? "bg-white/90 backdrop-blur-xl border-b border-gray-200 shadow-sm"
-            : "bg-white/70 backdrop-blur-md border-b border-gray-100"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+      <div className="w-full px-3 py-2.5 sm:px-6 sm:py-3">
+        <div
+          className={`mx-auto flex max-w-7xl items-center justify-between rounded-full border px-4 py-2 sm:px-6 sm:py-2.5 transition-all duration-300 ${
+            scrolled
+              ? "border-slate-200/80 bg-white/95 shadow-[0_16px_36px_-12px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+              : "border-white/70 bg-white/85 shadow-[0_12px_30px_-10px_rgba(15,23,42,0.08)] backdrop-blur-md"
+          }`}
+        >
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/" className="group flex items-center gap-2">
             <svg
               width="28"
               height="28"
               viewBox="0 0 32 32"
               fill="none"
-              className="group-hover:scale-110 transition-transform duration-300"
+              className="transition-transform duration-300 group-hover:scale-110"
             >
               <path d="M16 2L2 9L16 16L30 9L16 2Z" fill="url(#logo_grad1)" />
               <path
@@ -471,19 +471,23 @@ export default function Navbar() {
                 </linearGradient>
               </defs>
             </svg>
-            <span className="font-bold text-xl tracking-tight text-slate-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-pink-500 group-hover:to-indigo-500 transition-all">
+            <span className="text-xl font-bold tracking-tight text-slate-900 transition-all group-hover:bg-gradient-to-r group-hover:from-pink-500 group-hover:to-indigo-500 group-hover:bg-clip-text group-hover:text-transparent">
               Designora
             </span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden items-center gap-7 lg:gap-9 md:flex">
             {links.map((l) => (
               <NavLink
                 key={l.to}
                 to={l.to}
                 className={({ isActive }) =>
-                  `text-sm font-medium transition-colors ${isActive ? "text-slate-900 font-bold" : "text-slate-500 hover:text-slate-900"}`
+                  `text-sm font-semibold transition-colors ${
+                    isActive
+                      ? "font-bold text-slate-950"
+                      : "text-slate-600 hover:text-slate-950"
+                  }`
                 }
               >
                 {l.label}
@@ -493,7 +497,11 @@ export default function Navbar() {
               <NavLink
                 to="/kurslarim"
                 className={({ isActive }) =>
-                  `text-sm font-medium transition-colors ${isActive ? "text-slate-900 font-bold" : "text-slate-500 hover:text-slate-900"}`
+                  `text-sm font-semibold transition-colors ${
+                    isActive
+                      ? "font-bold text-slate-950"
+                      : "text-slate-600 hover:text-slate-950"
+                  }`
                 }
               >
                 Mening kurslarim
@@ -502,19 +510,19 @@ export default function Navbar() {
           </nav>
 
           {/* Desktop Auth CTA */}
-          <div className="hidden md:flex items-center gap-5">
+          <div className="hidden items-center gap-4 md:flex">
             {isAuthenticated ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3.5">
                 <NotificationBell />
                 <Link
                   to="/profil"
-                  className="text-sm text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                  className="text-sm font-semibold text-slate-700 transition-colors hover:text-slate-950"
                 >
                   {user?.full_name}
                 </Link>
                 <button
                   onClick={logout}
-                  className="text-sm font-medium px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="rounded-full border border-slate-300 px-4 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
                 >
                   Chiqish
                 </button>
@@ -523,13 +531,13 @@ export default function Navbar() {
               <>
                 <button
                   onClick={() => openModal("login")}
-                  className="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+                  className="px-3 py-1.5 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-950"
                 >
                   Kirish
                 </button>
                 <button
                   onClick={() => openModal("signup")}
-                  className="px-5 py-2.5 rounded-full text-sm font-bold bg-slate-900 text-white hover:scale-105 hover:shadow-[0_8px_20px_rgba(15,23,42,0.2)] transition-all"
+                  className="rounded-full bg-slate-950 px-5 py-2 text-sm font-bold text-white shadow-[0_10px_24px_-8px_rgba(15,23,42,0.35)] transition-all hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0"
                 >
                   Hisob yaratish
                 </button>
@@ -540,12 +548,12 @@ export default function Navbar() {
           {/* Mobile Hamburger Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden relative z-50 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="relative z-50 rounded-full p-2 text-slate-900 transition-colors hover:bg-slate-100 md:hidden"
             aria-label="Menyu"
           >
             <svg
               viewBox="0 0 24 24"
-              className="w-6 h-6 text-slate-900"
+              className="h-6 w-6 text-slate-900"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -578,14 +586,14 @@ export default function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
-              className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-black/25 backdrop-blur-sm md:hidden"
             />
             <motion.nav
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              className="fixed top-0 right-0 bottom-0 z-30 w-[280px] bg-white shadow-xl p-6 pt-24 flex flex-col gap-2 md:hidden"
+              className="fixed bottom-0 right-0 top-0 z-50 flex w-[290px] flex-col gap-2 bg-white p-6 pt-24 shadow-2xl md:hidden"
             >
               {links.map((l) => (
                 <NavLink
@@ -593,7 +601,11 @@ export default function Navbar() {
                   to={l.to}
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
-                    `block px-4 py-3 rounded-xl text-base font-medium transition-colors ${isActive ? "bg-violet-50 text-violet-700 font-bold" : "text-slate-700 hover:bg-gray-50"}`
+                    `block rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+                      isActive
+                        ? "bg-violet-50 font-bold text-violet-700"
+                        : "text-slate-700 hover:bg-gray-50"
+                    }`
                   }
                 >
                   {l.label}
@@ -604,20 +616,24 @@ export default function Navbar() {
                   to="/kurslarim"
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
-                    `block px-4 py-3 rounded-xl text-base font-medium transition-colors ${isActive ? "bg-violet-50 text-violet-700 font-bold" : "text-slate-700 hover:bg-gray-50"}`
+                    `block rounded-xl px-4 py-3 text-base font-semibold transition-colors ${
+                      isActive
+                        ? "bg-violet-50 font-bold text-violet-700"
+                        : "text-slate-700 hover:bg-gray-50"
+                    }`
                   }
                 >
                   Mening kurslarim
                 </NavLink>
               )}
 
-              <div className="mt-auto pt-6 border-t border-gray-100 space-y-3">
+              <div className="mt-auto space-y-3 border-t border-gray-100 pt-6">
                 {isAuthenticated ? (
                   <>
                     <Link
                       to="/profil"
                       onClick={() => setMobileOpen(false)}
-                      className="block px-4 py-3 rounded-xl text-base font-medium text-slate-700 hover:bg-gray-50"
+                      className="block rounded-xl px-4 py-3 text-base font-semibold text-slate-700 hover:bg-gray-50"
                     >
                       {user?.full_name || "Profil"}
                     </Link>
@@ -626,7 +642,7 @@ export default function Navbar() {
                         logout();
                         setMobileOpen(false);
                       }}
-                      className="w-full px-4 py-3 rounded-xl text-base font-medium text-red-600 hover:bg-red-50 text-left"
+                      className="w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-red-600 hover:bg-red-50"
                     >
                       Chiqish
                     </button>
@@ -635,13 +651,13 @@ export default function Navbar() {
                   <>
                     <button
                       onClick={() => openModal("login")}
-                      className="w-full px-4 py-3 rounded-xl text-base font-medium text-slate-700 hover:bg-gray-50 text-left"
+                      className="w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-slate-700 hover:bg-gray-50"
                     >
                       Kirish
                     </button>
                     <button
                       onClick={() => openModal("signup")}
-                      className="w-full px-4 py-3 rounded-xl text-base font-bold bg-slate-900 text-white text-center"
+                      className="w-full rounded-xl bg-slate-950 px-4 py-3 text-center text-base font-bold text-white shadow-md"
                     >
                       Hisob yaratish
                     </button>

@@ -18,40 +18,11 @@ const directions = [
 export default function HomePage() {
   return (
     <div className="home-reference-shell relative w-full bg-[oklch(98%_0.008_245)]">
-      <style>{`
-        body:has(.home-reference-shell) header > aside { display: none; }
-        body:has(.home-reference-shell) header > div:has(nav) {
-          border: 0 !important;
-          background: transparent !important;
-          box-shadow: none !important;
-          padding: 12px 16px !important;
-        }
-        body:has(.home-reference-shell) header > div:has(nav) > div {
-          max-width: 1280px;
-          border: 1px solid oklch(91% 0.012 245);
-          border-radius: 999px;
-          background: oklch(99% 0.006 245 / 0.96);
-          box-shadow: 0 16px 40px oklch(35% 0.035 245 / 0.12);
-          padding: 8px 16px;
-        }
-        body:has(.home-reference-shell) header nav { gap: clamp(20px, 3vw, 40px); }
-        body:has(.home-reference-shell) header nav a { color: oklch(38% 0.018 245); }
-        body:has(.home-reference-shell) header nav a:hover,
-        body:has(.home-reference-shell) header nav a[aria-current="page"] {
-          color: oklch(18% 0.018 245);
-        }
-        @media (max-width: 767px) {
-          body:has(.home-reference-shell) header > div:has(nav) > div {
-            border-radius: 22px;
-          }
-        }
-      `}</style>
-
-      {/* Katta Hero banner (public/hero-banner.png) */}
+      {/* Katta Hero banner (public/hero-banner.png) - navbar bu rasmning ustida suzib turadi */}
       <section
         data-home-section="hero"
         aria-labelledby="home-hero-title"
-        className="relative mx-auto min-h-[700px] w-[calc(100%-24px)] max-w-[1440px] overflow-hidden rounded-[28px] bg-sky-300 sm:min-h-[760px] lg:min-h-[820px]"
+        className="relative mx-auto min-h-[720px] w-full max-w-[1440px] overflow-hidden rounded-[28px] bg-sky-300 pt-24 sm:min-h-[780px] sm:pt-28 lg:min-h-[860px]"
       >
         <img
           data-testid="home-hero-image"
@@ -60,14 +31,14 @@ export default function HomePage() {
           className="absolute inset-0 h-full w-full object-cover object-center"
           fetchPriority="high"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-100/25 via-transparent to-slate-950/20" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-100/30 via-transparent to-slate-950/20" />
 
         <motion.div
           data-testid="home-hero-content"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: premiumEasing }}
-          className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pb-72 pt-16 text-center sm:px-8 sm:pb-80 sm:pt-20 lg:pb-96 lg:pt-24"
+          className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 pb-72 pt-10 text-center sm:px-8 sm:pb-80 sm:pt-14 lg:pb-96 lg:pt-16"
         >
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/85 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-sm">
             <span className="flex -space-x-1.5" aria-hidden="true">

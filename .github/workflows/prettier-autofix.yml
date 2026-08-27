@@ -1,8 +1,6 @@
-name: Prettier auto-fix
+name: Frontend repair
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches:
       - fix/ci-1167-fastapi-prettier
@@ -11,8 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  format:
-    name: Format frontend with repository-pinned Prettier
+  repair:
+    name: Format and lint-fix frontend with pinned tools
     runs-on: ubuntu-latest
     if: github.actor != 'github-actions[bot]'
     steps:
@@ -33,18 +31,20 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Apply Prettier fixes
+      - name: Apply pinned formatter and safe lint fixes
         working-directory: frontend
-        run: npm run format
+        run: |
+          npm run format
+          npm run lint -- --fix
 
-      - name: Commit formatted files
+      - name: Commit repairs
         run: |
           if git diff --quiet; then
-            echo "No formatting changes needed."
+            echo "No automatic repairs needed."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add frontend/src
-          git commit -m "style(frontend): apply Prettier formatting"
+          git commit -m "fix(frontend): apply pinned formatting and lint repairs"
           git push origin HEAD:fix/ci-1167-fastapi-prettier

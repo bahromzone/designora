@@ -100,7 +100,9 @@ describe("CheckoutPage", () => {
         { course_id: 5, provider: "payme", coupon_code: null },
         "mock-test-token"
       );
-      expect(assignMock).toHaveBeenCalledWith("https://checkout.payme.uz/redirect/123");
+      expect(assignMock).toHaveBeenCalledWith(
+        "https://checkout.payme.uz/redirect/123"
+      );
     });
 
     window.location = originalLocation;

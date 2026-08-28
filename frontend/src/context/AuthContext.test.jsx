@@ -39,7 +39,9 @@ function TestConsumer() {
       <div data-testid="user-email">{user?.email || "none"}</div>
       <div data-testid="user-role">{user?.role || "none"}</div>
       <button
-        onClick={() => login({ email: "test@example.com", password: "password123" })}
+        onClick={() =>
+          login({ email: "test@example.com", password: "password123" })
+        }
       >
         Login Action
       </button>
@@ -85,8 +87,12 @@ describe("AuthContext", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("loading")).toHaveTextContent("idle");
-      expect(screen.getByTestId("auth-state")).toHaveTextContent("authenticated");
-      expect(screen.getByTestId("user-email")).toHaveTextContent("user@example.com");
+      expect(screen.getByTestId("auth-state")).toHaveTextContent(
+        "authenticated"
+      );
+      expect(screen.getByTestId("user-email")).toHaveTextContent(
+        "user@example.com"
+      );
     });
   });
 
@@ -130,7 +136,10 @@ describe("AuthContext", () => {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<TestConsumer />} />
-            <Route path="/admin" element={<div data-testid="admin-page">Admin Dashboard</div>} />
+            <Route
+              path="/admin"
+              element={<div data-testid="admin-page">Admin Dashboard</div>}
+            />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -164,7 +173,9 @@ describe("AuthContext", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("auth-state")).toHaveTextContent("authenticated");
+      expect(screen.getByTestId("auth-state")).toHaveTextContent(
+        "authenticated"
+      );
     });
 
     fireEvent.click(screen.getByText("Logout Action"));

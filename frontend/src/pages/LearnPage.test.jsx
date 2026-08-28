@@ -169,7 +169,9 @@ describe("LearnPage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("learn-ready")).toBeInTheDocument();
       expect(screen.getByText("Figma UI/UX Asoslari")).toBeInTheDocument();
-      expect(screen.getByText("1.2 Frame va Layerlar")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "1.2 Frame va Layerlar" })
+      ).toBeInTheDocument();
     });
 
     const lessonOneButton = screen.getByTestId("lesson-item-1001");
@@ -177,7 +179,7 @@ describe("LearnPage", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("1.1 Interfeys bilan tanishuv")
+        screen.getByRole("heading", { name: "1.1 Interfeys bilan tanishuv" })
       ).toBeInTheDocument();
       expect(
         screen.getByText("✓ Tugatilgan (bekor qilish)")
@@ -220,7 +222,9 @@ describe("LearnPage", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("1.2 Frame va Layerlar")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "1.2 Frame va Layerlar" })
+      ).toBeInTheDocument();
     });
 
     const completeButton = screen.getByText("Tugatilgan deb belgilash");

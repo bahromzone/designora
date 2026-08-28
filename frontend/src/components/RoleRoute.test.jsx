@@ -1,8 +1,40 @@
-import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { canAccess } from "./RoleRoute";
+import RoleRoute, { canAccess } from "./RoleRoute";
+
+const authState = vi.hoisted(() => ({
+  value: { user: { role: "admin" }, loading: false },
+}));
+
+vi.mock("../context/AuthContext", () => ({
+  useAuth: () => authState.value,
+}));
+
+vi.mock("./ProtectedRoute", () => ({
+  default: ({ children }) => children,
+}));
 
 const ADMIN_ROLES = ["admin", "superadmin"];
+
+function renderRoute(roles = ADMIN_ROLES) {
+  return render(
+    <MemoryRouter initialEntries={["/admin"]}>
+      <Routes>
+        <Route path="/" element={<div>Home</div>} />
+        <Route
+          path="/admin"
+          element={
+            <RoleRoute roles={roles}>
+              <div>Admin content</div>
+            </RoleRoute>
+          }
+        />
+      </Routes>
+    </MemoryRouter>
+  );
+}
 
 describe("canAccess", () => {
   it("login qilmagan foydalanuvchini kiritmaydi", () => {
@@ -27,5 +59,35 @@ describe("canAccess", () => {
 
   it("rol ro'yxati bo'sh bo'lsa har qanday login qilgan userga ruxsat beradi", () => {
     expect(canAccess({ role: "user" })).toBe(true);
+  });
+});
+
+describe("RoleRoute", () => {
+  beforeEach(() => {
+    authState.value = { user: { role: "admin" }, loading: false };
+  });
+
+  it("ruxsat tekshirilayotganda loading holatini ko'rsatadi", () => {
+    authState.value = { user: null, loading: true };
+    renderRoute();
+    expect(screen.getByText("Ruxsatlar tekshirilmoqda...")).toBeInTheDocument();
+    expect(screen.queryByText("Admin content")).not.toBeInTheDocument();
+  });
+
+  it("ruxsatsiz rolni bosh sahifaga qaytaradi", () => {
+    authState.value = { user: { role: "user" }, loading: false };
+    renderRoute();
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.queryByText("Admin content")).not.toBeInTheDocument();
+  });
+
+  it("admin uchun himoyalangan kontentni ochadi", () => {
+    renderRoute();
+    expect(screen.getByText("Admin content")).toBeInTheDocument();
+  });
+
+  it("superadmin-only route'da adminni bloklaydi", () => {
+    renderRoute(["superadmin"]);
+    expect(screen.getByText("Home")).toBeInTheDocument();
   });
 });

@@ -63,7 +63,7 @@ describe("AdminPaymentsPage", () => {
     render(<AdminPaymentsPage />);
 
     await screen.findByText("Order topilmadi.");
-    await user.selectOptions(screen.getByRole("combobox", { name: "" }), "paid");
+    await user.selectOptions(screen.getAllByRole("combobox")[0], "paid");
 
     await waitFor(() =>
       expect(request).toHaveBeenCalledWith("/api/admin/orders?status=paid", {
@@ -92,7 +92,9 @@ describe("AdminPaymentsPage", () => {
         token: "admin-token",
       })
     );
-    expect(await screen.findByText("paid / refund: requested")).toBeInTheDocument();
+    expect(
+      await screen.findByText("paid / refund: requested")
+    ).toBeInTheDocument();
   });
 
   it("kupon yaratadi va ro'yxatni yangilaydi", async () => {
